@@ -1,7 +1,8 @@
 Definitions.
 
 Number      = [0-9]+
-Operator    = [\+\-\*\/]
+BasicOperator    = [\+\-]
+ComplexOperator = [\*\/]
 Roll        = d
 Space       = [\s]+
 LeftParen   = \(
@@ -11,7 +12,8 @@ Rules.
 
 {Space}       : skip_token.
 {Newline}     : skip_token.
-{Operator}    : {token, {operator, TokenLine, TokenChars}}.
+{BasicOperator}    : {token, {basic_operator, TokenLine, TokenChars}}.
+{ComplexOperator}    : {token, {complex_operator, TokenLine, TokenChars}}.
 {Roll}        : {token, {roll, TokenLine, TokenChars}}.
 {LeftParen}   : {token, {'(', TokenLine, TokenChars}}.
 {RightParen}  : {token, {')', TokenLine, TokenChars}}.
