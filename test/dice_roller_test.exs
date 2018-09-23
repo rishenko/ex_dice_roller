@@ -4,7 +4,7 @@ defmodule DiceRollerTest do
 
   describe "tokenizing" do
     test "digit" do
-      assert {:ok, [{:digit, 1, '2'}], 1} == DiceRoller.tokenize("2")
+      assert {:ok, [{:digit, 1, '2'}]} == DiceRoller.tokenize("2")
     end
 
     test "roll" do
@@ -14,7 +14,7 @@ defmodule DiceRollerTest do
         {:digit, 1, '4'}
       ]
 
-      assert {:ok, expected, 1} == DiceRoller.tokenize("1d4")
+      assert {:ok, expected} == DiceRoller.tokenize("1d4")
     end
 
     test "operator" do
@@ -24,7 +24,7 @@ defmodule DiceRollerTest do
         {:digit, 1, '2'}
       ]
 
-      assert {:ok, expected, 1} == DiceRoller.tokenize("1+2")
+      assert {:ok, expected} == DiceRoller.tokenize("1+2")
 
       expected = [
         {:digit, 1, '1'},
@@ -32,7 +32,7 @@ defmodule DiceRollerTest do
         {:digit, 1, '2'}
       ]
 
-      assert {:ok, expected, 1} == DiceRoller.tokenize("1-2")
+      assert {:ok, expected} == DiceRoller.tokenize("1-2")
 
       expected = [
         {:digit, 1, '1'},
@@ -40,7 +40,7 @@ defmodule DiceRollerTest do
         {:digit, 1, '2'}
       ]
 
-      assert {:ok, expected, 1} == DiceRoller.tokenize("1*2")
+      assert {:ok, expected} == DiceRoller.tokenize("1*2")
 
       expected = [
         {:digit, 1, '1'},
@@ -48,7 +48,7 @@ defmodule DiceRollerTest do
         {:digit, 1, '2'}
       ]
 
-      assert {:ok, expected, 1} == DiceRoller.tokenize("1/2")
+      assert {:ok, expected} == DiceRoller.tokenize("1/2")
     end
 
     test "subexpressions" do
@@ -60,7 +60,7 @@ defmodule DiceRollerTest do
         {:")", 1, ')'}
       ]
 
-      assert {:ok, expected, 1} == DiceRoller.tokenize("(78*5)")
+      assert {:ok, expected} == DiceRoller.tokenize("(78*5)")
     end
   end
 
