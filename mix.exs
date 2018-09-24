@@ -30,7 +30,8 @@ defmodule DiceRoller.MixProject do
       maintainers: ["Kevin McAbee"],
       licenses: ["MIT"],
       homepage_url: "https://github.com/rishenko/dice_roller",
-      source_url: "https://github.com/rishenko/dice_roller"
+      source_url: "https://github.com/rishenko/dice_roller",
+      links: %{"GitHub" => "https://github.com/rishenko/dice_roller"}
     ]
   end
 
