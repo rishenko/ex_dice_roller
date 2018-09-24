@@ -2,6 +2,12 @@ defmodule DiceRollerTest do
   use ExUnit.Case
   doctest DiceRoller
 
+  setup do
+    # This is called to make doctests predictable.
+    :rand.seed(:exsplus, {5, 7, 13})
+    :ok
+  end
+
   describe "tokenizing" do
     test "digit" do
       assert {:ok, [{:digit, 1, '2'}]} == DiceRoller.tokenize("2")
