@@ -1,4 +1,4 @@
-defmodule DiceRoller.Compiler do
+defmodule ExDiceRoller.Compiler do
   @moduledoc """
   Provides functionality for compiling expressions into ready-to-execute functions.
   """
@@ -6,8 +6,8 @@ defmodule DiceRoller.Compiler do
   @type intermediary_value :: compiled_function | integer | float
   @type compiled_function :: (() -> integer | float)
 
-  @doc "Compiles a provided `t:DiceRoller.expression/0` into an anonymous function."
-  @spec compile(DiceRoller.expression()) :: intermediary_value
+  @doc "Compiles a provided `t:ExDiceRoller.expression/0` into an anonymous function."
+  @spec compile(ExDiceRoller.expression()) :: intermediary_value
   def compile({:digit, intermediary_value}),
     do: intermediary_value |> to_string() |> String.to_integer()
 

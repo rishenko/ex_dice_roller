@@ -1,16 +1,16 @@
-defmodule DiceRoller.MixProject do
+defmodule ExDiceRoller.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :dice_roller,
+      app: :ex_dice_roller,
       version: "0.2.0-alpha",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       package: package(),
       description: description(),
-      name: "DiceRoller",
+      name: "ExDiceRoller",
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
@@ -29,9 +29,10 @@ defmodule DiceRoller.MixProject do
     [
       maintainers: ["Kevin McAbee"],
       licenses: ["MIT"],
-      homepage_url: "https://github.com/rishenko/dice_roller",
-      source_url: "https://github.com/rishenko/dice_roller",
-      links: %{"GitHub" => "https://github.com/rishenko/dice_roller"}
+      homepage_url: "https://github.com/rishenko/ex_dice_roller",
+      source_url: "https://github.com/rishenko/ex_dice_roller",
+      links: %{"GitHub" => "https://github.com/rishenko/ex_dice_roller"},
+      files: ~w(lib coveralls.json src/*.xrl src/*.yrl .formatter.exs mix.exs README.md LICENSE),
     ]
   end
 

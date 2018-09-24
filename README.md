@@ -1,4 +1,4 @@
-# DiceRoller
+# ExDiceRoller
 
 Provides functionality around calculating both simple and complex dice rolling equations.
 
@@ -13,12 +13,12 @@ Provides functionality around calculating both simple and complex dice rolling e
 
 ## Installation
 
-Add `:dice_roller` to your list of dependencies in `mix.exs`:
+Add `:ex_dice_roller` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:dice_roller, "~> 0.2.0"}
+    {:ex_dice_roller, "~> 0.2.0"}
   ]
 end
 ```
@@ -31,34 +31,34 @@ $ mix deps.get
 
 ## Usage
 
-DiceRoller supports a variety of possible dice roll permutations that can be used in your application.
+ExDiceRoller supports a variety of possible dice roll permutations that can be used in your application.
 
 ```elixir
-  iex> DiceRoller.roll("1")
+  iex> ExDiceRoller.roll("1")
   1
 
-  iex> DiceRoller.roll("1+2")
+  iex> ExDiceRoller.roll("1+2")
   3
 
-  iex> DiceRoller.roll("1d6")
+  iex> ExDiceRoller.roll("1d6")
   1
 
-  iex> DiceRoller.roll("1d20-5")
+  iex> ExDiceRoller.roll("1d20-5")
   12
 
-  iex> DiceRoller.roll("1d20-(5*6)")
+  iex> ExDiceRoller.roll("1d20-(5*6)")
   -28
 
-  iex> DiceRoller.roll("1d4d6")
+  iex> ExDiceRoller.roll("1d4d6")
   10
 
-  iex> DiceRoller.roll("(1d4+2)d8")
+  iex> ExDiceRoller.roll("(1d4+2)d8")
   28
 
-  iex> DiceRoller.roll("(1d4+2)d(1d20)")
+  iex> ExDiceRoller.roll("(1d4+2)d(1d20)")
   16
 
-  iex> DiceRoller.roll("(1d4+2)d((5*6)d20-5)")
+  iex> ExDiceRoller.roll("(1d4+2)d((5*6)d20-5)")
   677
 ```
 
@@ -69,27 +69,27 @@ Parsed expressions can be compiled into a single, executable anonymous
 function. This function can be reused again and again, with any dice rolls
 being randomized and calculated for each call.
 
-Note that while `DiceRoller.roll/1` always returns integers, `DiceRoller.execute/1` will
+Note that while `ExDiceRoller.roll/1` always returns integers, `ExDiceRoller.execute/1` will
 return either floats or integers.
 
 ```elixir
-  iex> {:ok, roll_fun} = DiceRoller.compile("1d6 - (3d6)d5 + (1d4)/5")
-  {:ok, #Function<6.11371143/0 in DiceRoller.Compiler.compile_op/5>}
+  iex> {:ok, roll_fun} = ExDiceRoller.compile("1d6 - (3d6)d5 + (1d4)/5")
+  {:ok, #Function<6.11371143/0 in ExDiceRoller.Compiler.compile_op/5>}
 
-  iex> DiceRoller.execute(roll_fun)
+  iex> ExDiceRoller.execute(roll_fun)
   21.6
 
-  iex> DiceRoller.execute(roll_fun)
+  iex> ExDiceRoller.execute(roll_fun)
   34.4
 
-  iex> DiceRoller.execute(roll_fun)
+  iex> ExDiceRoller.execute(roll_fun)
   37.8
 ```
 
 
 ## How It Works
 
-1. DiceRoller utilizes Erlang's [leex](http://erlang.org/doc/man/leex.html) library to tokenize a given dice roll string.
+1. ExDiceRoller utilizes Erlang's [leex](http://erlang.org/doc/man/leex.html) library to tokenize a given dice roll string.
 2. The tokens are then passed to [yecc](http://erlang.org/doc/man/yecc.html) which parses the tokens into an abstract 
 syntax tree.
 3. The syntax tree is then interpreted through recursive navigation.
@@ -106,7 +106,7 @@ function.
   iex(3)> expr = "(1d4+2)d((5*6)d20-5)"
   "(1d4+2)d((5*6)d20-5)"
 
-  iex(4)> {:ok, tokens} = DiceRoller.tokenize(expr)
+  iex(4)> {:ok, tokens} = ExDiceRoller.tokenize(expr)
   {:ok,
   [
     {:"(", 1, '('},
@@ -130,7 +130,7 @@ function.
     {:")", 1, ')'}
   ]}
 
-  iex(5)> {:ok, ast} = DiceRoller.parse(tokens)
+  iex(5)> {:ok, ast} = ExDiceRoller.parse(tokens)
   {:ok,
   {:roll,
     {{:operator, '+'},
@@ -142,8 +142,8 @@ function.
         {:digit, '20'}},
       {:digit, '5'}}}}
 
-  iex(6)> {:ok, roll_fun} = DiceRoller.compile(ast)
-  {:ok, #Function<12.11371143/0 in DiceRoller.Compiler.compile_roll/4>}
+  iex(6)> {:ok, roll_fun} = ExDiceRoller.compile(ast)
+  {:ok, #Function<12.11371143/0 in ExDiceRoller.Compiler.compile_roll/4>}
 
   iex(7)> roll_fun.()
   739

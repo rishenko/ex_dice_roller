@@ -1,36 +1,36 @@
-defmodule DiceRoller do
+defmodule ExDiceRoller do
   @moduledoc """
   Converts strings into dice rolls and returns expected results. Ignores any
   spaces, including tabs and newlines, in the provided string.
 
   ## Examples
 
-      iex> DiceRoller.roll("1")
+      iex> ExDiceRoller.roll("1")
       1
 
-      iex> DiceRoller.roll("1d8")
+      iex> ExDiceRoller.roll("1d8")
       1
 
-      iex> DiceRoller.roll("2d20 + 5")
+      iex> ExDiceRoller.roll("2d20 + 5")
       34
 
-      iex> DiceRoller.roll("2d8 + -5")
+      iex> ExDiceRoller.roll("2d8 + -5")
       0
 
-      iex> DiceRoller.roll("(1d4)d(6*5) - (2/3+1)")
+      iex> ExDiceRoller.roll("(1d4)d(6*5) - (2/3+1)")
       18
 
-      iex> DiceRoller.roll("1+2-3*4+5/6*7+8-9")
+      iex> ExDiceRoller.roll("1+2-3*4+5/6*7+8-9")
       -4
 
-      iex> DiceRoller.roll("1+\t2*3d 4")
+      iex> ExDiceRoller.roll("1+\t2*3d 4")
       15
 
 
   ## Order of Precedence
 
   The following table shows order of precendence, from highest to lowest,
-  of the operators available to DiceRoller.
+  of the operators available to ExDiceRoller.
 
 
   Operator              | Associativity
@@ -44,28 +44,28 @@ defmodule DiceRoller do
 
   As in math, parentheses can be used to create sub-expressions.
 
-      iex> DiceRoller.tokenize("1+3d4*1-2/-3") |> elem(1) |> DiceRoller.parse()
+      iex> ExDiceRoller.tokenize("1+3d4*1-2/-3") |> elem(1) |> ExDiceRoller.parse()
       {:ok,
       {{:operator, '-'},
         {{:operator, '+'}, {:digit, '1'},
         {{:operator, '*'}, {:roll, {:digit, '3'}, {:digit, '4'}}, {:digit, '1'}}},
         {{:operator, '/'}, {:digit, '2'}, {:digit, '-3'}}}}
 
-      iex> DiceRoller.tokenize("(1+3)d4*1-2/-3") |> elem(1) |> DiceRoller.parse()
+      iex> ExDiceRoller.tokenize("(1+3)d4*1-2/-3") |> elem(1) |> ExDiceRoller.parse()
       {:ok,
       {{:operator, '-'},
         {{:operator, '*'},
         {:roll, {{:operator, '+'}, {:digit, '1'}, {:digit, '3'}}, {:digit, '4'}},
         {:digit, '1'}}, {{:operator, '/'}, {:digit, '2'}, {:digit, '-3'}}}}
 
-      iex> DiceRoller.tokenize("1+3d(4*1)-2/-3") |> elem(1) |> DiceRoller.parse()
+      iex> ExDiceRoller.tokenize("1+3d(4*1)-2/-3") |> elem(1) |> ExDiceRoller.parse()
       {:ok,
       {{:operator, '-'},
         {{:operator, '+'}, {:digit, '1'},
         {:roll, {:digit, '3'}, {{:operator, '*'}, {:digit, '4'}, {:digit, '1'}}}},
         {{:operator, '/'}, {:digit, '2'}, {:digit, '-3'}}}}
 
-      iex> DiceRoller.tokenize("1+3d4*(1-2)/-3") |> elem(1) |> DiceRoller.parse()
+      iex> ExDiceRoller.tokenize("1+3d4*(1-2)/-3") |> elem(1) |> ExDiceRoller.parse()
       {:ok,
       {{:operator, '+'}, {:digit, '1'},
         {{:operator, '/'},
@@ -82,18 +82,18 @@ defmodule DiceRoller do
   function can be cached and reused repeatedly without having to re-parse the
   string, nor re-interpret the parsed expression.
 
-      iex> {:ok, roll_fun} = DiceRoller.compile("2d6+3")
-      iex> DiceRoller.execute(roll_fun)
+      iex> {:ok, roll_fun} = ExDiceRoller.compile("2d6+3")
+      iex> ExDiceRoller.execute(roll_fun)
       8
-      iex> DiceRoller.execute(roll_fun)
+      iex> ExDiceRoller.execute(roll_fun)
       13
-      iex> DiceRoller.execute(roll_fun)
+      iex> ExDiceRoller.execute(roll_fun)
       10
-      iex> DiceRoller.execute(roll_fun)
+      iex> ExDiceRoller.execute(roll_fun)
       11
   """
 
-  alias DiceRoller.Compiler
+  alias ExDiceRoller.Compiler
 
   @type tokens :: [token, ...]
   @type token :: {token_type, integer, list}
@@ -108,7 +108,7 @@ defmodule DiceRoller do
   Processes a given string as a dice roll and returns the final result. Note
   that the final result is a rounded integer.
 
-      iex> DiceRoller.roll("1d6+15")
+      iex> ExDiceRoller.roll("1d6+15")
       18
   """
   @spec roll(String.t()) :: integer
@@ -128,7 +128,7 @@ defmodule DiceRoller do
   file is located at `src/dice_lexer.xrl`. See `t:token_type/0`, `t:token/0`,
   and `t:tokens/0` for the possible return values.
 
-      iex> DiceRoller.tokenize("2d8+3")
+      iex> ExDiceRoller.tokenize("2d8+3")
       {:ok,
       [
         {:digit, 1, '2'},
@@ -155,7 +155,7 @@ defmodule DiceRoller do
   dice rolling functions to calculate rolls. The BNF grammar definition
   file is located at `src/dice_parser.yrl`.
 
-      iex> {:ok, tokens} = DiceRoller.tokenize("2d8 + (1+2)")
+      iex> {:ok, tokens} = ExDiceRoller.tokenize("2d8 + (1+2)")
       {:ok,
       [
         {:digit, 1, '2'},
@@ -168,7 +168,7 @@ defmodule DiceRoller do
         {:digit, 1, '2'},
         {:")", 1, ')'}
       ]}
-      iex> {:ok, _} = DiceRoller.parse(tokens)
+      iex> {:ok, _} = ExDiceRoller.parse(tokens)
       {:ok,
       {{:operator, '+'}, {:roll, {:digit, '2'}, {:digit, '8'}},
         {{:operator, '+'}, {:digit, '1'}, {:digit, '2'}}}}
@@ -196,8 +196,8 @@ defmodule DiceRoller do
   @doc """
   Compiles a string or `t:expression/0` into an anonymous function.
 
-      iex> {:ok, roll_fun} = DiceRoller.compile("1d8+2d(5d3+4)/3")
-      iex> DiceRoller.execute(roll_fun)
+      iex> {:ok, roll_fun} = ExDiceRoller.compile("1d8+2d(5d3+4)/3")
+      iex> ExDiceRoller.execute(roll_fun)
       5.0
   """
   @spec compile(String.t() | expression) :: {:ok, Compiler.compiled_function()} | {:error, any}

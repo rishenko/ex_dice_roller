@@ -1,4 +1,4 @@
-defmodule DiceRollerTest do
+defmodule ExDiceRollerTest do
   @moduledoc """
   Tests around tokenizing, parsing, and rolling.
 
@@ -7,7 +7,7 @@ defmodule DiceRollerTest do
   """
 
   use ExUnit.Case
-  doctest DiceRoller
+  doctest ExDiceRoller
 
   setup do
     # This is called to make doctests predictable.
@@ -17,7 +17,7 @@ defmodule DiceRollerTest do
 
   describe "tokenizing" do
     test "digit" do
-      assert {:ok, [{:digit, 1, '2'}]} == DiceRoller.tokenize("2")
+      assert {:ok, [{:digit, 1, '2'}]} == ExDiceRoller.tokenize("2")
     end
 
     test "roll" do
@@ -27,7 +27,7 @@ defmodule DiceRollerTest do
         {:digit, 1, '4'}
       ]
 
-      assert {:ok, expected} == DiceRoller.tokenize("1d4")
+      assert {:ok, expected} == ExDiceRoller.tokenize("1d4")
     end
 
     test "operator" do
@@ -37,7 +37,7 @@ defmodule DiceRollerTest do
         {:digit, 1, '2'}
       ]
 
-      assert {:ok, expected} == DiceRoller.tokenize("1+2")
+      assert {:ok, expected} == ExDiceRoller.tokenize("1+2")
 
       expected = [
         {:digit, 1, '1'},
@@ -45,7 +45,7 @@ defmodule DiceRollerTest do
         {:digit, 1, '2'}
       ]
 
-      assert {:ok, expected} == DiceRoller.tokenize("1-2")
+      assert {:ok, expected} == ExDiceRoller.tokenize("1-2")
 
       expected = [
         {:digit, 1, '1'},
@@ -53,7 +53,7 @@ defmodule DiceRollerTest do
         {:digit, 1, '2'}
       ]
 
-      assert {:ok, expected} == DiceRoller.tokenize("1*2")
+      assert {:ok, expected} == ExDiceRoller.tokenize("1*2")
 
       expected = [
         {:digit, 1, '1'},
@@ -61,7 +61,7 @@ defmodule DiceRollerTest do
         {:digit, 1, '2'}
       ]
 
-      assert {:ok, expected} == DiceRoller.tokenize("1/2")
+      assert {:ok, expected} == ExDiceRoller.tokenize("1/2")
     end
 
     test "subexpressions" do
@@ -73,19 +73,19 @@ defmodule DiceRollerTest do
         {:")", 1, ')'}
       ]
 
-      assert {:ok, expected} == DiceRoller.tokenize("(78*5)")
+      assert {:ok, expected} == ExDiceRoller.tokenize("(78*5)")
     end
 
     test "errors" do
-      assert {:error, {:tokenizing_failed, {:illegal, 'g'}}} = DiceRoller.tokenize("g")
-      assert {:error, {:tokenizing_failed, {:illegal, 'x'}}} = DiceRoller.tokenize("1d4+x")
-      assert {:error, {:tokenizing_failed, {:illegal, '$'}}} = DiceRoller.tokenize("1-3+$")
+      assert {:error, {:tokenizing_failed, {:illegal, 'g'}}} = ExDiceRoller.tokenize("g")
+      assert {:error, {:tokenizing_failed, {:illegal, 'x'}}} = ExDiceRoller.tokenize("1d4+x")
+      assert {:error, {:tokenizing_failed, {:illegal, '$'}}} = ExDiceRoller.tokenize("1-3+$")
     end
   end
 
   describe "parsing" do
     test "digit" do
-      assert {:ok, {:digit, '1'}} == DiceRoller.parse([{:digit, 1, '1'}])
+      assert {:ok, {:digit, '1'}} == ExDiceRoller.parse([{:digit, 1, '1'}])
     end
 
     test "roll" do
@@ -96,7 +96,7 @@ defmodule DiceRollerTest do
       ]
 
       expected = {:roll, {:digit, '1'}, {:digit, '4'}}
-      assert {:ok, expected} == DiceRoller.parse(tokens)
+      assert {:ok, expected} == ExDiceRoller.parse(tokens)
     end
 
     test "operator" do
@@ -107,7 +107,7 @@ defmodule DiceRollerTest do
       ]
 
       expected = {{:operator, '+'}, {:digit, '1'}, {:digit, '2'}}
-      assert {:ok, expected} == DiceRoller.parse(tokens)
+      assert {:ok, expected} == ExDiceRoller.parse(tokens)
     end
 
     test "subexpressions" do
@@ -125,21 +125,21 @@ defmodule DiceRollerTest do
         {:digit, '5'}
       }
 
-      assert {:ok, expected} == DiceRoller.parse(tokens)
+      assert {:ok, expected} == ExDiceRoller.parse(tokens)
     end
 
     test "parses token with bad value" do
-      assert {:ok, {:digit, 'a'}} = DiceRoller.parse([{:digit, 1, 'a'}])
+      assert {:ok, {:digit, 'a'}} = ExDiceRoller.parse([{:digit, 1, 'a'}])
     end
 
     test "parsing error" do
       assert {:error, {:token_parsing_failed, _}} =
-               DiceRoller.parse([{{:basic_operator, 1, '%'}, {:digit, 1, '1'}, {:digit, 1, '3'}}])
+               ExDiceRoller.parse([{{:basic_operator, 1, '%'}, {:digit, 1, '1'}, {:digit, 1, '3'}}])
     end
 
     test "raised errors" do
-      assert_raise(ArgumentError, fn -> DiceRoller.parse('x') end)
-      assert_raise(FunctionClauseError, fn -> DiceRoller.parse({:basic_operator, 1, '&'}) end)
+      assert_raise(ArgumentError, fn -> ExDiceRoller.parse('x') end)
+      assert_raise(FunctionClauseError, fn -> ExDiceRoller.parse({:basic_operator, 1, '&'}) end)
     end
   end
 
@@ -165,11 +165,11 @@ defmodule DiceRollerTest do
         {{:operator, '/'}, {:digit, '4'}, {:digit, '6'}}
       }
 
-      assert {:ok, expected} == DiceRoller.parse(tokens)
+      assert {:ok, expected} == ExDiceRoller.parse(tokens)
     end
 
     test "kitchen sink" do
-      {:ok, tokens} = DiceRoller.tokenize("((1+4*5)d(9*7+4/3))+(10/1d4-7)")
+      {:ok, tokens} = ExDiceRoller.tokenize("((1+4*5)d(9*7+4/3))+(10/1d4-7)")
 
       expected =
         {{:operator, '+'},
@@ -181,50 +181,50 @@ defmodule DiceRollerTest do
           {{:operator, '/'}, {:digit, '10'}, {:roll, {:digit, '1'}, {:digit, '4'}}},
           {:digit, '7'}}}
 
-      assert {:ok, expected} == DiceRoller.parse(tokens)
+      assert {:ok, expected} == ExDiceRoller.parse(tokens)
     end
   end
 
   describe "rolls" do
     test "basic" do
-      1 = DiceRoller.roll("1")
-      2 = DiceRoller.roll("1+1")
-      1 = DiceRoller.roll("1d4")
-      8 = DiceRoller.roll("2d6")
-      6 = DiceRoller.roll("1d12+2")
+      1 = ExDiceRoller.roll("1")
+      2 = ExDiceRoller.roll("1+1")
+      1 = ExDiceRoller.roll("1d4")
+      8 = ExDiceRoller.roll("2d6")
+      6 = ExDiceRoller.roll("1d12+2")
     end
 
     test "unary" do
-      -1 = DiceRoller.roll("-1")
-      3 = DiceRoller.roll("-1*-3")
-      -3 = DiceRoller.roll("-1*+3")
-      4 = DiceRoller.roll("1--3")
-      4 = DiceRoller.roll("1-(-3)")
-      -2 = DiceRoller.roll("-3/2")
+      -1 = ExDiceRoller.roll("-1")
+      3 = ExDiceRoller.roll("-1*-3")
+      -3 = ExDiceRoller.roll("-1*+3")
+      4 = ExDiceRoller.roll("1--3")
+      4 = ExDiceRoller.roll("1-(-3)")
+      -2 = ExDiceRoller.roll("-3/2")
     end
 
     test "complex" do
-      25 = DiceRoller.roll("(1/3*6)d(6d4+3-4) + (4*3d5-18)")
-      16_298 = DiceRoller.roll("2d5d6d7d8d9d10")
-      -24 = DiceRoller.roll("1d7d(9/8)+(5-6d8)")
-      1 = DiceRoller.roll("1d8+(-3/2)")
-      3 = DiceRoller.roll("-3/2+2d4")
+      25 = ExDiceRoller.roll("(1/3*6)d(6d4+3-4) + (4*3d5-18)")
+      16_298 = ExDiceRoller.roll("2d5d6d7d8d9d10")
+      -24 = ExDiceRoller.roll("1d7d(9/8)+(5-6d8)")
+      1 = ExDiceRoller.roll("1d8+(-3/2)")
+      3 = ExDiceRoller.roll("-3/2+2d4")
     end
 
     test "variations of expressions" do
-      4 = DiceRoller.roll("(1d4)d(2d8)")
-      13 = DiceRoller.roll("1d4 + 2d8")
-      9 = DiceRoller.roll("1d4 - 2d8")
-      14 = DiceRoller.roll("1d4 * 2d8")
-      14 = DiceRoller.roll("1d4 / 2d8")
-      2 = DiceRoller.roll("1d4 + 1")
-      -3 = DiceRoller.roll("1d4 - 4")
-      6 = DiceRoller.roll("1d4 * 2")
-      1 = DiceRoller.roll("1d4 / 3")
+      4 = ExDiceRoller.roll("(1d4)d(2d8)")
+      13 = ExDiceRoller.roll("1d4 + 2d8")
+      9 = ExDiceRoller.roll("1d4 - 2d8")
+      14 = ExDiceRoller.roll("1d4 * 2d8")
+      14 = ExDiceRoller.roll("1d4 / 2d8")
+      2 = ExDiceRoller.roll("1d4 + 1")
+      -3 = ExDiceRoller.roll("1d4 - 4")
+      6 = ExDiceRoller.roll("1d4 * 2")
+      1 = ExDiceRoller.roll("1d4 / 3")
     end
 
     test "with spaces" do
-      5 = DiceRoller.roll("1 d 4 - 2+ (50+1 ) / 2d5")
+      5 = ExDiceRoller.roll("1 d 4 - 2+ (50+1 ) / 2d5")
     end
 
     test "with newlines" do
@@ -235,26 +235,26 @@ defmodule DiceRollerTest do
         *8
       """
 
-      10 = DiceRoller.roll(expr)
+      10 = ExDiceRoller.roll(expr)
     end
 
     test "that error on a negative number of dice" do
-      assert_raise(ArgumentError, fn -> DiceRoller.roll("-1d4") end)
+      assert_raise(ArgumentError, fn -> ExDiceRoller.roll("-1d4") end)
     end
 
     test "returns tokenizing error" do
-      assert {:error, _} = DiceRoller.roll("1dx")
+      assert {:error, _} = ExDiceRoller.roll("1dx")
     end
   end
 
   describe "compiling" do
     test "a basic expression" do
-      {:ok, compiled} = DiceRoller.compile("1d4+1")
-      2 = DiceRoller.execute(compiled)
+      {:ok, compiled} = ExDiceRoller.compile("1d4+1")
+      2 = ExDiceRoller.execute(compiled)
     end
 
     test "error" do
-      assert {:error, _} = DiceRoller.compile("1d6+x")
+      assert {:error, _} = ExDiceRoller.compile("1d6+x")
     end
   end
 end
