@@ -1,6 +1,7 @@
 # ExDiceRoller
 
 [![Build Status](https://travis-ci.org/rishenko/ex_dice_roller.svg?branch=master)](https://travis-ci.org/rishenko/ex_dice_roller)
+[![Coverage Status](https://coveralls.io/repos/github/rishenko/ex_dice_roller/badge.svg?branch=master)](https://coveralls.io/github/rishenko/ex_dice_roller?branch=master)
 [![Hex.pm Version](https://img.shields.io/hexpm/v/ex_dice_roller.svg?style=flat)](https://hex.pm/packages/ex_dice_roller)
 
 Provides functionality around calculating both simple and complex dice rolling equations.
