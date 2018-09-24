@@ -158,8 +158,3 @@ function.
 * [ex_coveralls](https://github.com/parroty/excoveralls) provides test coverage metrics.
 * [credo](https://github.com/rrrene/credo) is used for static code analysis.
 
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/dice_roller](https://hexdocs.pm/dice_roller).
-
