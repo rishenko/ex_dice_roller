@@ -7,6 +7,7 @@ Roll            = d
 Space           = [\s\t\n\r]+
 LeftParen       = \(
 RightParen      = \)
+Variable        = [a-zA-Z]
 
 Rules.
 
@@ -17,5 +18,6 @@ Rules.
 {LeftParen}         : {token, {'(', TokenLine, TokenChars}}.
 {RightParen}        : {token, {')', TokenLine, TokenChars}}.
 {Number}            : {token, {digit, TokenLine, TokenChars}}.
+{Variable}          : {token, {var, TokenLine, TokenChars}}.
 
 Erlang code.

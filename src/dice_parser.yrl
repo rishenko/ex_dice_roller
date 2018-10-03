@@ -4,6 +4,7 @@ unary_operator
 .
 
 Terminals
+var
 digit
 basic_operator
 complex_operator
@@ -26,6 +27,7 @@ expr -> expr basic_operator expr    : {op('$2'), '$1', '$3'}.
 expr -> '(' expr ')'          : '$2'.
 expr -> digit                 : val('$1').
 expr -> unary_operator        : '$1'.
+expr -> var                   : val('$1').
 
 unary_operator -> basic_operator digit : {digit, last('$1') ++ last('$2')}.
 

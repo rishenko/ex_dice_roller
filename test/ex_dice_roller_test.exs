@@ -76,9 +76,20 @@ defmodule ExDiceRollerTest do
       assert {:ok, expected} == ExDiceRoller.tokenize("(78*5)")
     end
 
+    test "variables" do
+      assert {:ok, [{:var, 1, 'x'}]} = ExDiceRoller.tokenize("x")
+
+      assert {:ok,
+              [
+                {:digit, 1, '1'},
+                {:roll, 1, 'd'},
+                {:digit, 1, '4'},
+                {:basic_operator, 1, '+'},
+                {:var, 1, 'x'}
+              ]} = ExDiceRoller.tokenize("1d4+x")
+    end
+
     test "errors" do
-      assert {:error, {:tokenizing_failed, {:illegal, 'g'}}} = ExDiceRoller.tokenize("g")
-      assert {:error, {:tokenizing_failed, {:illegal, 'x'}}} = ExDiceRoller.tokenize("1d4+x")
       assert {:error, {:tokenizing_failed, {:illegal, '$'}}} = ExDiceRoller.tokenize("1-3+$")
     end
   end
@@ -110,6 +121,19 @@ defmodule ExDiceRollerTest do
       assert {:ok, expected} == ExDiceRoller.parse(tokens)
     end
 
+    test "variable" do
+      tokens = [
+        {:digit, 1, '1'},
+        {:roll, 1, 'd'},
+        {:digit, 1, '4'},
+        {:basic_operator, 1, '+'},
+        {:var, 1, 'x'}
+      ]
+
+      expected = {{:operator, '+'}, {:roll, {:digit, '1'}, {:digit, '4'}}, {:var, 'x'}}
+      assert {:ok, expected} == ExDiceRoller.parse(tokens)
+    end
+
     test "subexpressions" do
       tokens = [
         {:"(", 1, '('},
@@ -134,7 +158,9 @@ defmodule ExDiceRollerTest do
 
     test "parsing error" do
       assert {:error, {:token_parsing_failed, _}} =
-               ExDiceRoller.parse([{{:basic_operator, 1, '%'}, {:digit, 1, '1'}, {:digit, 1, '3'}}])
+               ExDiceRoller.parse([
+                 {{:basic_operator, 1, '%'}, {:digit, 1, '1'}, {:digit, 1, '3'}}
+               ])
     end
 
     test "raised errors" do
@@ -203,6 +229,14 @@ defmodule ExDiceRollerTest do
       -2 = ExDiceRoller.roll("-3/2")
     end
 
+    test "variables" do
+      4 = ExDiceRoller.roll("1d8+x", x: 3)
+      2 = ExDiceRoller.roll("1dy", y: 6)
+      8 = ExDiceRoller.roll("1+y", y: 7)
+      10 = ExDiceRoller.roll("1+z", z: "1d6+3")
+      5 = ExDiceRoller.roll("1+x", x: "1+3")
+    end
+
     test "complex" do
       25 = ExDiceRoller.roll("(1/3*6)d(6d4+3-4) + (4*3d5-18)")
       16_298 = ExDiceRoller.roll("2d5d6d7d8d9d10")
@@ -221,6 +255,9 @@ defmodule ExDiceRollerTest do
       -3 = ExDiceRoller.roll("1d4 - 4")
       6 = ExDiceRoller.roll("1d4 * 2")
       1 = ExDiceRoller.roll("1d4 / 3")
+    end
+
+    test "variable passed another roll" do
     end
 
     test "with spaces" do
@@ -242,8 +279,22 @@ defmodule ExDiceRollerTest do
       assert_raise(ArgumentError, fn -> ExDiceRoller.roll("-1d4") end)
     end
 
-    test "returns tokenizing error" do
-      assert {:error, _} = ExDiceRoller.roll("1dx")
+    test "that error on values" do
+      assert_raise(ArgumentError, ~s/no variable 'z' was found in the arguments/, fn ->
+        ExDiceRoller.roll("1dz")
+      end)
+
+      assert_raise(ArgumentError, ~s/no variable 'z' was found in the arguments/, fn ->
+        ExDiceRoller.roll("1dz", z: nil)
+      end)
+    end
+
+    test "that error during tokenizing" do
+      assert {:error, {:tokenizing_failed, _}} = ExDiceRoller.roll("1d6+$")
+    end
+
+    test "that error during parsing" do
+      assert {:error, {:token_parsing_failed, _}} = ExDiceRoller.roll("1d6++")
     end
   end
 
@@ -254,7 +305,7 @@ defmodule ExDiceRollerTest do
     end
 
     test "error" do
-      assert {:error, _} = ExDiceRoller.compile("1d6+x")
+      assert {:error, _} = ExDiceRoller.compile("1d6+$")
     end
   end
 end

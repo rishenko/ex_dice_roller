@@ -93,16 +93,7 @@ defmodule ExDiceRoller do
       11
   """
 
-  alias ExDiceRoller.Compiler
-
-  @type tokens :: [token, ...]
-  @type token :: {token_type, integer, list}
-  @type token_type :: :digit | :basic_operator | :complex_operator | :roll | :"(" | :")"
-
-  @type expression ::
-          {:digit, list}
-          | {{:operator, list}, expression, expression}
-          | {:roll, expression, expression}
+  alias ExDiceRoller.{Compiler, Parser, Tokenizer}
 
   @doc """
   Processes a given string as a dice roll and returns the final result. Note
@@ -111,86 +102,35 @@ defmodule ExDiceRoller do
       iex> ExDiceRoller.roll("1d6+15")
       18
   """
-  @spec roll(String.t()) :: integer
-  def roll(roll_string) do
-    with {:ok, tokens} <- tokenize(roll_string),
-         {:ok, parsed_tokens} <- parse(tokens) do
+  @spec roll(String.t(), Keyword.t()) :: integer
+  def roll(roll_string, args \\ []) do
+    with {:ok, tokens} <- Tokenizer.tokenize(roll_string),
+         {:ok, parsed_tokens} <- Parser.parse(tokens) do
       parsed_tokens
-      |> calculate()
+      |> calculate(args)
       |> round()
     else
       {:error, _} = err -> err
     end
   end
 
-  @doc """
-  Converts a roll-based string into tokens using leex. The input definition
-  file is located at `src/dice_lexer.xrl`. See `t:token_type/0`, `t:token/0`,
-  and `t:tokens/0` for the possible return values.
+  @doc "Helper function that calls `ExDiceRoller.Tokenizer.tokenize/1`."
+  @spec tokenize(String.t()) :: {:ok, Tokenizer.tokens()}
+  def tokenize(roll_string), do: Tokenizer.tokenize(roll_string)
 
-      iex> ExDiceRoller.tokenize("2d8+3")
-      {:ok,
-      [
-        {:digit, 1, '2'},
-        {:roll, 1, 'd'},
-        {:digit, 1, '8'},
-        {:basic_operator, 1, '+'},
-        {:digit, 1, '3'}
-      ]}
-  """
-  @spec tokenize(String.t()) :: {:ok, tokens}
-  def tokenize(roll_string) do
-    with charlist <- String.to_charlist(roll_string),
-         {:ok, tokens, _} <- :dice_lexer.string(charlist) do
-      {:ok, tokens}
-    else
-      {:error, {1, :dice_lexer, reason}, 1} ->
-        {:error, {:tokenizing_failed, reason}}
-    end
-  end
-
-  @doc """
-  Converts a series of tokens provided by `tokenize/1` and parses them into
-  an expression structure. This expression structure is what's used by the
-  dice rolling functions to calculate rolls. The BNF grammar definition
-  file is located at `src/dice_parser.yrl`.
-
-      iex> {:ok, tokens} = ExDiceRoller.tokenize("2d8 + (1+2)")
-      {:ok,
-      [
-        {:digit, 1, '2'},
-        {:roll, 1, 'd'},
-        {:digit, 1, '8'},
-        {:basic_operator, 1, '+'},
-        {:"(", 1, '('},
-        {:digit, 1, '1'},
-        {:basic_operator, 1, '+'},
-        {:digit, 1, '2'},
-        {:")", 1, ')'}
-      ]}
-      iex> {:ok, _} = ExDiceRoller.parse(tokens)
-      {:ok,
-      {{:operator, '+'}, {:roll, {:digit, '2'}, {:digit, '8'}},
-        {{:operator, '+'}, {:digit, '1'}, {:digit, '2'}}}}
-
-  """
-  @spec parse(tokens) :: {:ok, expression}
-  def parse(tokens) do
-    case :dice_parser.parse(tokens) do
-      {:ok, _} = resp -> resp
-      {:error, {_, :dice_parser, reason}} -> {:error, {:token_parsing_failed, reason}}
-    end
-  end
+  @doc "Helper function that calls `ExDiceRoller.Tokenizer.tokenize/1`."
+  @spec parse(Tokenizer.tokens()) :: {:ok, Parser.expression()}
+  def parse(tokens), do: Parser.parse(tokens)
 
   @doc """
   Takes a given expression from parse and calculates the result.
   """
-  @spec calculate(expression) :: integer | float
-  def calculate(expression) do
+  @spec calculate(Parser.expression(), Keyword.t()) :: number
+  def calculate(expression, args \\ []) do
     expression
     |> compile()
     |> elem(1)
-    |> execute()
+    |> execute(args)
   end
 
   @doc """
@@ -200,10 +140,11 @@ defmodule ExDiceRoller do
       iex> ExDiceRoller.execute(roll_fun)
       5.0
   """
-  @spec compile(String.t() | expression) :: {:ok, Compiler.compiled_function()} | {:error, any}
+  @spec compile(String.t() | Parser.expression()) ::
+          {:ok, Compiler.compiled_function()} | {:error, any}
   def compile(roll_string) when is_bitstring(roll_string) do
-    with {:ok, tokens} <- tokenize(roll_string),
-         {:ok, parsed_tokens} <- parse(tokens) do
+    with {:ok, tokens} <- Tokenizer.tokenize(roll_string),
+         {:ok, parsed_tokens} <- Parser.parse(tokens) do
       compile(parsed_tokens)
     else
       {:error, _} = err -> err
@@ -214,14 +155,14 @@ defmodule ExDiceRoller do
     compiled = Compiler.compile(expression)
 
     case is_function(compiled) do
-      false -> {:ok, fn -> compiled end}
+      false -> {:ok, fn _args -> compiled end}
       true -> {:ok, compiled}
     end
   end
 
   @doc "Executes a function built by `compile/1`."
-  @spec execute(function) :: integer | float
-  def execute(compiled) when is_function(compiled) do
-    compiled.()
+  @spec execute(function, Keyword.t()) :: number
+  def execute(compiled, args \\ []) when is_function(compiled) do
+    compiled.(args)
   end
 end
