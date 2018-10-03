@@ -31,6 +31,22 @@ defmodule ExDiceRoller.Compiler do
     fn args -> var_final(var, args) end
   end
 
+  @doc "Shows the nested functions and relationships for a compiled function."
+  @spec fun_info(compiled_function) :: Keyword.t
+  def fun_info(fun) when is_function(fun) do
+    info = :erlang.fun_info(fun)
+
+    {fun,
+     info
+     |> Keyword.get(:env)
+     |> Enum.map(fn child ->
+       fun_info(child)
+     end)}
+  end
+
+  def fun_info(num) when is_number(num), do: num
+  def fun_info(str) when is_list(str), do: str
+
   @spec compile_roll(intermediary_value, boolean, intermediary_value, boolean) ::
           compiled_function
   defp compile_roll(num, true, sides, true),

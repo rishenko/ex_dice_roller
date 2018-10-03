@@ -10,7 +10,7 @@ defmodule ExDiceRoller.Tokenizer do
   file is located at `src/dice_lexer.xrl`. See `t:token_type/0`, `t:token/0`,
   and `t:tokens/0` for the possible return values.
 
-      iex> ExDiceRoller.tokenize("2d8+3")
+      iex> ExDiceRoller.Tokenizer.tokenize("2d8+3")
       {:ok,
       [
         {:digit, 1, '2'},
