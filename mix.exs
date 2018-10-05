@@ -32,7 +32,7 @@ defmodule ExDiceRoller.MixProject do
       homepage_url: "https://github.com/rishenko/ex_dice_roller",
       source_url: "https://github.com/rishenko/ex_dice_roller",
       links: %{"GitHub" => "https://github.com/rishenko/ex_dice_roller"},
-      files: ~w(lib coveralls.json src/*.xrl src/*.yrl .formatter.exs mix.exs README.md LICENSE),
+      files: ~w(lib coveralls.json src/*.xrl src/*.yrl .formatter.exs mix.exs README.md LICENSE)
     ]
   end
 

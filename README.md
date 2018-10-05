@@ -12,6 +12,7 @@ Provides functionality around calculating both simple and complex dice rolling e
 * Supports `+` and `-` unary operators.
 * Supports creating common expressions and parenthetically grouped expressions into complex dice-roll equations.
 * Supports creating uncommon dice rolls, such as `(1d4)d(3d6)-(1d4+7)`.
+* Supports using variables in expressions that can be given values upon use, such as `1dx+y`.
 * Allows developers to tokenize, parse, and then compile dice roll strings into reusable anonymous functions.
 
 
@@ -64,6 +65,9 @@ ExDiceRoller supports a variety of possible dice roll permutations that can be u
 
   iex> ExDiceRoller.roll("(1d4+2)d((5*6)d20-5)")
   677
+
+  iex> ExDiceRoller.roll("1dx+y", x: 20, y: 13)
+  16
 ```
 
 
@@ -86,8 +90,14 @@ return either floats or integers.
   iex> ExDiceRoller.execute(roll_fun)
   34.4
 
-  iex> ExDiceRoller.execute(roll_fun)
-  37.8
+  iex> {:ok, roll_fun} = ExDiceRoller.compile("1dx+10")
+  {:ok, #Function<8.36233920/1 in ExDiceRoller.Compiler.compile_op/5>}
+
+  iex> ExDiceRoller.execute(roll_fun, x: 5)
+  11
+
+  iex> ExDiceRoller.execute(roll_fun, x: "10d100")
+  523
 ```
 
 
@@ -154,6 +164,26 @@ function.
 
   iex(8)> roll_fun.()
   905
+
+  iex(9)> ExDiceRoller.Compiler.fun_info(roll_fun)
+  {#Function<9.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
+  :"-compile_roll/4-fun-0-",
+  [
+    {#Function<1.16543174/1 in ExDiceRoller.Compiler.compile_add/4>,
+      :"-compile_add/4-fun-1-",
+      [
+        {#Function<12.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
+        :"-compile_roll/4-fun-3-", [1, 4]},
+        2
+      ]},
+    {#Function<14.16543174/1 in ExDiceRoller.Compiler.compile_sub/4>,
+      :"-compile_sub/4-fun-1-",
+      [
+        {#Function<12.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
+        :"-compile_roll/4-fun-3-", [30, 20]},
+        5
+      ]}
+  ]}
 ```
 
 
@@ -161,4 +191,3 @@ function.
 
 * [ex_coveralls](https://github.com/parroty/excoveralls) provides test coverage metrics.
 * [credo](https://github.com/rrrene/credo) is used for static code analysis.
-
