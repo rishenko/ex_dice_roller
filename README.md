@@ -23,7 +23,7 @@ Add `:ex_dice_roller` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:ex_dice_roller, "~> 0.2.0-alpha"}
+    {:ex_dice_roller, "~> 0.3.0-alpha"}
   ]
 end
 ```
