@@ -1,12 +1,13 @@
 defmodule ExDiceRoller.Compiler do
   @moduledoc """
-  Provides functionality for compiling expressions into ready-to-execute functions.
+  Provides functionality for compiling expressions into ready-to-execute
+  functions.
   """
 
   alias ExDiceRoller.{Parser, Tokenizer}
 
-  @type intermediary_value :: compiled_function | number
-  @type compiled_function :: (Keyword.t() -> number)
+  @type compiled_val :: compiled_fun | number
+  @type compiled_fun :: (Keyword.t() -> number)
   @type fun_info_tuple :: {function, atom, list(any)}
 
   @doc """
@@ -23,9 +24,9 @@ defmodule ExDiceRoller.Compiler do
     523
   ```
   """
-  @spec compile(Parser.expression()) :: intermediary_value
-  def compile({:digit, intermediary_value}),
-    do: intermediary_value |> to_string() |> String.to_integer()
+  @spec compile(Parser.expression()) :: compiled_val
+  def compile({:digit, compiled_val}),
+    do: compiled_val |> to_string() |> String.to_integer()
 
   def compile({:roll, left_expr, right_expr}) do
     num = compile(left_expr)
@@ -41,9 +42,7 @@ defmodule ExDiceRoller.Compiler do
     compile_op(op, left_expr, is_function(left_expr), right_expr, is_function(right_expr))
   end
 
-  def compile({:var, var}) do
-    fn args -> var_final(var, args) end
-  end
+  def compile({:var, _} = var), do: compile_var(var)
 
   @doc """
   Shows the nested functions and relationships of a compiled function.
@@ -51,28 +50,42 @@ defmodule ExDiceRoller.Compiler do
   ```elixir
 
     > {:ok, fun} = ExDiceRoller.compile("1d8+(1-x)d(2*y)")
-    {:ok, #Function<7.36233920/1 in ExDiceRoller.Compiler.compile_op/5>}
+    {:ok, #Function<0.84780260/1 in ExDiceRoller.Compiler.compile_add/4>}
 
-    > ExDiceRoller.Compiler.fun_info(fun)
-    {#Function<7.36233920/1 in ExDiceRoller.Compiler.compile_op/5>,
+    > ExDiceRoller.Compiler.fun_info fun
+    {#Function<0.16543174/1 in ExDiceRoller.Compiler.compile_add/4>,
+    :"-compile_add/4-fun-0-",
     [
-      {#Function<13.36233920/1 in ExDiceRoller.Compiler.compile_roll/4>,
+      {#Function<12.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
+        :"-compile_roll/4-fun-3-", [1, 8]},
+      {#Function<9.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
+        :"-compile_roll/4-fun-0-",
         [
-          {#Function<6.36233920/1 in ExDiceRoller.Compiler.compile_op/5>,
-          [{#Function<0.36233920/1 in ExDiceRoller.Compiler.compile/1>, ['y']}, 2]},
-          {#Function<3.36233920/1 in ExDiceRoller.Compiler.compile_op/5>,
-          [{#Function<0.36233920/1 in ExDiceRoller.Compiler.compile/1>, ['x']}, 1]}
-        ]},
-      {#Function<16.36233920/1 in ExDiceRoller.Compiler.compile_roll/4>, [8, 1]}
+          {#Function<15.16543174/1 in ExDiceRoller.Compiler.compile_sub/4>,
+          :"-compile_sub/4-fun-2-",
+          [
+            1,
+            {#Function<16.16543174/1 in ExDiceRoller.Compiler.compile_var/1>,
+              :"-compile_var/1-fun-0-", ['x']}
+          ]},
+          {#Function<8.16543174/1 in ExDiceRoller.Compiler.compile_mul/4>,
+          :"-compile_mul/4-fun-2-",
+          [
+            2,
+            {#Function<16.16543174/1 in ExDiceRoller.Compiler.compile_var/1>,
+              :"-compile_var/1-fun-0-", ['y']}
+          ]}
+        ]}
     ]}
   ```
   """
-  @spec fun_info(compiled_function) :: fun_info_tuple
+  @spec fun_info(compiled_fun) :: fun_info_tuple
   def fun_info(fun) when is_function(fun) do
     info = :erlang.fun_info(fun)
 
     {fun, info[:name],
      info[:env]
+     |> Enum.reverse()
      |> Enum.map(fn child ->
        fun_info(child)
      end)}
@@ -81,10 +94,10 @@ defmodule ExDiceRoller.Compiler do
   def fun_info(num) when is_number(num), do: num
   def fun_info(str) when is_list(str), do: str
 
-  @spec compile_roll(intermediary_value, boolean, intermediary_value, boolean) ::
-          compiled_function
-  defp compile_roll(num, true, sides, true),
-    do: fn args -> roll_final(num.(args), sides.(args)) end
+  @spec compile_roll(compiled_val, boolean, compiled_val, boolean) :: compiled_fun
+  defp compile_roll(num, true, sides, true) do
+    fn args -> roll_final(num.(args), sides.(args)) end
+  end
 
   defp compile_roll(num, true, sides, false), do: fn args -> roll_final(num.(args), sides) end
   defp compile_roll(num, false, sides, true), do: fn args -> roll_final(num, sides.(args)) end
@@ -92,6 +105,7 @@ defmodule ExDiceRoller.Compiler do
 
   @spec roll_final(number, number) :: integer
   defp roll_final(0, _), do: 0
+  defp roll_final(_, 0), do: 0
 
   defp roll_final(num, sides) when num >= 0 and sides >= 0 do
     num = round(num)
@@ -102,25 +116,38 @@ defmodule ExDiceRoller.Compiler do
   defp roll_final(_, _),
     do: raise(ArgumentError, "neither number of dice nor number of sides cannot be less than 0")
 
-  @spec compile_op(list, intermediary_value, boolean, intermediary_value, boolean) ::
-          intermediary_value
-  defp compile_op('+', l, true, r, true), do: fn args -> l.(args) + r.(args) end
-  defp compile_op('-', l, true, r, true), do: fn args -> l.(args) - r.(args) end
-  defp compile_op('*', l, true, r, true), do: fn args -> l.(args) * r.(args) end
-  defp compile_op('/', l, true, r, true), do: fn args -> l.(args) / r.(args) end
-  defp compile_op('+', l, true, r, false), do: fn args -> l.(args) + r end
-  defp compile_op('-', l, true, r, false), do: fn args -> l.(args) - r end
-  defp compile_op('*', l, true, r, false), do: fn args -> l.(args) * r end
-  defp compile_op('/', l, true, r, false), do: fn args -> l.(args) / r end
-  defp compile_op('+', l, false, r, true), do: fn args -> l + r.(args) end
-  defp compile_op('-', l, false, r, true), do: fn args -> l - r.(args) end
-  defp compile_op('*', l, false, r, true), do: fn args -> l * r.(args) end
-  defp compile_op('/', l, false, r, true), do: fn args -> l / r.(args) end
+  @spec compile_op(list, compiled_val, boolean, compiled_val, boolean) :: compiled_val
+  defp compile_op('+', l, l_fun?, r, r_fun?), do: compile_add(l, l_fun?, r, r_fun?)
+  defp compile_op('-', l, l_fun?, r, r_fun?), do: compile_sub(l, l_fun?, r, r_fun?)
+  defp compile_op('*', l, l_fun?, r, r_fun?), do: compile_mul(l, l_fun?, r, r_fun?)
+  defp compile_op('/', l, l_fun?, r, r_fun?), do: compile_div(l, l_fun?, r, r_fun?)
 
-  defp compile_op('+', l, false, r, false), do: l + r
-  defp compile_op('-', l, false, r, false), do: l - r
-  defp compile_op('*', l, false, r, false), do: l * r
-  defp compile_op('/', l, false, r, false), do: l / r
+  @spec compile_add(compiled_val, boolean, compiled_val, boolean) :: compiled_val
+  defp compile_add(l, true, r, true), do: fn args -> l.(args) + r.(args) end
+  defp compile_add(l, true, r, false), do: fn args -> l.(args) + r end
+  defp compile_add(l, false, r, true), do: fn args -> l + r.(args) end
+  defp compile_add(l, false, r, false), do: l + r
+
+  @spec compile_sub(compiled_val, boolean, compiled_val, boolean) :: compiled_val
+  defp compile_sub(l, true, r, true), do: fn args -> l.(args) - r.(args) end
+  defp compile_sub(l, true, r, false), do: fn args -> l.(args) - r end
+  defp compile_sub(l, false, r, true), do: fn args -> l - r.(args) end
+  defp compile_sub(l, false, r, false), do: l - r
+
+  @spec compile_mul(compiled_val, boolean, compiled_val, boolean) :: compiled_val
+  defp compile_mul(l, true, r, true), do: fn args -> l.(args) * r.(args) end
+  defp compile_mul(l, true, r, false), do: fn args -> l.(args) * r end
+  defp compile_mul(l, false, r, true), do: fn args -> l * r.(args) end
+  defp compile_mul(l, false, r, false), do: l * r
+
+  @spec compile_div(compiled_val, boolean, compiled_val, boolean) :: compiled_val
+  defp compile_div(l, true, r, true), do: fn args -> l.(args) / r.(args) end
+  defp compile_div(l, true, r, false), do: fn args -> l.(args) / r end
+  defp compile_div(l, false, r, true), do: fn args -> l / r.(args) end
+  defp compile_div(l, false, r, false), do: l / r
+
+  @spec compile_var({:var, charlist}) :: compiled_fun
+  defp compile_var({:var, var}), do: fn args -> var_final(var, args) end
 
   @spec var_final(charlist, Keyword.t()) :: number
   defp var_final(var, args) do

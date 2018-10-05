@@ -29,29 +29,29 @@ defmodule ExDiceRoller.CompilerTest do
         |> elem(1)
         |> Compiler.fun_info()
 
-      assert {_, :"-compile_op/5-fun-0-",
+      assert {_, :"-compile_add/4-fun-0-",
               [
-                {_, :"-compile/1-fun-0-", ['x']},
-                {_, :"-compile_roll/4-fun-3-", [4, 1]}
+                {_, :"-compile_roll/4-fun-3-", [1, 4]},
+                {_, :"-compile_var/1-fun-0-", ['x']}
               ]} = result
     end
 
     test "complex" do
       result =
-        "1d4+(1dy)d(5 * x+2)"
+        "1d4 + (1dy)d(5*x + 2)"
         |> ExDiceRoller.compile()
         |> elem(1)
         |> Compiler.fun_info()
 
-      assert {_, :"-compile_op/5-fun-0-",
+      assert {_, :"-compile_add/4-fun-0-",
               [
+                {_, :"-compile_roll/4-fun-3-", [1, 4]},
                 {_, :"-compile_roll/4-fun-0-",
                  [
-                   {_, :"-compile_op/5-fun-4-",
-                    [2, {_, :"-compile_op/5-fun-10-", [{_, :"-compile/1-fun-0-", ['x']}, 5]}]},
-                   {_, :"-compile_roll/4-fun-2-", [{_, :"-compile/1-fun-0-", ['y']}, 1]}
-                 ]},
-                {_, :"-compile_roll/4-fun-3-", [4, 1]}
+                   {_, :"-compile_roll/4-fun-2-", [1, {_, :"-compile_var/1-fun-0-", ['y']}]},
+                   {_, :"-compile_add/4-fun-1-",
+                    [{_, :"-compile_mul/4-fun-2-", [5, {_, :"-compile_var/1-fun-0-", ['x']}]}, 2]}
+                 ]}
               ]} = result
     end
   end

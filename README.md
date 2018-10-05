@@ -164,6 +164,26 @@ function.
 
   iex(8)> roll_fun.()
   905
+
+  iex(9)> ExDiceRoller.Compiler.fun_info(roll_fun)
+  {#Function<9.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
+  :"-compile_roll/4-fun-0-",
+  [
+    {#Function<1.16543174/1 in ExDiceRoller.Compiler.compile_add/4>,
+      :"-compile_add/4-fun-1-",
+      [
+        {#Function<12.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
+        :"-compile_roll/4-fun-3-", [1, 4]},
+        2
+      ]},
+    {#Function<14.16543174/1 in ExDiceRoller.Compiler.compile_sub/4>,
+      :"-compile_sub/4-fun-1-",
+      [
+        {#Function<12.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
+        :"-compile_roll/4-fun-3-", [30, 20]},
+        5
+      ]}
+  ]}
 ```
 
 
