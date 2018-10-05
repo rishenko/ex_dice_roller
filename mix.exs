@@ -4,7 +4,7 @@ defmodule ExDiceRoller.MixProject do
   def project do
     [
       app: :ex_dice_roller,
-      version: "0.2.0-alpha",
+      version: "0.3.0-alpha",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
