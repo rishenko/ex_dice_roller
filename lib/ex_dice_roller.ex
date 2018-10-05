@@ -26,6 +26,8 @@ defmodule ExDiceRoller do
       iex> ExDiceRoller.roll("1+\t2*3d 4")
       15
 
+      iex> ExDiceRoller.roll("1dx+6", x: 10)
+      15
 
   ## Order of Precedence
 

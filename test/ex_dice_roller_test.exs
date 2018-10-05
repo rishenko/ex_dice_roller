@@ -55,16 +55,23 @@ defmodule ExDiceRollerTest do
     test "variations of expressions" do
       4 = ExDiceRoller.roll("(1d4)d(2d8)")
       13 = ExDiceRoller.roll("1d4 + 2d8")
-      9 = ExDiceRoller.roll("1d4 - 2d8")
-      14 = ExDiceRoller.roll("1d4 * 2d8")
-      14 = ExDiceRoller.roll("1d4 / 2d8")
+      -1 = ExDiceRoller.roll("1d4 - 2d8")
+      24 = ExDiceRoller.roll("1d4 * 2d8")
+      0 = ExDiceRoller.roll("1d4 / 2d8")
       2 = ExDiceRoller.roll("1d4 + 1")
       -3 = ExDiceRoller.roll("1d4 - 4")
       6 = ExDiceRoller.roll("1d4 * 2")
       1 = ExDiceRoller.roll("1d4 / 3")
     end
 
-    test "variable passed another roll" do
+    test "basic arithmetic with variables" do
+      22 = ExDiceRoller.roll("x+15", x: 7)
+      7 = ExDiceRoller.roll("x+y", x: 3, y: 4)
+      10 = ExDiceRoller.roll("x+x", x: 5)
+      -65 = ExDiceRoller.roll("x+x-y*y", x: 8, y: 9)
+      250 = ExDiceRoller.roll("x/y", x: 1000, y: 4)
+      3 = ExDiceRoller.roll("x+x/y", x: 2, y: 4)
+      4 = ExDiceRoller.roll("x/y", x: 15, y: 4)
     end
 
     test "with spaces" do

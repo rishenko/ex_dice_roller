@@ -8,7 +8,18 @@ defmodule ExDiceRoller.Compiler do
   @type intermediary_value :: compiled_function | number
   @type compiled_function :: (Keyword.t() -> number)
 
-  @doc "Compiles a provided `t:Parser.expression/0` into an anonymous function."
+  @doc """
+  Compiles a provided `t:Parser.expression/0` into an anonymous function.
+
+  ```elixir
+    iex> {:ok, roll_fun} = ExDiceRoller.compile("1dx+10")
+    {:ok, #Function<8.36233920/1 in ExDiceRoller.Compiler.compile_op/5>}
+    iex> ExDiceRoller.execute(roll_fun, x: 5)
+    11
+    iex> ExDiceRoller.execute(roll_fun, x: "10d100")
+    523
+  ```
+  """
   @spec compile(Parser.expression()) :: intermediary_value
   def compile({:digit, intermediary_value}),
     do: intermediary_value |> to_string() |> String.to_integer()
@@ -31,7 +42,28 @@ defmodule ExDiceRoller.Compiler do
     fn args -> var_final(var, args) end
   end
 
-  @doc "Shows the nested functions and relationships for a compiled function."
+  @doc """
+  Shows the nested functions and relationships of a compiled function.
+
+  ```elixir
+
+    > {:ok, fun} = ExDiceRoller.compile("1d8+(1-x)d(2*y)")
+    {:ok, #Function<7.36233920/1 in ExDiceRoller.Compiler.compile_op/5>}
+
+    > ExDiceRoller.Compiler.fun_info(fun)
+    {#Function<7.36233920/1 in ExDiceRoller.Compiler.compile_op/5>,
+    [
+      {#Function<13.36233920/1 in ExDiceRoller.Compiler.compile_roll/4>,
+        [
+          {#Function<6.36233920/1 in ExDiceRoller.Compiler.compile_op/5>,
+          [{#Function<0.36233920/1 in ExDiceRoller.Compiler.compile/1>, ['y']}, 2]},
+          {#Function<3.36233920/1 in ExDiceRoller.Compiler.compile_op/5>,
+          [{#Function<0.36233920/1 in ExDiceRoller.Compiler.compile/1>, ['x']}, 1]}
+        ]},
+      {#Function<16.36233920/1 in ExDiceRoller.Compiler.compile_roll/4>, [8, 1]}
+    ]}
+  ```
+  """
   @spec fun_info(compiled_function) :: Keyword.t
   def fun_info(fun) when is_function(fun) do
     info = :erlang.fun_info(fun)
@@ -71,9 +103,9 @@ defmodule ExDiceRoller.Compiler do
   @spec compile_op(list, intermediary_value, boolean, intermediary_value, boolean) ::
           intermediary_value
   defp compile_op('+', l, true, r, true), do: fn args -> l.(args) + r.(args) end
-  defp compile_op('-', l, true, r, true), do: fn args -> l.(args) + r.(args) end
-  defp compile_op('*', l, true, r, true), do: fn args -> l.(args) + r.(args) end
-  defp compile_op('/', l, true, r, true), do: fn args -> l.(args) + r.(args) end
+  defp compile_op('-', l, true, r, true), do: fn args -> l.(args) - r.(args) end
+  defp compile_op('*', l, true, r, true), do: fn args -> l.(args) * r.(args) end
+  defp compile_op('/', l, true, r, true), do: fn args -> l.(args) / r.(args) end
   defp compile_op('+', l, true, r, false), do: fn args -> l.(args) + r end
   defp compile_op('-', l, true, r, false), do: fn args -> l.(args) - r end
   defp compile_op('*', l, true, r, false), do: fn args -> l.(args) * r end
