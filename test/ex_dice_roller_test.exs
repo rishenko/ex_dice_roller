@@ -10,7 +10,6 @@ defmodule ExDiceRollerTest do
   doctest ExDiceRoller
 
   require Logger
-  alias ExDiceRoller.Compiler
 
   setup do
     # This is called to make doctests predictable.
@@ -109,27 +108,6 @@ defmodule ExDiceRollerTest do
 
     test "that error during parsing" do
       assert {:error, {:token_parsing_failed, _}} = ExDiceRoller.roll("1d6++")
-    end
-  end
-
-  describe "compiling" do
-    test "a basic expression" do
-      {:ok, compiled} = ExDiceRoller.compile("1d4+1")
-      2 = ExDiceRoller.execute(compiled)
-    end
-
-    test "error" do
-      assert {:error, _} = ExDiceRoller.compile("1d6+$")
-    end
-
-    test "function relationships" do
-      result =
-        "1d4+(1d6)d(5 * x+2)"
-        |> ExDiceRoller.compile()
-        |> elem(1)
-        |> Compiler.fun_info()
-
-      result |> inspect(pretty: true) |> Logger.warn()
     end
   end
 end

@@ -7,16 +7,19 @@ defmodule ExDiceRoller.Compiler do
 
   @type intermediary_value :: compiled_function | number
   @type compiled_function :: (Keyword.t() -> number)
+  @type fun_info_tuple :: {function, atom, list(any)}
 
   @doc """
   Compiles a provided `t:Parser.expression/0` into an anonymous function.
 
   ```elixir
-    iex> {:ok, roll_fun} = ExDiceRoller.compile("1dx+10")
-    {:ok, #Function<8.36233920/1 in ExDiceRoller.Compiler.compile_op/5>}
-    iex> ExDiceRoller.execute(roll_fun, x: 5)
+    {:ok, roll_fun} = ExDiceRoller.compile("1dx+10")
+    {:ok, _}
+
+    ExDiceRoller.execute(roll_fun, x: 5)
     11
-    iex> ExDiceRoller.execute(roll_fun, x: "10d100")
+
+    ExDiceRoller.execute(roll_fun, x: "10d100")
     523
   ```
   """
@@ -64,13 +67,12 @@ defmodule ExDiceRoller.Compiler do
     ]}
   ```
   """
-  @spec fun_info(compiled_function) :: Keyword.t
+  @spec fun_info(compiled_function) :: fun_info_tuple
   def fun_info(fun) when is_function(fun) do
     info = :erlang.fun_info(fun)
 
-    {fun,
-     info
-     |> Keyword.get(:env)
+    {fun, info[:name],
+     info[:env]
      |> Enum.map(fn child ->
        fun_info(child)
      end)}
