@@ -2,11 +2,52 @@ defmodule ExDiceRoller.Compiler do
   @moduledoc """
   Provides functionality for compiling expressions into ready-to-execute
   functions.
+
+      > parsed =
+       {{:operator, '+'},
+        {{:operator, '-'}, {:roll, {:digit, '1'}, {:digit, '4'}},
+         {{:operator, '/'}, {:roll, {:digit, '3'}, {:digit, '6'}}, {:digit, '2'}}},
+        {:roll, {:roll, {:digit, '1'}, {:digit, '4'}},
+         {:roll, {:digit, '1'}, {:digit, '6'}}}}
+
+      > fun = ExDiceRoller.Compiler.compile(parsed)
+      #=> #Function<0.47893785/2 in ExDiceRoller.Compiler.compile_add/4>
+
+      > fun.([], [])
+      #=> 4
+
+      > ExDiceRoller.Compiler.fun_info(fun)
+      #=> {#Function<0.47893785/2 in ExDiceRoller.Compiler.compile_add/4>,
+        :"-compile_add/4-fun-0-",
+        [
+          {#Function<13.47893785/2 in ExDiceRoller.Compiler.compile_sub/4>,
+            :"-compile_sub/4-fun-0-",
+            [
+              {#Function<12.47893785/2 in ExDiceRoller.Compiler.compile_roll/4>,
+              :"-compile_roll/4-fun-3-", [1, 4]},
+              {#Function<4.47893785/2 in ExDiceRoller.Compiler.compile_div/4>,
+              :"-compile_div/4-fun-1-",
+              [
+                {#Function<12.47893785/2 in ExDiceRoller.Compiler.compile_roll/4>,
+                  :"-compile_roll/4-fun-3-", [3, 6]},
+                2
+              ]}
+            ]},
+          {#Function<9.47893785/2 in ExDiceRoller.Compiler.compile_roll/4>,
+            :"-compile_roll/4-fun-0-",
+            [
+              {#Function<12.47893785/2 in ExDiceRoller.Compiler.compile_roll/4>,
+              :"-compile_roll/4-fun-3-", [1, 4]},
+              {#Function<12.47893785/2 in ExDiceRoller.Compiler.compile_roll/4>,
+              :"-compile_roll/4-fun-3-", [1, 6]}
+            ]}
+        ]}
+
   """
 
   alias ExDiceRoller.{Parser, Tokenizer}
   @type compiled_val :: compiled_fun | number
-  @type compiled_fun :: (args, opts -> number)
+  @type compiled_fun :: (args, opts -> integer)
   @type fun_info_tuple :: {function, atom, list(any)}
   @type args :: Keyword.t()
   @type opts :: list(atom | {atom, any})
@@ -14,33 +55,67 @@ defmodule ExDiceRoller.Compiler do
   @doc """
   Compiles a provided `t:Parser.expression/0` into an anonymous function.
 
-      iex> {:ok, roll_fun} = ExDiceRoller.compile("1dx+10")
-      iex> ExDiceRoller.execute(roll_fun, x: 5)
-      14
-      iex> ExDiceRoller.execute(roll_fun, x: "10d100")
-      72
+      iex> expr = "1d2+x"
+      "1d2+x"
+      iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize(expr)
+      {:ok,
+      [
+        {:digit, 1, '1'},
+        {:roll, 1, 'd'},
+        {:digit, 1, '2'},
+        {:basic_operator, 1, '+'},
+        {:var, 1, 'x'}
+      ]}
+      iex> {:ok, parsed} = ExDiceRoller.Parser.parse(tokens)
+      {:ok, {{:operator, '+'}, {:roll, {:digit, '1'}, {:digit, '2'}}, {:var, 'x'}}}
+      iex> fun = ExDiceRoller.Compiler.compile(parsed)
+      iex> fun.([x: 1], [:cache, :explode])
+      2
+
+  During calculation, float values are left as float for as long as possible.
+  If a compiled roll is invoked with a float as the number of dice or sides,
+  that value will be rounded to an integer. Finally, the return value is an
+  integer. Rounding rules can be found at `Kernel.round/1`.
   """
   @spec compile(Parser.expression()) :: compiled_val
-  def compile({:digit, compiled_val}),
+  def compile(expression) do
+    compiled = do_compile(expression)
+
+    compiled =
+      case is_function(compiled) do
+        false -> fn _args, _opts -> compiled end
+        true -> compiled
+      end
+
+    fn args, opts ->
+      args
+      |> compiled.(opts)
+      |> round()
+    end
+  end
+
+  defp do_compile({:digit, compiled_val}),
     do: compiled_val |> to_string() |> String.to_integer()
 
-  def compile({:roll, left_expr, right_expr}) do
-    num = compile(left_expr)
-    sides = compile(right_expr)
+  defp do_compile({:roll, left_expr, right_expr}) do
+    num = do_compile(left_expr)
+    sides = do_compile(right_expr)
     compile_roll(num, is_function(num), sides, is_function(sides))
   end
 
-  def compile({{:operator, op}, left_expr, right_expr}) do
-    left_expr = compile(left_expr)
-    right_expr = compile(right_expr)
+  defp do_compile({{:operator, op}, left_expr, right_expr}) do
+    left_expr = do_compile(left_expr)
+    right_expr = do_compile(right_expr)
 
     compile_op(op, left_expr, is_function(left_expr), right_expr, is_function(right_expr))
   end
 
-  def compile({:var, _} = var), do: compile_var(var)
+  defp do_compile({:var, _} = var), do: compile_var(var)
 
   @doc """
-  Shows the nested functions and relationships of a compiled function.
+  Shows the nested functions and relationships of a compiled function. The
+  structure of the fun_info result is `{<function>, <atom with name, arity, and
+  ordered function #>, [<recursive info about child functions>]}`.
 
       > {:ok, fun} = ExDiceRoller.compile("1d8+(1-x)d(2*y)")
       #=> {:ok, #Function<0.84780260/1 in ExDiceRoller.Compiler.compile_add/4>}
@@ -73,19 +148,25 @@ defmodule ExDiceRoller.Compiler do
 
   """
   @spec fun_info(compiled_fun) :: fun_info_tuple
-  def fun_info(fun) when is_function(fun) do
+  def fun_info(fun) do
+    info = :erlang.fun_info(fun)
+    do_fun_info(hd(info[:env]))
+  end
+
+  @spec do_fun_info(function | number | charlist) :: function | number | charlist
+  defp do_fun_info(fun) when is_function(fun) do
     info = :erlang.fun_info(fun)
 
     {fun, info[:name],
      info[:env]
      |> Enum.reverse()
      |> Enum.map(fn child ->
-       fun_info(child)
+       do_fun_info(child)
      end)}
   end
 
-  def fun_info(num) when is_number(num), do: num
-  def fun_info(str) when is_list(str), do: str
+  defp do_fun_info(num) when is_number(num), do: num
+  defp do_fun_info(str) when is_list(str), do: str
 
   @spec compile_roll(compiled_val, boolean, compiled_val, boolean) :: compiled_fun
   defp compile_roll(num, true, sides, true) do
@@ -167,26 +248,27 @@ defmodule ExDiceRoller.Compiler do
   @spec compile_var({:var, charlist}) :: compiled_fun
   defp compile_var({:var, var}), do: fn args, opts -> var_final(var, args, opts) end
 
-  @spec var_final(charlist, Keyword.t(), list(atom | tuple)) :: number
-  defp var_final(var, args, _opts) do
+  @spec var_final(charlist, args, opts) :: number
+  defp var_final(var, args, opts) do
     key = var |> to_string() |> String.to_atom()
 
-    case Keyword.get(args, key) do
-      nil ->
-        raise ArgumentError, "no variable #{inspect(var)} was found in the arguments"
+    args
+    |> Keyword.get(key)
+    |> var_final_arg(var, opts)
+  end
 
-      val when is_integer(val) or is_float(val) ->
-        val
+  @spec var_final_arg(any, charlist, opts) :: number
+  defp var_final_arg(nil, var, _),
+    do: raise(ArgumentError, "no variable #{inspect(var)} was found in the arguments")
 
-      val when is_bitstring(val) ->
-        {:ok, tokens} = Tokenizer.tokenize(val)
-        {:ok, parsed} = Parser.parse(tokens)
-        maybe_fun = compile(parsed)
+  defp var_final_arg(val, _, _) when is_integer(val), do: val
+  defp var_final_arg(val, _, opts) when is_function(val), do: val.([], opts)
 
-        case is_function(maybe_fun) do
-          false -> maybe_fun
-          true -> maybe_fun.([], [])
-        end
-    end
+  defp var_final_arg(val, var, opts) when is_bitstring(val) do
+    {:ok, tokens} = Tokenizer.tokenize(val)
+    {:ok, parsed} = Parser.parse(tokens)
+    compiled_arg = compile(parsed)
+
+    var_final_arg(compiled_arg, var, opts)
   end
 end

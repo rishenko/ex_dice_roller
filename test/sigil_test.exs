@@ -29,7 +29,7 @@ defmodule ExDiceRoller.SigilTest do
     test "complex" do
       fun = ~a|1d20+(2d4)d(3d10)/5|
       assert is_function(fun)
-      assert 17.2 == ExDiceRoller.execute(fun)
+      assert 17 == ExDiceRoller.execute(fun)
     end
 
     test "variables" do
@@ -66,7 +66,7 @@ defmodule ExDiceRoller.SigilTest do
     end
 
     test "complex" do
-      assert 27.25 == ~a|1d(5d4+3)+(2d6)d(5d4)/4-2|r
+      assert 27 == ~a|1d(5d4+3)+(2d6)d(5d4)/4-2|r
     end
 
     test "with exploding dice" do

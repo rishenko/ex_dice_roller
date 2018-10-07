@@ -99,6 +99,22 @@ defmodule ExDiceRoller do
       iex> ExDiceRoller.execute(roll_fun)
       11
 
+
+  ## Caching
+
+  ExDiceRoller allows for dice rolls to be cached and reused. More details can
+  be found in the documentation for `ExDiceRoller.Cache`.
+
+      iex> ExDiceRoller.start_cache()
+      iex> ExDiceRoller.roll("8d6-(4d5)", [], [:cache])
+      20
+      iex> ExDiceRoller.roll("8d6-(4d5)", [], [:cache])
+      13
+      iex> ExDiceRoller.roll("1d3+x", [x: 4], [:cache])
+      6
+      iex> ExDiceRoller.roll("1d3+x", [x: "1"], [:cache, :explode])
+      6
+
   """
 
   alias ExDiceRoller.{Cache, Compiler, Parser, Tokenizer}
@@ -120,14 +136,20 @@ defmodule ExDiceRoller do
   def roll(roll_string), do: roll(roll_string, [], [])
 
   @doc """
-  Processes a given string as a dice roll and returns the final result. The
-  final result is a rounded integer.
+  Processes a given string as a dice roll and returns the calculated result. The
+  result is a rounded integer.
 
-  Any variables should be specified in `args`. Options can be passed in `opts`.
+  Any variable values should be specified in `args`. Options can be passed in
+  `opts`.
 
-  Possible options include:
-  * `:cache`: This will add compiled function caching. Refer to
+  Possible values for `opts` include:
+  * `:cache`: Performs a cache lookup, with a miss generating a compiled
+  roll that is both cached and returned.
   `ExDiceRoller.Cache.obtain/2` for more information.
+  * `:explode`: Causes dice to _explode_. This means that if a die roll results
+  in the highest possible value for a die (such as rolling a 20 on a d20), the
+  die will be rerolled until the result is no longer the max possible. It then
+  sums the total of all rolls and returns that value.
 
   ### Examples
 
@@ -137,9 +159,20 @@ defmodule ExDiceRoller do
       iex> ExDiceRoller.roll("1d8+x", x: 5)
       6
 
+      iex> ExDiceRoller.roll("1d3", [], [:explode])
+      5
+      iex> ExDiceRoller.roll("1d3", [], [:explode])
+      4
+      iex> ExDiceRoller.roll("1d3", [], [:explode])
+      2
+
       iex> ExDiceRoller.start_cache(ExDiceRoller.Cache)
       iex> ExDiceRoller.roll("(1d6)d4-3+y", [y: 3], [:cache])
       10
+      iex> ExDiceRoller.roll("1d2+y", [y: 1], [:cache, :explode])
+      2
+      iex> ExDiceRoller.roll("1d2+y", [y: 2], [:cache, :explode])
+      11
 
   """
   @spec roll(String.t(), Keyword.t(), list(atom | tuple)) :: integer
@@ -187,7 +220,7 @@ defmodule ExDiceRoller do
 
       iex> {:ok, roll_fun} = ExDiceRoller.compile("1d8+2d(5d3+4)/3")
       iex> ExDiceRoller.execute(roll_fun)
-      5.0
+      5
 
   """
   @spec compile(String.t() | Parser.expression()) ::
@@ -204,12 +237,7 @@ defmodule ExDiceRoller do
   end
 
   def compile(expression) when is_tuple(expression) do
-    compiled = Compiler.compile(expression)
-
-    case is_function(compiled) do
-      false -> {:ok, fn _args, _opts -> compiled end}
-      true -> {:ok, compiled}
-    end
+    {:ok, Compiler.compile(expression)}
   end
 
   def compile(other), do: {:error, {:invalid_roll_string, other}}
