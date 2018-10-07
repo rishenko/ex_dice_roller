@@ -9,7 +9,7 @@ defmodule ExDiceRollerTest do
   use ExUnit.Case
   doctest ExDiceRoller
 
-  require Logger
+  alias ExDiceRoller.Cache
 
   setup do
     # This is called to make doctests predictable.
@@ -88,6 +88,15 @@ defmodule ExDiceRollerTest do
       10 = ExDiceRoller.roll(expr)
     end
 
+    test "exploding dice" do
+      {:ok, fun} = ExDiceRoller.compile("1d2")
+      assert 1 == ExDiceRoller.execute(fun, [], [:explode])
+      assert 7 == ExDiceRoller.execute(fun, [], [:explode])
+      assert 9 == ExDiceRoller.execute(fun, [], [:explode])
+      assert 9 == ExDiceRoller.execute(fun, [], [:explode])
+      assert 1 == ExDiceRoller.execute(fun, [], [:explode])
+    end
+
     test "that error on a negative number of dice" do
       assert_raise(ArgumentError, fn -> ExDiceRoller.roll("-1d4") end)
     end
@@ -108,6 +117,33 @@ defmodule ExDiceRollerTest do
 
     test "that error during parsing" do
       assert {:error, {:token_parsing_failed, _}} = ExDiceRoller.roll("1d6++")
+    end
+
+    test "starting cache" do
+      {:ok, ExDiceRoller.Cache.Test} = ExDiceRoller.start_cache(ExDiceRoller.Cache.Test)
+      assert [] == Cache.all(ExDiceRoller.Cache.Test)
+    end
+  end
+
+  describe "caching" do
+    test "rolls" do
+      {:ok, _} = ExDiceRoller.start_cache()
+      roll = "1d20"
+
+      assert [] == Cache.all()
+
+      assert 9 == ExDiceRoller.roll(roll, [], [:cache])
+      assert length(Cache.all()) == 1
+    end
+
+    test "variables" do
+      {:ok, _} = ExDiceRoller.start_cache()
+      roll = "1d6+x-y"
+
+      assert [] == Cache.all()
+
+      assert 6 == ExDiceRoller.roll(roll, [x: 7, y: 4], [:cache])
+      assert length(Cache.all()) == 1
     end
   end
 end
