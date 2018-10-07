@@ -94,10 +94,10 @@ defmodule ExDiceRoller.Cache do
 
   @doc """
   Deletes the cache entry stored under `roll_string`. Note that if `roll_string`
-  is anything but a string, `{:error, {:invalid_roll_string, roll_string}}`
+  is anything but a string, `{:error, {:invalid_roll_key, roll_string}}`
   will be returned.
   """
-  @spec delete(atom | none, roll_string) :: :ok | {:error, {:invalid_roll_string, any}}
+  @spec delete(atom | none, roll_string) :: :ok | {:error, {:invalid_roll_key, any}}
 
   def delete(cache \\ @cache_table, roll_string)
 
@@ -106,7 +106,7 @@ defmodule ExDiceRoller.Cache do
     :ok
   end
 
-  def delete(_, roll_string), do: {:error, {:invalid_roll_string, roll_string}}
+  def delete(_, roll_string), do: {:error, {:invalid_roll_key, roll_string}}
 
   @doc """
   Empties the specified cache.

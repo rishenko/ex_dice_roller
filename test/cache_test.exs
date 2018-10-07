@@ -95,7 +95,7 @@ defmodule ExDiceRoller.CacheTest do
   test "delete errors with bad rollstring" do
     {:ok, CacheTest} = Cache.start_link(CacheTest)
 
-    {:error, {:invalid_roll_string, :not_a_roll_string}} =
+    {:error, {:invalid_roll_key, :not_a_roll_string}} =
       Cache.delete(CacheTest, :not_a_roll_string)
   end
 end

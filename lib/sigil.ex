@@ -1,12 +1,12 @@
 defmodule ExDiceRoller.Sigil do
   @moduledoc """
-    Handles the sigil `~a` for dice rolling. If no options are specified, the
+  Han dles the sigil `~a` for dice rolling. If no options are specified, the
   sigil will return the compiled function based on the provided roll.
 
   The following options are available:
 
-  * `r`: Compiles and executes the roll. Variables are not supported with this.
-  * `e`: Allows dice to explode. Can only be used if used alongside option `r`.
+  * `r`: Compiles and invokes the roll. Variables are not supported with this.
+  * `e`: Allows dice to explode. Can only be used alongside option `r`.
 
   ## Example
 
