@@ -17,8 +17,8 @@ Provides functionality around calculating both simple and complex dice rolling e
   upon invocation, such as `1dx+y`.
 * Supports compiling dice rolls into reuseable anonymous functions that be
   passed around and invoked again and again.
-* Supports caching compiled rolls. This can be especially useful in an
-  application that generates variations rolls during runtime.
+* Supports caching compiled rolls. This optional feature can be especially
+  useful in an application that generates various rolls during runtime.
 * Supports exploding dice.
 * Introduces a new sigil, `~a`. This can be used as a shorthand for compiling
   and/or rolling dice rolls, such as `~a/1d6+2-(1d4)d6/`.
