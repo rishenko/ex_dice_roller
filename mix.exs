@@ -4,7 +4,7 @@ defmodule ExDiceRoller.MixProject do
   def project do
     [
       app: :ex_dice_roller,
-      version: "0.3.0-alpha",
+      version: "0.4.0-alpha",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -28,7 +28,7 @@ defmodule ExDiceRoller.MixProject do
   def package do
     [
       maintainers: ["Kevin McAbee"],
-      licenses: ["MIT"],
+      licenses: ["Apache 2.0"],
       homepage_url: "https://github.com/rishenko/ex_dice_roller",
       source_url: "https://github.com/rishenko/ex_dice_roller",
       links: %{"GitHub" => "https://github.com/rishenko/ex_dice_roller"},
