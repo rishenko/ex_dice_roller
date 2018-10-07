@@ -2,8 +2,14 @@ defmodule ExDiceRoller.CacheTest do
   @moduledoc false
 
   use ExUnit.Case
+  doctest ExDiceRoller.Cache
 
   alias ExDiceRoller.Cache
+
+  setup do
+    :rand.seed(:exsplus, {5, 7, 13})
+    :ok
+  end
 
   test "starting with no name" do
     cache = Application.fetch_env!(:ex_dice_roller, :cache_table)
