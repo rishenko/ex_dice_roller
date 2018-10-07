@@ -8,12 +8,20 @@ Provides functionality around calculating both simple and complex dice rolling e
 
 ## Features
 
+* Simulates dice rolls with any number of dice and sides of dice.
 * Supports common math operators: `+`, `-`, `*`, `/`
 * Supports `+` and `-` unary operators.
-* Supports creating common expressions and parenthetically grouped expressions into complex dice-roll equations.
-* Supports creating uncommon dice rolls, such as `(1d4)d(3d6)-(1d4+7)`.
-* Supports using variables in expressions that can be given values upon use, such as `1dx+y`.
-* Allows developers to tokenize, parse, and then compile dice roll strings into reusable anonymous functions.
+* Supports creating common expressions and parenthetically grouped expressions
+  into complex dice-roll equations, such as `(1d4)d(3d6)-(1d4+7)`.
+* Supports using single-letter variables in expressions that can be given values
+  upon invocation, such as `1dx+y`.
+* Supports compiling dice rolls into reuseable anonymous functions that be
+  passed around and invoked again and again.
+* Supports caching compiled rolls. This optional feature can be especially
+  useful in an application that generates various rolls during runtime.
+* Supports exploding dice.
+* Introduces a new sigil, `~a`. This can be used as a shorthand for compiling
+  and/or rolling dice rolls, such as `~a/1d6+2-(1d4)d6/`.
 
 
 ## Installation
@@ -34,42 +42,87 @@ $ mix deps.get
 ```
 
 
-## Usage
+## General Usage
 
-ExDiceRoller supports a variety of possible dice roll permutations that can be used in your application.
+ExDiceRoller supports a variety of possible dice roll permutations that can be
+used in your application.
 
 ```elixir
-  iex> ExDiceRoller.roll("1")
-  1
+iex> ExDiceRoller.roll("1")
+#=> 1
 
-  iex> ExDiceRoller.roll("1+2")
-  3
+iex> ExDiceRoller.roll("1+2")
+#=> 3
 
-  iex> ExDiceRoller.roll("1d6")
-  1
+iex> ExDiceRoller.roll("1d6")
+#=> 1
 
-  iex> ExDiceRoller.roll("1d20-5")
-  12
+iex> ExDiceRoller.roll("1d20-(5*6)")
+#=> -28
 
-  iex> ExDiceRoller.roll("1d20-(5*6)")
-  -28
+iex> ExDiceRoller.roll("1d4d6")
+#=> 10
 
-  iex> ExDiceRoller.roll("1d4d6")
-  10
+iex> ExDiceRoller.roll("(1d4+2)d(1d20)")
+#=> 22
 
-  iex> ExDiceRoller.roll("(1d4+2)d8")
-  28
+iex> ExDiceRoller.roll("(1d4+2)d((5*6)d20-5)", []) 
+#=> 566
 
-  iex> ExDiceRoller.roll("(1d4+2)d(1d20)")
-  16
+iex> ExDiceRoller.roll("1dx+y", [x: 20, y: 13])
+#=> 16
 
-  iex> ExDiceRoller.roll("(1d4+2)d((5*6)d20-5)")
-  677
-
-  iex> ExDiceRoller.roll("1dx+y", x: 20, y: 13)
-  16
 ```
 
+## Sigil Usage
+
+```elixir
+iex> import ExDiceRoller.Sigil
+#=> ExDiceRoller.Sigil
+
+iex> fun = ~a/1d6+3/
+#=> #Function<1.86580672/2 in ExDiceRoller.Compiler.compile/1>
+
+iex> ExDiceRoller.execute(fun)
+#=> 6
+
+iex> ~a/1d2+3/r   # compiles the roll and invokes it
+#=> 4
+
+iex> ~a/1d2+2/re  # compiles the roll and invokes it with exploding dice
+#=> 9
+
+iex> ExDiceRoller.roll(~a/2d8-2/)
+#=> 3
+```
+
+## Cache Usage
+
+```elixir
+iex> ExDiceRoller.start_cache()
+#=> {:ok, ExDiceRoller.Cache}
+
+iex> ExDiceRoller.roll("xdy-2d4", [x: 10, y: 5], [:cache])
+#=> 34
+
+iex> ExDiceRoller.Cache.all()
+#=> [{"xdy-2d4", #Function<1.86580672/2 in ExDiceRoller.Compiler.compile/1>}]
+
+iex> ExDiceRoller.roll("xdy-2d4", [x: 10, y: "2d6"], [:cache])
+#=> 29
+
+iex> ExDiceRoller.Cache.all()
+#=> [{"xdy-2d4", #Function<1.86580672/2 in ExDiceRoller.Compiler.compile/1>}]
+
+iex> ExDiceRoller.roll("1d6+3d4", [], [:cache])
+#=> 10
+
+iex> ExDiceRoller.Cache.all()
+#=> [
+#=>   {"xdy-2d4", #Function<1.86580672/2 in ExDiceRoller.Compiler.compile/1>},
+#=>   {"1d6+3d4", #Function<1.86580672/2 in ExDiceRoller.Compiler.compile/1>}
+#=> ]
+```
 
 ## Compiled Expressions
 
@@ -77,42 +130,45 @@ Parsed expressions can be compiled into a single, executable anonymous
 function. This function can be reused again and again, with any dice rolls
 being randomized and calculated for each call.
 
-Note that while `ExDiceRoller.roll/1` always returns integers, `ExDiceRoller.execute/1` will
-return either floats or integers.
+Note that while `ExDiceRoller.roll/1` always returns integers,
+`ExDiceRoller.execute/1` will return either floats or integers.
 
 ```elixir
-  iex> {:ok, roll_fun} = ExDiceRoller.compile("1d6 - (3d6)d5 + (1d4)/5")
-  {:ok, #Function<6.11371143/0 in ExDiceRoller.Compiler.compile_op/5>}
+  iex> {:ok, roll_fun} = ExDiceRoller.compile("1d6 - (3d10)d5 + (1d50)/5")
+  #=> {:ok, #Function<1.86580672/2 in ExDiceRoller.Compiler.compile/1>}
 
   iex> ExDiceRoller.execute(roll_fun)
-  21.6
+  #=> -16
 
-  iex> ExDiceRoller.execute(roll_fun)
-  34.4
+  iex> roll_fun.([], [])
+  #=> -43
 
   iex> {:ok, roll_fun} = ExDiceRoller.compile("1dx+10")
-  {:ok, #Function<8.36233920/1 in ExDiceRoller.Compiler.compile_op/5>}
+  #=> {:ok, #Function<8.36233920/1 in ExDiceRoller.Compiler.compile_op/5>}
 
-  iex> ExDiceRoller.execute(roll_fun, x: 5)
-  11
+  iex> ExDiceRoller.execute(roll_fun, [x: 5])
+  #=> 12
 
   iex> ExDiceRoller.execute(roll_fun, x: "10d100")
-  523
+  #=> 523
 ```
 
 
 ## How It Works
 
-1. ExDiceRoller utilizes Erlang's [leex](http://erlang.org/doc/man/leex.html) library to tokenize a given dice roll string.
-2. The tokens are then passed to [yecc](http://erlang.org/doc/man/yecc.html) which parses the tokens into an abstract 
-syntax tree.
+1. ExDiceRoller utilizes Erlang's [leex](http://erlang.org/doc/man/leex.html)
+   library to tokenize a given dice roll string.
+2. The tokens are then passed to [yecc](http://erlang.org/doc/man/yecc.html)
+   which parses the tokens into an abstract syntax tree of expressions.
 3. The syntax tree is then interpreted through recursive navigation.
 4. During interpretation:
-  1. Any basic numerical values are calculated.
-  2. Any dice rolls are converted into anonymous functions.
-  3. Any portion of the expression or equation that use both base values and
+    1. Any basic numerical values are calculated.
+    2. Any dice rolls are converted into anonymous functions.
+    3. Any mathematical operations using numbers are calculated.
+    4. Any mathematical operations using expressions are converted into
+       anonymous functions.
   dice rolls are converted into anonymous functions.
-1. The results of interpretation are then wrapped by a final anonymous
+5. The results of interpretation are then wrapped by a final anonymous
 function.
 6. This final anonymous function is then executed and the value returned.
 
@@ -159,10 +215,10 @@ function.
   iex(6)> {:ok, roll_fun} = ExDiceRoller.compile(ast)
   {:ok, #Function<12.11371143/0 in ExDiceRoller.Compiler.compile_roll/4>}
 
-  iex(7)> roll_fun.()
+  iex(7)> roll_fun.([], [])
   739
 
-  iex(8)> roll_fun.()
+  iex(8)> roll_fun.([], [])
   905
 
   iex(9)> ExDiceRoller.Compiler.fun_info(roll_fun)
@@ -189,5 +245,11 @@ function.
 
 ## Test Coverage and More
 
-* [ex_coveralls](https://github.com/parroty/excoveralls) provides test coverage metrics.
+* [ex_coveralls](https://github.com/parroty/excoveralls) provides test coverage
+  metrics.
 * [credo](https://github.com/rrrene/credo) is used for static code analysis.
+
+
+## License
+
+ExDiceRoller source code is released under Apache 2 License.
