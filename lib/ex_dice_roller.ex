@@ -102,6 +102,7 @@ defmodule ExDiceRoller do
       22
       ```
 
+
   ## Caching
 
   ExDiceRoller can cache and reuse dice rolls.
@@ -117,6 +118,22 @@ defmodule ExDiceRoller do
       6
 
   More details can be found in the documentation for `ExDiceRoller.Cache`.
+
+
+  ## Sigil Support
+
+  ExDiceRoller comes with its own sigil, `~a`, that can be used to create
+  compiled dice roll functions or roll them on the spot. See
+  `ExDiceRoller.Sigil` for detailed usage and examples.
+
+      iex> import ExDiceRoller.Sigil
+      iex> fun = ~a/2d6+2/
+      iex> ExDiceRoller.roll(fun)
+      7
+      iex> ExDiceRoller.roll(~a|1d4+x/5|, [x: 43])
+      11
+      iex> ExDiceRoller.roll(~a|xdy|, [x: fun, y: ~a/12d4-15/])
+      111
 
 
   ## ExDiceRoller Examples
@@ -166,7 +183,7 @@ defmodule ExDiceRoller do
       10
 
       iex> import ExDiceRoller.Sigil
-      iex> ~a/1d2+3/r #
+      iex> ~a/1d2+3/r
       4
       iex> ~a/1d2+2/re
       9

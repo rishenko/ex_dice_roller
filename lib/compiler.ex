@@ -4,20 +4,20 @@ defmodule ExDiceRoller.Compiler do
   functions.
 
       > parsed =
-       {{:operator, '+'},
+        {{:operator, '+'},
         {{:operator, '-'}, {:roll, {:digit, '1'}, {:digit, '4'}},
-         {{:operator, '/'}, {:roll, {:digit, '3'}, {:digit, '6'}}, {:digit, '2'}}},
+          {{:operator, '/'}, {:roll, {:digit, '3'}, {:digit, '6'}}, {:digit, '2'}}},
         {:roll, {:roll, {:digit, '1'}, {:digit, '4'}},
-         {:roll, {:digit, '1'}, {:digit, '6'}}}}
+          {:roll, {:digit, '1'}, {:digit, '6'}}}}
 
       > fun = ExDiceRoller.Compiler.compile(parsed)
-      #=> #Function<0.47893785/2 in ExDiceRoller.Compiler.compile_add/4>
+      #Function<0.47893785/2 in ExDiceRoller.Compiler.compile_add/4>
 
       > fun.([], [])
-      #=> 4
+      4
 
       > ExDiceRoller.Compiler.fun_info(fun)
-      #=> {#Function<0.47893785/2 in ExDiceRoller.Compiler.compile_add/4>,
+      {#Function<0.47893785/2 in ExDiceRoller.Compiler.compile_add/4>,
         :"-compile_add/4-fun-0-",
         [
           {#Function<13.47893785/2 in ExDiceRoller.Compiler.compile_sub/4>,
@@ -69,7 +69,7 @@ defmodule ExDiceRoller.Compiler do
       iex> {:ok, parsed} = ExDiceRoller.Parser.parse(tokens)
       {:ok, {{:operator, '+'}, {:roll, {:digit, '1'}, {:digit, '2'}}, {:var, 'x'}}}
       iex> fun = ExDiceRoller.Compiler.compile(parsed)
-      iex> fun.([x: 1], [:cache, :explode])
+      iex> fun.([x: 1], [:explode])
       2
 
   During calculation, float values are left as float for as long as possible.
