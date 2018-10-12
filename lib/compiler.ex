@@ -46,11 +46,15 @@ defmodule ExDiceRoller.Compiler do
   """
 
   alias ExDiceRoller.{Parser, Tokenizer}
+  alias ExDiceRoller.Compilers.{Math, Roll, Separator, Variable}
   @type compiled_val :: compiled_fun | number
   @type compiled_fun :: (args, opts -> integer | list(integer))
   @type fun_info_tuple :: {function, atom, list(any)}
   @type args :: Keyword.t()
   @type opts :: list(atom | {atom, any})
+
+  @doc "Compiles the expression into a `t:compiled_val/0`."
+  @callback compile(Parser.expression()) :: compiled_val
 
   @doc """
   Compiles a provided `t:Parser.expression/0` into an anonymous function.
@@ -79,7 +83,7 @@ defmodule ExDiceRoller.Compiler do
   """
   @spec compile(Parser.expression()) :: compiled_val
   def compile(expression) do
-    compiled = do_compile(expression)
+    compiled = delegate(expression)
 
     compiled =
       case is_function(compiled) do
@@ -90,32 +94,19 @@ defmodule ExDiceRoller.Compiler do
     fn args, opts ->
       args
       |> compiled.(opts)
-      |> do_round()
+      |> round_val()
     end
   end
+
+  def delegate(expression), do: do_compile(expression)
 
   defp do_compile({:digit, compiled_val}),
     do: compiled_val |> to_string() |> String.to_integer()
 
-  defp do_compile({:roll, left_expr, right_expr}) do
-    num = do_compile(left_expr)
-    sides = do_compile(right_expr)
-    compile_roll(num, is_function(num), sides, is_function(sides))
-  end
-
-  defp do_compile({{:operator, op}, left_expr, right_expr}) do
-    left_expr = do_compile(left_expr)
-    right_expr = do_compile(right_expr)
-    compile_op(op, left_expr, is_function(left_expr), right_expr, is_function(right_expr))
-  end
-
-  defp do_compile({:sep, left_expr, right_expr}) do
-    left_expr = do_compile(left_expr)
-    right_expr = do_compile(right_expr)
-    compile_sep(left_expr, is_function(left_expr), right_expr, is_function(right_expr))
-  end
-
-  defp do_compile({:var, _} = var), do: compile_var(var)
+  defp do_compile({:roll, _, _} = expr), do: Roll.compile(expr)
+  defp do_compile({{:operator, _}, _, _} = expr), do: Math.compile(expr)
+  defp do_compile({:sep, _, _} = expr), do: Separator.compile(expr)
+  defp do_compile({:var, _} = var), do: Variable.compile(var)
 
   @doc """
   Shows the nested functions and relationships of a compiled function. The
@@ -155,8 +146,15 @@ defmodule ExDiceRoller.Compiler do
   @spec fun_info(compiled_fun) :: fun_info_tuple
   def fun_info(fun) do
     info = :erlang.fun_info(fun)
-    do_fun_info(hd(info[:env]))
+    info[:env] |> hd() |> do_fun_info()
   end
+
+  @doc "Performs rounding on both numbers and lists of numbers."
+  def round_val(val) when is_list(val) do
+    Enum.map(val, &round(&1))
+  end
+
+  def round_val(val) when is_number(val), do: Kernel.round(val)
 
   @spec do_fun_info(function | number | charlist) :: function | number | charlist
   defp do_fun_info(fun) when is_function(fun) do
@@ -172,181 +170,4 @@ defmodule ExDiceRoller.Compiler do
 
   defp do_fun_info(num) when is_number(num), do: num
   defp do_fun_info(str) when is_list(str), do: str
-
-  @spec compile_roll(compiled_val, boolean, compiled_val, boolean) :: compiled_fun
-
-  defp compile_roll(num, true, sides, true) do
-    fn args, opts -> roll_prep(num.(args, opts), sides.(args, opts), opts) end
-  end
-
-  defp compile_roll(num, true, sides, false),
-    do: fn args, opts -> roll_prep(num.(args, opts), sides, opts) end
-
-  defp compile_roll(num, false, sides, true),
-    do: fn args, opts -> roll_prep(num, sides.(args, opts), opts) end
-
-  defp compile_roll(num, false, sides, false),
-    do: fn _args, opts -> roll_prep(num, sides, opts) end
-
-  @spec roll_prep(number, number, list(atom | tuple)) :: integer
-  defp roll_prep(0, _, _), do: 0
-  defp roll_prep(_, 0, _), do: 0
-
-  defp roll_prep(num, sides, opts) when num >= 0 and sides >= 0 do
-    num = do_round(num)
-    sides = do_round(sides)
-    explode? = :explode in opts
-
-    case :keep in opts do
-      true ->
-        keep_roll(num, sides, explode?)
-
-      false ->
-        Enum.reduce(1..num, 0, fn _, total ->
-          total + roll(sides, explode?)
-        end)
-    end
-  end
-
-  defp roll_prep(_, _, _),
-    do: raise(ArgumentError, "neither number of dice nor number of sides cannot be less than 0")
-
-  defp keep_roll(num, sides, explode?) when is_number(num) do
-    keep_roll([num], sides, explode?)
-  end
-
-  defp keep_roll(num, sides, explode?) when is_number(sides) do
-    keep_roll(num, [sides], explode?)
-  end
-
-  defp keep_roll(num, sides, explode?) do
-    Enum.flat_map(num, fn n ->
-      Enum.flat_map(1..n, fn _ ->
-        Enum.map(sides, & roll(&1, explode?))
-      end)
-    end)
-  end
-
-  defp roll(sides, false) do
-    Enum.random(1..sides)
-  end
-
-  defp roll(sides, true) do
-    result = Enum.random(1..sides)
-    explode_roll(sides, result, result)
-  end
-
-  defp do_round(l) when is_list(l) do
-    Enum.map(l, & do_round(&1))
-  end
-
-  defp do_round(val) when is_number(val), do: round(val)
-
-  defp explode_roll(sides, sides, acc) do
-    result = Enum.random(1..sides)
-    explode_roll(sides, result, acc + result)
-  end
-
-  defp explode_roll(_, _, acc), do: acc
-
-  @spec compile_op(list, compiled_val, boolean, compiled_val, boolean) :: compiled_val
-  defp compile_op('+', l, l_fun?, r, r_fun?), do: compile_add(l, l_fun?, r, r_fun?)
-  defp compile_op('-', l, l_fun?, r, r_fun?), do: compile_sub(l, l_fun?, r, r_fun?)
-  defp compile_op('*', l, l_fun?, r, r_fun?), do: compile_mul(l, l_fun?, r, r_fun?)
-  defp compile_op('/', l, l_fun?, r, r_fun?), do: compile_div(l, l_fun?, r, r_fun?)
-  defp compile_op('%', l, l_fun?, r, r_fun?), do: compile_mod(l, l_fun?, r, r_fun?)
-  defp compile_op('^', l, l_fun?, r, r_fun?), do: compile_exp(l, l_fun?, r, r_fun?)
-
-  @spec compile_add(compiled_val, boolean, compiled_val, boolean) :: compiled_val
-  defp compile_add(l, true, r, true), do: fn args, opts -> l.(args, opts) + r.(args, opts) end
-  defp compile_add(l, true, r, false), do: fn args, opts -> l.(args, opts) + r end
-  defp compile_add(l, false, r, true), do: fn args, opts -> l + r.(args, opts) end
-  defp compile_add(l, false, r, false), do: l + r
-
-  @spec compile_sub(compiled_val, boolean, compiled_val, boolean) :: compiled_val
-  defp compile_sub(l, true, r, true), do: fn args, opts -> l.(args, opts) - r.(args, opts) end
-  defp compile_sub(l, true, r, false), do: fn args, opts -> l.(args, opts) - r end
-  defp compile_sub(l, false, r, true), do: fn args, opts -> l - r.(args, opts) end
-  defp compile_sub(l, false, r, false), do: l - r
-
-  @spec compile_mul(compiled_val, boolean, compiled_val, boolean) :: compiled_val
-  defp compile_mul(l, true, r, true), do: fn args, opts -> l.(args, opts) * r.(args, opts) end
-  defp compile_mul(l, true, r, false), do: fn args, opts -> l.(args, opts) * r end
-  defp compile_mul(l, false, r, true), do: fn args, opts -> l * r.(args, opts) end
-  defp compile_mul(l, false, r, false), do: l * r
-
-  @spec compile_div(compiled_val, boolean, compiled_val, boolean) :: compiled_val
-  defp compile_div(l, true, r, true), do: fn args, opts -> l.(args, opts) / r.(args, opts) end
-  defp compile_div(l, true, r, false), do: fn args, opts -> l.(args, opts) / r end
-  defp compile_div(l, false, r, true), do: fn args, opts -> l / r.(args, opts) end
-  defp compile_div(l, false, r, false), do: l / r
-
-  @spec compile_mod(compiled_val, boolean, compiled_val, boolean) :: compiled_val
-  defp compile_mod(l, true, r, true), do: fn args, opts -> rem(l.(args, opts), r.(args, opts)) end
-  defp compile_mod(l, true, r, false), do: fn args, opts -> rem(l.(args, opts), r) end
-  defp compile_mod(l, false, r, true), do: fn args, opts -> rem(l, r.(args, opts)) end
-  defp compile_mod(l, false, r, false), do: rem(l, r)
-
-  @spec compile_exp(compiled_val, boolean, compiled_val, boolean) :: compiled_val
-  defp compile_exp(l, true, r, true),
-    do: fn args, opts -> :math.pow(l.(args, opts), r.(args, opts)) end
-
-  defp compile_exp(l, true, r, false), do: fn args, opts -> :math.pow(l.(args, opts), r) end
-  defp compile_exp(l, false, r, true), do: fn args, opts -> :math.pow(l, r.(args, opts)) end
-  defp compile_exp(l, false, r, false), do: :math.pow(l, r)
-
-  @spec compile_sep(compiled_val, boolean, compiled_val, boolean) :: compiled_val
-  defp compile_sep(l, true, r, true),
-    do: fn args, opts -> choose_high_low(l.(args, opts), r.(args, opts), opts) end
-
-  defp compile_sep(l, true, r, false),
-    do: fn args, opts -> choose_high_low(l.(args, opts), r, opts) end
-
-  defp compile_sep(l, false, r, true),
-    do: fn args, opts -> choose_high_low(l, r.(args, opts), opts) end
-
-  defp compile_sep(l, false, r, false), do: fn _args, opts -> choose_high_low(l, r, opts) end
-
-  @spec choose_high_low(number, number, :highest | :lowest) :: number
-  defp choose_high_low(l, l, _), do: l
-
-  defp choose_high_low(l, r, opts) when is_list(opts) do
-    case Enum.find(opts, &(&1 in [:highest, :lowest])) do
-      :highest -> choose_high_low(l, r, :highest)
-      :lowest -> choose_high_low(l, r, :lowest)
-      _ -> choose_high_low(l, r, :highest)
-    end
-  end
-
-  defp choose_high_low(l, r, :highest) when l > r, do: l
-  defp choose_high_low(_, r, :highest), do: r
-  defp choose_high_low(l, r, :lowest) when l < r, do: l
-  defp choose_high_low(_, r, :lowest), do: r
-
-  @spec compile_var({:var, charlist}) :: compiled_fun
-  defp compile_var({:var, var}), do: fn args, opts -> var_final(var, args, opts) end
-
-  @spec var_final(charlist, args, opts) :: number
-  defp var_final(var, args, opts) do
-    key = var |> to_string() |> String.to_atom()
-
-    args
-    |> Keyword.get(key)
-    |> var_final_arg(var, opts)
-  end
-
-  @spec var_final_arg(any, charlist, opts) :: number
-  defp var_final_arg(nil, var, _),
-    do: raise(ArgumentError, "no variable #{inspect(var)} was found in the arguments")
-
-  defp var_final_arg(val, _, _) when is_integer(val), do: val
-  defp var_final_arg(val, _, opts) when is_function(val), do: val.([], opts)
-
-  defp var_final_arg(val, var, opts) when is_bitstring(val) do
-    {:ok, tokens} = Tokenizer.tokenize(val)
-    {:ok, parsed} = Parser.parse(tokens)
-    compiled_arg = compile(parsed)
-
-    var_final_arg(compiled_arg, var, opts)
-  end
 end
