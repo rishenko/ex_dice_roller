@@ -33,6 +33,23 @@ defmodule ExDiceRoller.ParserTest do
       assert {:ok, expected} == Parser.parse(tokens)
     end
 
+    test "separator" do
+      tokens = [
+        {:digit, 1, '2'},
+        {:roll, 1, 'd'},
+        {:digit, 1, '4'},
+        {:",", 1, ','},
+        {:digit, 1, '1'},
+        {:roll, 1, 'd'},
+        {:digit, 1, '6'}
+      ]
+
+      expected =
+        {:sep, {:roll, {:digit, '2'}, {:digit, '4'}}, {:roll, {:digit, '1'}, {:digit, '6'}}}
+
+      assert {:ok, expected} == Parser.parse(tokens)
+    end
+
     test "variable" do
       tokens = [
         {:digit, 1, '1'},

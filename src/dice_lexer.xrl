@@ -8,6 +8,7 @@ Space           = [\s\t\n\r]+
 LeftParen       = \(
 RightParen      = \)
 Variable        = [a-zA-Z]
+Separator       = ,
 
 Rules.
 
@@ -19,5 +20,6 @@ Rules.
 {RightParen}        : {token, {')', TokenLine, TokenChars}}.
 {Number}            : {token, {digit, TokenLine, TokenChars}}.
 {Variable}          : {token, {var, TokenLine, TokenChars}}.
+{Separator}         : {token, {',', TokenLine, TokenChars}}.
 
 Erlang code.

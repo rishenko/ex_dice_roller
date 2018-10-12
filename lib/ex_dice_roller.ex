@@ -247,6 +247,11 @@ defmodule ExDiceRoller do
       iex> ExDiceRoller.roll("1d2+y", [y: 2], [:cache, :explode])
       11
 
+      iex> ExDiceRoller.roll("1,2", [], [:highest])
+      2
+      iex> ExDiceRoller.roll("10,12,45,3,100", [], [:lowest])
+      3
+
   """
   @spec roll(String.t() | Compiler.compiled_fun(), Keyword.t(), list(atom | tuple)) :: integer
 
