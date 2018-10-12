@@ -28,6 +28,8 @@ defmodule ExDiceRollerTest do
       3 = ExDiceRoller.roll("3,3")
       83 = ExDiceRoller.roll("11,5,83,42,36")
       1 = ExDiceRoller.roll("2,1", [], [:lowest])
+      2 = ExDiceRoller.roll("5%3")
+      8 = ExDiceRoller.roll("2^3")
     end
 
     test "unary" do
@@ -55,6 +57,12 @@ defmodule ExDiceRollerTest do
       3 = ExDiceRoller.roll("-3/2+2d4")
       6 = ExDiceRoller.roll("4d1, 6d1")
       15 = ExDiceRoller.roll("3d6+9,1d4")
+      0 = ExDiceRoller.roll("13%(1d4)")
+      2 = ExDiceRoller.roll("(5d3)%3")
+      2 = ExDiceRoller.roll("(6d4)%(2d3)")
+      28_561 = ExDiceRoller.roll("13^(1d4)")
+      1331 = ExDiceRoller.roll("(5d3)^3")
+      50_625 = ExDiceRoller.roll("(6d4)^(2d3)")
     end
 
     test "variations of expressions" do

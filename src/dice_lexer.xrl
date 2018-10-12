@@ -2,7 +2,7 @@ Definitions.
 
 Number          = [0-9]+
 BasicOperator   = [\+\-]
-ComplexOperator = [\*\/]
+ComplexOperator = [\*\/%^]
 Roll            = d
 Space           = [\s\t\n\r]+
 LeftParen       = \(
