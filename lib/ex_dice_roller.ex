@@ -224,6 +224,10 @@ defmodule ExDiceRoller do
   in the highest possible value for a die (such as rolling a 20 on a d20), the
   die will be rerolled until the result is no longer the max possible. It then
   sums the total of all rolls and returns that value.
+  * `:highest`: Selects the highest of all calculated values when using the `,`
+  operator.
+  * `:lowest`: Selects the lowest of all calculated values when using the `,`
+  operator.
 
   ### Examples
 
