@@ -11,56 +11,41 @@ defmodule ExDiceRoller.Compilers.Math do
     compile_op(op, left_expr, is_function(left_expr), right_expr, is_function(right_expr))
   end
 
-  @spec compile_op(list, Compiler.compiled_val(), boolean, Compiler.compiled_val(), boolean) ::
-          Compiler.compiled_val()
-  defp compile_op('+', l, l_fun?, r, r_fun?), do: compile_add(l, l_fun?, r, r_fun?)
-  defp compile_op('-', l, l_fun?, r, r_fun?), do: compile_sub(l, l_fun?, r, r_fun?)
-  defp compile_op('*', l, l_fun?, r, r_fun?), do: compile_mul(l, l_fun?, r, r_fun?)
-  defp compile_op('/', l, l_fun?, r, r_fun?), do: compile_div(l, l_fun?, r, r_fun?)
-  defp compile_op('%', l, l_fun?, r, r_fun?), do: compile_mod(l, l_fun?, r, r_fun?)
-  defp compile_op('^', l, l_fun?, r, r_fun?), do: compile_exp(l, l_fun?, r, r_fun?)
+  @operators [
+    {'+', &Kernel.+/2, "add"},
+    {'-', &Kernel.-/2, "sub"},
+    {'*', &Kernel.*/2, "mul"},
+    {'/', &Kernel.//2, "div"},
+    {'%', &Kernel.rem/2, "mod"},
+    {'^', &:math.pow/2, "exp"}
+  ]
 
-  @spec compile_add(Compiler.compiled_val(), boolean, Compiler.compiled_val(), boolean) ::
-          Compiler.compiled_val()
-  defp compile_add(l, true, r, true), do: fn args, opts -> l.(args, opts) + r.(args, opts) end
-  defp compile_add(l, true, r, false), do: fn args, opts -> l.(args, opts) + r end
-  defp compile_add(l, false, r, true), do: fn args, opts -> l + r.(args, opts) end
-  defp compile_add(l, false, r, false), do: l + r
+  for {char, fun, name} <- @operators do
+    defp unquote(:"compile_#{name}")(l, true, r, true),
+      do: fn args, opts -> op(l.(args, opts), r.(args, opts), unquote(fun)) end
 
-  @spec compile_sub(Compiler.compiled_val(), boolean, Compiler.compiled_val(), boolean) ::
-          Compiler.compiled_val()
-  defp compile_sub(l, true, r, true), do: fn args, opts -> l.(args, opts) - r.(args, opts) end
-  defp compile_sub(l, true, r, false), do: fn args, opts -> l.(args, opts) - r end
-  defp compile_sub(l, false, r, true), do: fn args, opts -> l - r.(args, opts) end
-  defp compile_sub(l, false, r, false), do: l - r
+    defp unquote(:"compile_#{name}")(l, true, r, false),
+      do: fn args, opts -> op(l.(args, opts), r, unquote(fun)) end
 
-  @spec compile_mul(Compiler.compiled_val(), boolean, Compiler.compiled_val(), boolean) ::
-          Compiler.compiled_val()
-  defp compile_mul(l, true, r, true), do: fn args, opts -> l.(args, opts) * r.(args, opts) end
-  defp compile_mul(l, true, r, false), do: fn args, opts -> l.(args, opts) * r end
-  defp compile_mul(l, false, r, true), do: fn args, opts -> l * r.(args, opts) end
-  defp compile_mul(l, false, r, false), do: l * r
+    defp unquote(:"compile_#{name}")(l, false, r, true),
+      do: fn args, opts -> op(l, r.(args, opts), unquote(fun)) end
 
-  @spec compile_div(Compiler.compiled_val(), boolean, Compiler.compiled_val(), boolean) ::
-          Compiler.compiled_val()
-  defp compile_div(l, true, r, true), do: fn args, opts -> l.(args, opts) / r.(args, opts) end
-  defp compile_div(l, true, r, false), do: fn args, opts -> l.(args, opts) / r end
-  defp compile_div(l, false, r, true), do: fn args, opts -> l / r.(args, opts) end
-  defp compile_div(l, false, r, false), do: l / r
+    defp unquote(:"compile_#{name}")(l, false, r, false), do: op(l, r, unquote(fun))
 
-  @spec compile_mod(Compiler.compiled_val(), boolean, Compiler.compiled_val(), boolean) ::
-          Compiler.compiled_val()
-  defp compile_mod(l, true, r, true), do: fn args, opts -> rem(l.(args, opts), r.(args, opts)) end
-  defp compile_mod(l, true, r, false), do: fn args, opts -> rem(l.(args, opts), r) end
-  defp compile_mod(l, false, r, true), do: fn args, opts -> rem(l, r.(args, opts)) end
-  defp compile_mod(l, false, r, false), do: rem(l, r)
+    defp compile_op(unquote(char), l, l_fun?, r, r_fun?),
+      do: unquote(:"compile_#{name}")(l, l_fun?, r, r_fun?)
+  end
 
-  @spec compile_exp(Compiler.compiled_val(), boolean, Compiler.compiled_val(), boolean) ::
-          Compiler.compiled_val()
-  defp compile_exp(l, true, r, true),
-    do: fn args, opts -> :math.pow(l.(args, opts), r.(args, opts)) end
+  @spec op(list | number, list | number, function) :: list | number
+  defp op(l, r, fun) when is_list(l) and is_list(r) do
+    if length(l) != length(r) do
+      raise ArgumentError, "you cannot add two lists of different sizes"
+    end
 
-  defp compile_exp(l, true, r, false), do: fn args, opts -> :math.pow(l.(args, opts), r) end
-  defp compile_exp(l, false, r, true), do: fn args, opts -> :math.pow(l, r.(args, opts)) end
-  defp compile_exp(l, false, r, false), do: :math.pow(l, r)
+    Enum.map(0..(length(l) - 1), &fun.(Enum.at(l, &1), Enum.at(r, &1)))
+  end
+
+  defp op(l, r, fun) when is_list(l), do: Enum.map(l, &fun.(&1, r))
+  defp op(l, r, fun) when is_list(r), do: Enum.map(r, &fun.(&1, l))
+  defp op(l, r, fun), do: fun.(l, r)
 end
