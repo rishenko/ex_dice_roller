@@ -220,6 +220,8 @@ defmodule ExDiceRoller.Compiler do
   defp compile_op('-', l, l_fun?, r, r_fun?), do: compile_sub(l, l_fun?, r, r_fun?)
   defp compile_op('*', l, l_fun?, r, r_fun?), do: compile_mul(l, l_fun?, r, r_fun?)
   defp compile_op('/', l, l_fun?, r, r_fun?), do: compile_div(l, l_fun?, r, r_fun?)
+  defp compile_op('%', l, l_fun?, r, r_fun?), do: compile_mod(l, l_fun?, r, r_fun?)
+  defp compile_op('^', l, l_fun?, r, r_fun?), do: compile_exp(l, l_fun?, r, r_fun?)
 
   @spec compile_add(compiled_val, boolean, compiled_val, boolean) :: compiled_val
   defp compile_add(l, true, r, true), do: fn args, opts -> l.(args, opts) + r.(args, opts) end
@@ -244,6 +246,18 @@ defmodule ExDiceRoller.Compiler do
   defp compile_div(l, true, r, false), do: fn args, opts -> l.(args, opts) / r end
   defp compile_div(l, false, r, true), do: fn args, opts -> l / r.(args, opts) end
   defp compile_div(l, false, r, false), do: l / r
+
+  @spec compile_mod(compiled_val, boolean, compiled_val, boolean) :: compiled_val
+  defp compile_mod(l, true, r, true), do: fn args, opts -> rem(l.(args, opts), r.(args, opts)) end
+  defp compile_mod(l, true, r, false), do: fn args, opts -> rem(l.(args, opts), r) end
+  defp compile_mod(l, false, r, true), do: fn args, opts -> rem(l, r.(args, opts)) end
+  defp compile_mod(l, false, r, false), do: rem(l, r)
+
+  @spec compile_exp(compiled_val, boolean, compiled_val, boolean) :: compiled_val
+  defp compile_exp(l, true, r, true), do: fn args, opts -> :math.pow(l.(args, opts), r.(args, opts)) end
+  defp compile_exp(l, true, r, false), do: fn args, opts -> :math.pow(l.(args, opts), r) end
+  defp compile_exp(l, false, r, true), do: fn args, opts -> :math.pow(l, r.(args, opts)) end
+  defp compile_exp(l, false, r, false), do: :math.pow(l, r)
 
   @spec compile_var({:var, charlist}) :: compiled_fun
   defp compile_var({:var, var}), do: fn args, opts -> var_final(var, args, opts) end
