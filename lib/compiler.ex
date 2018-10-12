@@ -47,7 +47,7 @@ defmodule ExDiceRoller.Compiler do
 
   alias ExDiceRoller.{Parser, Tokenizer}
   @type compiled_val :: compiled_fun | number
-  @type compiled_fun :: (args, opts -> integer)
+  @type compiled_fun :: (args, opts -> integer | list(integer))
   @type fun_info_tuple :: {function, atom, list(any)}
   @type args :: Keyword.t()
   @type opts :: list(atom | {atom, any})
@@ -90,7 +90,7 @@ defmodule ExDiceRoller.Compiler do
     fn args, opts ->
       args
       |> compiled.(opts)
-      |> round()
+      |> do_round()
     end
   end
 
@@ -176,34 +176,56 @@ defmodule ExDiceRoller.Compiler do
   @spec compile_roll(compiled_val, boolean, compiled_val, boolean) :: compiled_fun
 
   defp compile_roll(num, true, sides, true) do
-    fn args, opts -> roll_final(num.(args, opts), sides.(args, opts), opts) end
+    fn args, opts -> roll_prep(num.(args, opts), sides.(args, opts), opts) end
   end
 
   defp compile_roll(num, true, sides, false),
-    do: fn args, opts -> roll_final(num.(args, opts), sides, opts) end
+    do: fn args, opts -> roll_prep(num.(args, opts), sides, opts) end
 
   defp compile_roll(num, false, sides, true),
-    do: fn args, opts -> roll_final(num, sides.(args, opts), opts) end
+    do: fn args, opts -> roll_prep(num, sides.(args, opts), opts) end
 
   defp compile_roll(num, false, sides, false),
-    do: fn _args, opts -> roll_final(num, sides, opts) end
+    do: fn _args, opts -> roll_prep(num, sides, opts) end
 
-  @spec roll_final(number, number, list(atom | tuple)) :: integer
-  defp roll_final(0, _, _), do: 0
-  defp roll_final(_, 0, _), do: 0
+  @spec roll_prep(number, number, list(atom | tuple)) :: integer
+  defp roll_prep(0, _, _), do: 0
+  defp roll_prep(_, 0, _), do: 0
 
-  defp roll_final(num, sides, opts) when num >= 0 and sides >= 0 do
-    num = round(num)
-    sides = round(sides)
+  defp roll_prep(num, sides, opts) when num >= 0 and sides >= 0 do
+    num = do_round(num)
+    sides = do_round(sides)
     explode? = :explode in opts
 
-    Enum.reduce(1..num, 0, fn _, total ->
-      total + roll(sides, explode?)
-    end)
+    case :keep in opts do
+      true ->
+        keep_roll(num, sides, explode?)
+
+      false ->
+        Enum.reduce(1..num, 0, fn _, total ->
+          total + roll(sides, explode?)
+        end)
+    end
   end
 
-  defp roll_final(_, _, _),
+  defp roll_prep(_, _, _),
     do: raise(ArgumentError, "neither number of dice nor number of sides cannot be less than 0")
+
+  defp keep_roll(num, sides, explode?) when is_number(num) do
+    keep_roll([num], sides, explode?)
+  end
+
+  defp keep_roll(num, sides, explode?) when is_number(sides) do
+    keep_roll(num, [sides], explode?)
+  end
+
+  defp keep_roll(num, sides, explode?) do
+    Enum.flat_map(num, fn n ->
+      Enum.flat_map(1..n, fn _ ->
+        Enum.map(sides, & roll(&1, explode?))
+      end)
+    end)
+  end
 
   defp roll(sides, false) do
     Enum.random(1..sides)
@@ -213,6 +235,12 @@ defmodule ExDiceRoller.Compiler do
     result = Enum.random(1..sides)
     explode_roll(sides, result, result)
   end
+
+  defp do_round(l) when is_list(l) do
+    Enum.map(l, & do_round(&1))
+  end
+
+  defp do_round(val) when is_number(val), do: round(val)
 
   defp explode_roll(sides, sides, acc) do
     result = Enum.random(1..sides)

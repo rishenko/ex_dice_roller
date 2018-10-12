@@ -206,7 +206,7 @@ defmodule ExDiceRoller do
   Note that using variables with this call will result in errors. If you need
   variables, use `roll/3` instead.
   """
-  @spec roll(String.t()) :: integer
+  @spec roll(String.t()) :: integer | list(integer)
   def roll(roll_string), do: roll(roll_string, [], [])
 
   @doc """
@@ -271,9 +271,7 @@ defmodule ExDiceRoller do
   def roll(roll_string, args, opts) when is_bitstring(roll_string) do
     with {:ok, tokens} <- Tokenizer.tokenize(roll_string),
          {:ok, parsed_tokens} <- Parser.parse(tokens) do
-      parsed_tokens
-      |> calculate(args, opts)
-      |> round()
+      calculate(parsed_tokens, args, opts)
     else
       {:error, _} = err -> err
     end
@@ -333,7 +331,7 @@ defmodule ExDiceRoller do
   def compile(other), do: {:error, {:cannot_compile_roll, other}}
 
   @doc "Executes a function built by `compile/1`."
-  @spec execute(function, Compiler.args(), Compiler.opts()) :: number
+  @spec execute(function, Compiler.args(), Compiler.opts()) :: integer | list(integer)
   def execute(compiled, args \\ [], opts \\ []) when is_function(compiled) do
     compiled.(args, opts)
   end

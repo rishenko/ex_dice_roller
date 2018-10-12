@@ -90,6 +90,13 @@ defmodule ExDiceRollerTest do
       4 = ExDiceRoller.roll("x/y", x: 15, y: 4)
     end
 
+    test "keep roll values" do
+      values = ExDiceRoller.roll("3d6", [], [:keep])
+      require Logger
+      values |> inspect() |> Logger.warn()
+      assert length(values) == 3
+    end
+
     test "with spaces" do
       5 = ExDiceRoller.roll("1 d 4 - 2+ (50+1 ) / 2d5")
     end

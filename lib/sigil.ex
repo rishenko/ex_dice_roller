@@ -9,6 +9,7 @@ defmodule ExDiceRoller.Sigil do
   * `e`: Allows dice to explode. Can only be used alongside option `r`.
   * `h`: If the dice roll contains any separators `,`, select the highest of the calculated values. Can only be used alongside option `r`.
   * `l`: If the dice roll contains any separators `,`, select the lowest of the calculated values. Can only be used alongside option `r`.
+  * `k`: Keeps the value for each dice roll and returns it as a list.
 
   ## Example
 
@@ -64,6 +65,7 @@ defmodule ExDiceRoller.Sigil do
   defp translate_opts(<<?e, t::binary>>, acc), do: translate_opts(t, [:explode | acc])
   defp translate_opts(<<?h, t::binary>>, acc), do: translate_opts(t, [:highest | acc])
   defp translate_opts(<<?l, t::binary>>, acc), do: translate_opts(t, [:lowest | acc])
+  defp translate_opts(<<?k, t::binary>>, acc), do: translate_opts(t, [:keep | acc])
   defp translate_opts(<<>>, acc), do: {:ok, acc}
   defp translate_opts(rest, _acc), do: {:error, rest}
 end
