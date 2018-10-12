@@ -47,8 +47,9 @@ defmodule ExDiceRoller.Compiler do
 
   alias ExDiceRoller.{Parser, Tokenizer}
   alias ExDiceRoller.Compilers.{Math, Roll, Separator, Variable}
-  @type compiled_val :: compiled_fun | number
-  @type compiled_fun :: (args, opts -> integer | list(integer))
+  @type calculated_val :: number | list(integer)
+  @type compiled_val :: compiled_fun | calculated_val
+  @type compiled_fun :: (args, opts -> calculated_val)
   @type fun_info_tuple :: {function, atom, list(any)}
   @type args :: Keyword.t()
   @type opts :: list(atom | {atom, any})
@@ -98,15 +99,18 @@ defmodule ExDiceRoller.Compiler do
     end
   end
 
-  def delegate(expression), do: do_compile(expression)
-
-  defp do_compile({:digit, compiled_val}),
+  @doc """
+  Delegates expression compilation to an appropriate module implementing
+  `ExDiceRoller.Compiler` behaviours.
+  """
+  @spec delegate(Parser.expression()) :: compiled_val
+  def delegate({:digit, compiled_val}),
     do: compiled_val |> to_string() |> String.to_integer()
 
-  defp do_compile({:roll, _, _} = expr), do: Roll.compile(expr)
-  defp do_compile({{:operator, _}, _, _} = expr), do: Math.compile(expr)
-  defp do_compile({:sep, _, _} = expr), do: Separator.compile(expr)
-  defp do_compile({:var, _} = var), do: Variable.compile(var)
+  def delegate({:roll, _, _} = expr), do: Roll.compile(expr)
+  def delegate({{:operator, _}, _, _} = expr), do: Math.compile(expr)
+  def delegate({:sep, _, _} = expr), do: Separator.compile(expr)
+  def delegate({:var, _} = var), do: Variable.compile(var)
 
   @doc """
   Shows the nested functions and relationships of a compiled function. The

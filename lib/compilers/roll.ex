@@ -28,6 +28,7 @@ defmodule ExDiceRoller.Compilers.Roll do
     do: fn _args, opts -> roll_prep(num, sides, opts) end
 
   @spec roll_prep(number, number, list(atom | tuple)) :: integer
+
   defp roll_prep(0, _, _), do: 0
   defp roll_prep(_, 0, _), do: 0
 
@@ -50,6 +51,29 @@ defmodule ExDiceRoller.Compilers.Roll do
   defp roll_prep(_, _, _),
     do: raise(ArgumentError, "neither number of dice nor number of sides cannot be less than 0")
 
+  @spec roll(integer, boolean) :: integer
+
+  defp roll(sides, false) do
+    Enum.random(1..sides)
+  end
+
+  defp roll(sides, true) do
+    result = Enum.random(1..sides)
+    explode_roll(sides, result, result)
+  end
+
+  @spec explode_roll(integer, integer, integer) :: integer
+
+  defp explode_roll(sides, sides, acc) do
+    result = Enum.random(1..sides)
+    explode_roll(sides, result, acc + result)
+  end
+
+  defp explode_roll(_, _, acc), do: acc
+
+  @spec keep_roll(Compiler.calculated_val(), Compiler.calculated_val(), boolean) ::
+          Compiler.calculated_val()
+
   defp keep_roll(num, sides, explode?) when is_number(num) do
     keep_roll([num], sides, explode?)
   end
@@ -65,20 +89,4 @@ defmodule ExDiceRoller.Compilers.Roll do
       end)
     end)
   end
-
-  defp roll(sides, false) do
-    Enum.random(1..sides)
-  end
-
-  defp roll(sides, true) do
-    result = Enum.random(1..sides)
-    explode_roll(sides, result, result)
-  end
-
-  defp explode_roll(sides, sides, acc) do
-    result = Enum.random(1..sides)
-    explode_roll(sides, result, acc + result)
-  end
-
-  defp explode_roll(_, _, acc), do: acc
 end
