@@ -106,8 +106,13 @@ defmodule ExDiceRoller.Compiler do
   defp do_compile({{:operator, op}, left_expr, right_expr}) do
     left_expr = do_compile(left_expr)
     right_expr = do_compile(right_expr)
-
     compile_op(op, left_expr, is_function(left_expr), right_expr, is_function(right_expr))
+  end
+
+  defp do_compile({:sep, left_expr, right_expr}) do
+    left_expr = do_compile(left_expr)
+    right_expr = do_compile(right_expr)
+    compile_sep(left_expr, is_function(left_expr), right_expr, is_function(right_expr))
   end
 
   defp do_compile({:var, _} = var), do: compile_var(var)
@@ -169,6 +174,7 @@ defmodule ExDiceRoller.Compiler do
   defp do_fun_info(str) when is_list(str), do: str
 
   @spec compile_roll(compiled_val, boolean, compiled_val, boolean) :: compiled_fun
+
   defp compile_roll(num, true, sides, true) do
     fn args, opts -> roll_final(num.(args, opts), sides.(args, opts), opts) end
   end
@@ -254,10 +260,40 @@ defmodule ExDiceRoller.Compiler do
   defp compile_mod(l, false, r, false), do: rem(l, r)
 
   @spec compile_exp(compiled_val, boolean, compiled_val, boolean) :: compiled_val
-  defp compile_exp(l, true, r, true), do: fn args, opts -> :math.pow(l.(args, opts), r.(args, opts)) end
+  defp compile_exp(l, true, r, true),
+    do: fn args, opts -> :math.pow(l.(args, opts), r.(args, opts)) end
+
   defp compile_exp(l, true, r, false), do: fn args, opts -> :math.pow(l.(args, opts), r) end
   defp compile_exp(l, false, r, true), do: fn args, opts -> :math.pow(l, r.(args, opts)) end
   defp compile_exp(l, false, r, false), do: :math.pow(l, r)
+
+  @spec compile_sep(compiled_val, boolean, compiled_val, boolean) :: compiled_val
+  defp compile_sep(l, true, r, true),
+    do: fn args, opts -> choose_high_low(l.(args, opts), r.(args, opts), opts) end
+
+  defp compile_sep(l, true, r, false),
+    do: fn args, opts -> choose_high_low(l.(args, opts), r, opts) end
+
+  defp compile_sep(l, false, r, true),
+    do: fn args, opts -> choose_high_low(l, r.(args, opts), opts) end
+
+  defp compile_sep(l, false, r, false), do: fn _args, opts -> choose_high_low(l, r, opts) end
+
+  @spec choose_high_low(number, number, :highest | :lowest) :: number
+  defp choose_high_low(l, l, _), do: l
+
+  defp choose_high_low(l, r, opts) when is_list(opts) do
+    case Enum.find(opts, &(&1 in [:highest, :lowest])) do
+      :highest -> choose_high_low(l, r, :highest)
+      :lowest -> choose_high_low(l, r, :lowest)
+      _ -> choose_high_low(l, r, :highest)
+    end
+  end
+
+  defp choose_high_low(l, r, :highest) when l > r, do: l
+  defp choose_high_low(_, r, :highest), do: r
+  defp choose_high_low(l, r, :lowest) when l < r, do: l
+  defp choose_high_low(_, r, :lowest), do: r
 
   @spec compile_var({:var, charlist}) :: compiled_fun
   defp compile_var({:var, var}), do: fn args, opts -> var_final(var, args, opts) end

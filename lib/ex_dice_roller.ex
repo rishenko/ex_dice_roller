@@ -23,8 +23,9 @@ defmodule ExDiceRoller do
   --------------------- | ------------
   `d`                   | left-to-right
   `+`, `-`              | unary
-  `*`, `/`              | left-to-right
+  `*`, `/`, `%`, `^`    | left-to-right
   `+`, `-`              | left-to-right
+  `,`                   | left-to-right
 
   ### Effects of Parentheses
 
@@ -223,6 +224,10 @@ defmodule ExDiceRoller do
   in the highest possible value for a die (such as rolling a 20 on a d20), the
   die will be rerolled until the result is no longer the max possible. It then
   sums the total of all rolls and returns that value.
+  * `:highest`: Selects the highest of all calculated values when using the `,`
+  operator.
+  * `:lowest`: Selects the lowest of all calculated values when using the `,`
+  operator.
 
   ### Examples
 
@@ -246,6 +251,11 @@ defmodule ExDiceRoller do
       2
       iex> ExDiceRoller.roll("1d2+y", [y: 2], [:cache, :explode])
       11
+
+      iex> ExDiceRoller.roll("1,2", [], [:highest])
+      2
+      iex> ExDiceRoller.roll("10,12,45,3,100", [], [:lowest])
+      3
 
   """
   @spec roll(String.t() | Compiler.compiled_fun(), Keyword.t(), list(atom | tuple)) :: integer

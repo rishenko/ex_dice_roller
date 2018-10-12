@@ -66,6 +66,18 @@ defmodule ExDiceRoller.TokenizerTest do
     assert {:ok, expected} == Tokenizer.tokenize("(78*5)")
   end
 
+  test "separator" do
+    expected = [
+      {:digit, 1, '5'},
+      {:",", 1, ','},
+      {:digit, 1, '6'},
+      {:",", 1, ','},
+      {:digit, 1, '7'}
+    ]
+
+    assert {:ok, expected} == Tokenizer.tokenize("5,6,7")
+  end
+
   test "variables" do
     assert {:ok, [{:var, 1, 'x'}]} = Tokenizer.tokenize("x")
 
