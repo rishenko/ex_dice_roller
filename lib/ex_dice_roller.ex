@@ -23,8 +23,9 @@ defmodule ExDiceRoller do
   --------------------- | ------------
   `d`                   | left-to-right
   `+`, `-`              | unary
-  `*`, `/`              | left-to-right
+  `*`, `/`, `%`, `^`    | left-to-right
   `+`, `-`              | left-to-right
+  `,`                   | left-to-right
 
   ### Effects of Parentheses
 
