@@ -3,6 +3,26 @@ defmodule ExDiceRoller.Compiler do
   Provides functionality for compiling expressions into ready-to-execute
   functions.
 
+  Compiler's main job is to perform the following:
+
+  * takes a concrete parse tree, generally outputted by `ExDiceRoller.Parser`,
+  and recursively navigates the tree
+  * each expression is delegated to an appropriate module that implements the
+  `compile/1` callback, which then
+    * converts each expression that results in an invariable value into a number
+    * converts each expression containing variability, or randomness, into a
+    compiled anonymous function
+    * sends sub-expressions back to Compiler to be delegated appropriately
+  * wraps the nested set of compiled functions with an anonymous function that
+  also rounds the final value
+
+  Note that all compiled functions outputted by Compiler accept both arguments
+  and options. Arguments are used exclusively for replacing variables with
+  values. Options affect the behavior of the anonymous functions and include
+  concepts such as exploding dice, choosing highest or lowest values, and more.
+
+  ## Example
+
       > parsed =
         {{:operator, '+'},
         {{:operator, '-'}, {:roll, {:digit, '1'}, {:digit, '4'}},
@@ -45,7 +65,7 @@ defmodule ExDiceRoller.Compiler do
 
   """
 
-  alias ExDiceRoller.{Parser, Tokenizer}
+  alias ExDiceRoller.Parser
   alias ExDiceRoller.Compilers.{Math, Roll, Separator, Variable}
   @type calculated_val :: number | list(integer)
   @type compiled_val :: compiled_fun | calculated_val
@@ -161,6 +181,7 @@ defmodule ExDiceRoller.Compiler do
   def round_val(val) when is_number(val), do: Kernel.round(val)
 
   @spec do_fun_info(function | number | charlist) :: function | number | charlist
+
   defp do_fun_info(fun) when is_function(fun) do
     info = :erlang.fun_info(fun)
 

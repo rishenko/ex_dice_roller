@@ -1,5 +1,21 @@
 defmodule ExDiceRoller.Compilers.Variable do
-  @moduledoc "Handles compiling expressions that use variables."
+  @moduledoc """
+  Handles compiling expressions that use variables.
+
+  Variables can be used to replace single letter characters in an expression
+  with a value, such as a number or an anonymous function that accepts list
+  arguments (`args` and `opts`, respectively).
+
+      iex(1)> import ExDiceRoller.Sigil
+      ExDiceRoller.Sigil
+      iex(2)> ExDiceRoller.roll(~a/1+x/, [x: 5])
+      6
+      iex(3)> ExDiceRoller.roll("xdy+z", [x: 5, y: 10, z: 50])
+      81
+      iex(4)> ExDiceRoller.roll("xdy+z", [x: 5, y: 10, z: ~a/15d100/])
+      824
+
+  """
 
   @behaviour ExDiceRoller.Compiler
   alias ExDiceRoller.{Compiler, Tokenizer, Parser}

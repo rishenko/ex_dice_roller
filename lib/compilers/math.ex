@@ -1,5 +1,7 @@
 defmodule ExDiceRoller.Compilers.Math do
-  @moduledoc "Handles compiling mathematical expressions. "
+  @moduledoc """
+  Handles compiling mathematical expressions.
+  """
 
   @behaviour ExDiceRoller.Compiler
   alias ExDiceRoller.Compiler

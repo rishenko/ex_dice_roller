@@ -1,5 +1,7 @@
 defmodule ExDiceRoller.Compilers.Roll do
-  @moduledoc "Handles compiling dice roll expressions. "
+  @moduledoc """
+  Handles compiling dice roll expressions.
+  """
 
   @behaviour ExDiceRoller.Compiler
   alias ExDiceRoller.Compiler
