@@ -8,25 +8,22 @@ defmodule ExDiceRoller.Compilers.Roll do
 
   @impl true
   def compile({:roll, left_expr, right_expr}) do
-    num = Compiler.delegate(left_expr)
-    sides = Compiler.delegate(right_expr)
-    compile_roll(num, is_function(num), sides, is_function(sides))
+    compile_roll(Compiler.delegate(left_expr), Compiler.delegate(right_expr))
   end
 
-  @spec compile_roll(Compiler.compiled_val(), boolean, Compiler.compiled_val(), boolean) ::
-          Compiler.compiled_fun()
+  @spec compile_roll(Compiler.compiled_val(), Compiler.compiled_val()) :: Compiler.compiled_fun()
 
-  defp compile_roll(num, true, sides, true) do
+  defp compile_roll(num, sides) when is_function(num) and is_function(sides) do
     fn args, opts -> roll_prep(num.(args, opts), sides.(args, opts), opts) end
   end
 
-  defp compile_roll(num, true, sides, false),
+  defp compile_roll(num, sides) when is_function(num),
     do: fn args, opts -> roll_prep(num.(args, opts), sides, opts) end
 
-  defp compile_roll(num, false, sides, true),
+  defp compile_roll(num, sides) when is_function(sides),
     do: fn args, opts -> roll_prep(num, sides.(args, opts), opts) end
 
-  defp compile_roll(num, false, sides, false),
+  defp compile_roll(num, sides),
     do: fn _args, opts -> roll_prep(num, sides, opts) end
 
   @spec roll_prep(number, number, list(atom | tuple)) :: integer

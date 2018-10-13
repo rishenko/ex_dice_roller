@@ -67,6 +67,7 @@ defmodule ExDiceRoller.Compiler do
 
   alias ExDiceRoller.Parser
   alias ExDiceRoller.Compilers.{Math, Roll, Separator, Variable}
+
   @type calculated_val :: number | list(integer)
   @type compiled_val :: compiled_fun | calculated_val
   @type compiled_fun :: (args, opts -> calculated_val)
@@ -120,7 +121,7 @@ defmodule ExDiceRoller.Compiler do
   end
 
   @doc """
-  Delegates expression compilation to an appropriate module implementing
+  Delegates expression compilation to an appropriate module that implements
   `ExDiceRoller.Compiler` behaviours.
   """
   @spec delegate(Parser.expression()) :: compiled_val
@@ -174,6 +175,7 @@ defmodule ExDiceRoller.Compiler do
   end
 
   @doc "Performs rounding on both numbers and lists of numbers."
+  @spec round_val(calculated_val | float) :: calculated_val
   def round_val(val) when is_list(val) do
     Enum.map(val, &round(&1))
   end

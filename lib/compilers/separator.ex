@@ -10,23 +10,20 @@ defmodule ExDiceRoller.Compilers.Separator do
 
   @impl true
   def compile({:sep, left_expr, right_expr}) do
-    left_expr = Compiler.delegate(left_expr)
-    right_expr = Compiler.delegate(right_expr)
-    compile_sep(left_expr, is_function(left_expr), right_expr, is_function(right_expr))
+    compile_sep(Compiler.delegate(left_expr), Compiler.delegate(right_expr))
   end
 
-  @spec compile_sep(Compiler.compiled_val(), boolean, Compiler.compiled_val(), boolean) ::
-          Compiler.compiled_val()
-  defp compile_sep(l, true, r, true),
+  @spec compile_sep(Compiler.compiled_val(), Compiler.compiled_val()) :: Compiler.compiled_val()
+  defp compile_sep(l, r) when is_function(l) and is_function(r),
     do: fn args, opts -> high_low(l.(args, opts), r.(args, opts), opts) end
 
-  defp compile_sep(l, true, r, false),
+  defp compile_sep(l, r) when is_function(l),
     do: fn args, opts -> high_low(l.(args, opts), r, opts) end
 
-  defp compile_sep(l, false, r, true),
+  defp compile_sep(l, r) when is_function(r),
     do: fn args, opts -> high_low(l, r.(args, opts), opts) end
 
-  defp compile_sep(l, false, r, false), do: fn _args, opts -> high_low(l, r, opts) end
+  defp compile_sep(l, r), do: fn _args, opts -> high_low(l, r, opts) end
 
   @spec high_low(Compiler.calculated_val(), Compiler.calculated_val(), :highest | :lowest) ::
           Compiler.calculated_val()

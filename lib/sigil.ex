@@ -7,9 +7,12 @@ defmodule ExDiceRoller.Sigil do
 
   * `r`: Compiles and invokes the roll. Variables are not supported with this.
   * `e`: Allows dice to explode. Can only be used alongside option `r`.
-  * `h`: If the dice roll contains any separators `,`, select the highest of the calculated values. Can only be used alongside option `r`.
-  * `l`: If the dice roll contains any separators `,`, select the lowest of the calculated values. Can only be used alongside option `r`.
-  * `k`: Keeps the value for each dice roll and returns it as a list.
+  * `h`: If the dice roll contains any separators `,`, select the highest of the
+  calculated values. Can only be used alongside option `r`.
+  * `l`: If the dice roll contains any separators `,`, select the lowest of the
+  calculated values. Can only be used alongside option `r`.
+  * `k`: Keeps the value for each dice roll and returns it as a list. Refer to
+  `ExDiceRoller.Roll` for more information.
 
   ## Example
 

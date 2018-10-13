@@ -8,9 +8,7 @@ defmodule ExDiceRoller.Compilers.Math do
 
   @impl true
   def compile({{:operator, op}, left_expr, right_expr}) do
-    left_expr = Compiler.delegate(left_expr)
-    right_expr = Compiler.delegate(right_expr)
-    compile_op(op, left_expr, is_function(left_expr), right_expr, is_function(right_expr))
+    compile_op(op, Compiler.delegate(left_expr), Compiler.delegate(right_expr))
   end
 
   @operators [
@@ -22,20 +20,30 @@ defmodule ExDiceRoller.Compilers.Math do
     {'^', &:math.pow/2, "exp"}
   ]
 
-  for {char, fun, name} <- @operators do
-    defp unquote(:"compile_#{name}")(l, true, r, true),
-      do: fn args, opts -> op(l.(args, opts), r.(args, opts), unquote(fun)) end
+  @spec compile_op(charlist, Compiler.compiled_val(), Compiler.compiled_val()) ::
+          Compiler.compiled_val()
 
-    defp unquote(:"compile_#{name}")(l, true, r, false),
-      do: fn args, opts -> op(l.(args, opts), r, unquote(fun)) end
+  for {char, _, name} <- @operators do
+    defp compile_op(unquote(char), l, r), do: unquote(:"compile_#{name}")(l, r)
+  end
 
-    defp unquote(:"compile_#{name}")(l, false, r, true),
-      do: fn args, opts -> op(l, r.(args, opts), unquote(fun)) end
+  for {_, fun, name} <- @operators do
+    @spec unquote(:"compile_#{name}")(Compiler.compiled_val(), Compiler.compiled_val()) ::
+            Compiler.compiled_val()
 
-    defp unquote(:"compile_#{name}")(l, false, r, false), do: op(l, r, unquote(fun))
+    defp unquote(:"compile_#{name}")(l, r) when is_function(l) and is_function(r) do
+      fn args, opts -> op(l.(args, opts), r.(args, opts), unquote(fun)) end
+    end
 
-    defp compile_op(unquote(char), l, l_fun?, r, r_fun?),
-      do: unquote(:"compile_#{name}")(l, l_fun?, r, r_fun?)
+    defp unquote(:"compile_#{name}")(l, r) when is_function(l) do
+      fn args, opts -> op(l.(args, opts), r, unquote(fun)) end
+    end
+
+    defp unquote(:"compile_#{name}")(l, r) when is_function(r) do
+      fn args, opts -> op(l, r.(args, opts), unquote(fun)) end
+    end
+
+    defp unquote(:"compile_#{name}")(l, r), do: op(l, r, unquote(fun))
   end
 
   @spec op(list | number, list | number, function) :: list | number
