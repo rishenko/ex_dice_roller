@@ -26,6 +26,10 @@ defmodule ExDiceRoller.SigilTest do
       assert 9 == ExDiceRoller.execute(fun)
     end
 
+    test "keep" do
+      [9, 20, 14, 16, 3] = ~a/5d20/rk
+    end
+
     test "choose highest/lowest" do
       fun = ~a/5d1,6d1/
       assert is_function(fun)

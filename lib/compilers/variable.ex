@@ -11,9 +11,9 @@ defmodule ExDiceRoller.Compilers.Variable do
       iex(2)> ExDiceRoller.roll(~a/1+x/, [x: 5])
       6
       iex(3)> ExDiceRoller.roll("xdy+z", [x: 5, y: 10, z: 50])
-      81
+      82
       iex(4)> ExDiceRoller.roll("xdy+z", [x: 5, y: 10, z: ~a/15d100/])
-      824
+      739
 
   """
 
