@@ -25,6 +25,17 @@ defmodule ExDiceRoller.Compilers.Separator do
       iex> ExDiceRoller.roll("1d6,10d8", [], [:lowest])
       6
 
+
+  Seperator expressions can be wrapped in parentheses to be utilized it as a
+  subexpression in a larger expression.
+
+  Examples:
+
+      iex> ExDiceRoller.roll("(5d1,2d1)+5", [], [:highest])
+      10
+      iex> ExDiceRoller.roll("(5d1,2d1)+5", [], [:lowest])
+      7
+
   ## Separator Use And Keeping Dice
 
   The separator can be used alongside kept dice rolls, provided both sides of
@@ -37,6 +48,11 @@ defmodule ExDiceRoller.Compilers.Separator do
       [2, 2, 6, 4, 5]
       iex> ExDiceRoller.roll("5d6,5d100", [], [:keep, :highest])
       [47, 6, 49, 91, 54]
+
+      iex> ExDiceRoller.roll("(5d2,5d6)+5", [], [:highest, :keep])
+      [7, 9, 9, 11, 6]
+      iex> ExDiceRoller.roll("(5d1,5d100)+5", [], [:lowest, :keep])
+      [6, 6, 6, 6, 6]
   """
 
   @behaviour ExDiceRoller.Compiler
