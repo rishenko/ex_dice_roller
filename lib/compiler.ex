@@ -21,6 +21,9 @@ defmodule ExDiceRoller.Compiler do
   values. Options affect the behavior of the anonymous functions and include
   concepts such as exploding dice, choosing highest or lowest values, and more.
 
+  More information about the different types of expression compilers and their
+  function can be found in the individual `ExDiceRoller.Compiler.*` modules.
+
   ## Example
 
       > parsed =

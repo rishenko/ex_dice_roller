@@ -5,6 +5,9 @@ defmodule ExDiceRoller.Sigil do
   variables cannot be present in the expression when invoking a roll directly
   from the sigil.
 
+  Also note that if you wish to use the `/` operator with the sigil, you will
+  need to use a different delimeter. Example being `~a|1d4+4d6/2d4`.
+
   The following options are available, with each invoking a roll:
 
   * `r`: Compiles and invokes the roll. Variables are not supported with this.
@@ -15,7 +18,7 @@ defmodule ExDiceRoller.Sigil do
   separator.
   * `k`: Keeps the value for each dice roll and returns it as a list.
 
-  ## Example
+  ## Examples
 
       iex> import ExDiceRoller.Sigil
       ExDiceRoller.Sigil
@@ -38,7 +41,7 @@ defmodule ExDiceRoller.Sigil do
 
   """
 
-  @spec sigil_a(String.t(), charlist) :: function | integer | float
+  @spec sigil_a(String.t(), charlist) :: Compiler.compiled_val
 
   def sigil_a(roll_string, opts) do
     binary_opts = :binary.list_to_bin(opts)
@@ -54,7 +57,7 @@ defmodule ExDiceRoller.Sigil do
           fun.([], translated_opts -- [:execute])
       end
     else
-      {:error, rest} -> {:error, {:invalid_option, rest}}
+      {:error, reason} -> {:error, {:invalid_option, reason}}
     end
   end
 
