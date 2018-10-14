@@ -32,6 +32,9 @@ defmodule ExDiceRoller.Compilers.Roll do
   ExDiceRoller.roll/3 calls, or specifying the `e` flag when using the `~a`
   sigil. This option can be used with any ExDiceRoller roll option.
 
+  It should also be noted that the exploding dice mechanic is not applied to a
+  one-sided die, since that would result in an infinite loop.
+
   Examples:
 
       iex> expr = "1d6"
@@ -53,8 +56,6 @@ defmodule ExDiceRoller.Compilers.Roll do
       9
       iex> ~a/1d10/re
       14
-
-  When using the `~a` sigil, adding option `e` will cause dice to explode.
 
 
   ### Keeping Dice Rolls
@@ -172,6 +173,8 @@ defmodule ExDiceRoller.Compilers.Roll do
   end
 
   @spec explode_roll(integer, integer, integer) :: integer
+
+  defp explode_roll(_, 1, acc), do: acc
 
   defp explode_roll(sides, sides, acc) do
     result = Enum.random(1..sides)
