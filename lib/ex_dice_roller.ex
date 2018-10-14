@@ -1,7 +1,8 @@
 defmodule ExDiceRoller do
   @moduledoc """
   Converts strings into dice rolls and returns expected results. Ignores any
-  spaces, including tabs and newlines, in the provided string.
+  spaces, including tabs and newlines, in the provided string. A roll can be
+  invoked via `ExDiceRoller.roll/3`.
 
       iex> ExDiceRoller.roll("2d6+3")
       8
@@ -13,19 +14,36 @@ defmodule ExDiceRoller do
       iex> ExDiceRoller.roll(~a/1d2+z/, [z: ~a/1d2/], [:explode])
       8
 
+
+  Rolls and invoked compiled functions can be supplied a number of options:
+
+  * `:cache`: Performs a cache lookup, with a miss generating a compiled
+  roll that is both cached and returned.
+  `ExDiceRoller.Cache.obtain/2` for more information.
+  * `:explode`: Causes dice to _explode_. This means that if a die roll results
+  in the highest possible value for a die (such as rolling a 20 on a d20), the
+  die will be rerolled until the result is no longer the max possible. It then
+  sums the total of all rolls and returns that value.
+  * `:keep`: Retains each dice roll.
+  For more information, see `ExDiceRoller.Compilers.Roll`.
+  * `:highest`: Selects the highest of all calculated values when using the `,`
+  operator.
+  * `:lowest`: Selects the lowest of all calculated values when using the `,`
+  operator.
+
   ## Order of Precedence
 
   The following table shows order of precendence, from highest to lowest,
   of the operators available to ExDiceRoller.
 
 
-  Operator              | Associativity
-  --------------------- | ------------
-  `d`                   | left-to-right
-  `+`, `-`              | unary
-  `*`, `/`, `%`, `^`    | left-to-right
-  `+`, `-`              | left-to-right
-  `,`                   | left-to-right
+  Operator              | Associativity | Compiler
+  --------------------- | ------------- | ----------------------------
+  `d`                   | left-to-right | `ExDiceRoller.Compilers.Roll`
+  `+`, `-`              | unary         | NA (handled by the parser in `dice_parser.yrl`)
+  `*`, `/`, `%`, `^`    | left-to-right | `ExDiceRoller.Compilers.Math`
+  `+`, `-`              | left-to-right | `ExDiceRoller.Compilers.Math`
+  `,`                   | left-to-right | `ExDiceRoller.Compilers.Separator`
 
   ### Effects of Parentheses
 
@@ -66,8 +84,9 @@ defmodule ExDiceRoller do
   parsing, and interpreting complicated dice rolls strings can lead to a
   performance hit on an application. To ease the burden, developers can
   _compile_ a dice roll string into an anonymous function. This anonymous
-  function can be cached and reused repeatedly without having to re-parse the
-  string, nor re-interpret the parsed expression.
+  function can be passed around as any other function and reused repeatedly
+  without having to re-tokenize the string, nor re-interpret a parsed
+  expression.
 
       iex> {:ok, roll_fun} = ExDiceRoller.compile("2d6+3")
       iex> ExDiceRoller.execute(roll_fun)
@@ -76,6 +95,8 @@ defmodule ExDiceRoller do
       13
       iex> ExDiceRoller.execute(roll_fun)
       10
+
+  More information can be found in `ExDiceRoller.Compiler`.
 
 
   ## Variables
@@ -86,8 +107,8 @@ defmodule ExDiceRoller do
 
   * numbers
   * expressions, such as "1d6+2"
-  * previously compiled dice rolls
-  * `~a` sigil, as described in `ExDiceRoller.Sigil`
+  * compiled dice rolls
+  * results of `~a` sigil, as described in `ExDiceRoller.Sigil`
 
       ```elixir
       iex> {:ok, fun} = ExDiceRoller.compile("2d4+x")
@@ -103,6 +124,7 @@ defmodule ExDiceRoller do
       22
       ```
 
+  More information can be found in `ExDiceRoller.Compilers.Variable`.
 
   ## Caching
 
@@ -124,8 +146,7 @@ defmodule ExDiceRoller do
   ## Sigil Support
 
   ExDiceRoller comes with its own sigil, `~a`, that can be used to create
-  compiled dice roll functions or roll them on the spot. See
-  `ExDiceRoller.Sigil` for detailed usage and examples.
+  compiled dice roll functions or roll them on the spot.
 
       iex> import ExDiceRoller.Sigil
       iex> fun = ~a/2d6+2/
@@ -136,6 +157,7 @@ defmodule ExDiceRoller do
       iex> ExDiceRoller.roll(~a|xdy|, [x: fun, y: ~a/12d4-15/])
       111
 
+  More information can be found in `ExDiceRoller.Sigil`.
 
   ## ExDiceRoller Examples
 
@@ -206,7 +228,7 @@ defmodule ExDiceRoller do
   Note that using variables with this call will result in errors. If you need
   variables, use `roll/3` instead.
   """
-  @spec roll(String.t()) :: integer
+  @spec roll(String.t()) :: integer | list(integer)
   def roll(roll_string), do: roll(roll_string, [], [])
 
   @doc """
@@ -224,6 +246,8 @@ defmodule ExDiceRoller do
   in the highest possible value for a die (such as rolling a 20 on a d20), the
   die will be rerolled until the result is no longer the max possible. It then
   sums the total of all rolls and returns that value.
+  * `:keep`: Retains each dice roll.
+  For more information, see `ExDiceRoller.Compilers.Roll`.
   * `:highest`: Selects the highest of all calculated values when using the `,`
   operator.
   * `:lowest`: Selects the lowest of all calculated values when using the `,`
@@ -258,7 +282,7 @@ defmodule ExDiceRoller do
       3
 
   """
-  @spec roll(String.t() | Compiler.compiled_fun(), Keyword.t(), list(atom | tuple)) :: integer
+  @spec roll(String.t() | Compiler.compiled_fun(), Compiler.args, Compiler.opts) :: integer
 
   def roll(roll_string, args, opts \\ [])
 
@@ -271,9 +295,7 @@ defmodule ExDiceRoller do
   def roll(roll_string, args, opts) when is_bitstring(roll_string) do
     with {:ok, tokens} <- Tokenizer.tokenize(roll_string),
          {:ok, parsed_tokens} <- Parser.parse(tokens) do
-      parsed_tokens
-      |> calculate(args, opts)
-      |> round()
+      calculate(parsed_tokens, args, opts)
     else
       {:error, _} = err -> err
     end
@@ -333,7 +355,7 @@ defmodule ExDiceRoller do
   def compile(other), do: {:error, {:cannot_compile_roll, other}}
 
   @doc "Executes a function built by `compile/1`."
-  @spec execute(function, Compiler.args(), Compiler.opts()) :: number
+  @spec execute(function, Compiler.args(), Compiler.opts()) :: integer | list(integer)
   def execute(compiled, args \\ [], opts \\ []) when is_function(compiled) do
     compiled.(args, opts)
   end

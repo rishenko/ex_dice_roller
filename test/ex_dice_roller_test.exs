@@ -90,6 +90,29 @@ defmodule ExDiceRollerTest do
       4 = ExDiceRoller.roll("x/y", x: 15, y: 4)
     end
 
+    test "list comprehensions" do
+      [3, 12] = ExDiceRoller.roll("2d4 + 2d8", [], [:keep])
+      [1] = ExDiceRoller.roll("1d4 - 2", [], [:keep])
+      [12, 8] = ExDiceRoller.roll("2 * 2d8", [], [:keep])
+      [4, 6] = ExDiceRoller.roll("2d6,2d8", [], [:keep])
+    end
+
+    test "errors using separator with lists" do
+      assert_raise ArgumentError, fn -> ExDiceRoller.roll("2d4, 1d8", [], [:keep]) end
+      assert_raise ArgumentError, fn -> ExDiceRoller.roll("2d4, 1", [], [:keep]) end
+      assert_raise ArgumentError, fn -> ExDiceRoller.roll("1, 1d8", [], [:keep]) end
+    end
+
+    test "errors with lists" do
+      assert_raise ArgumentError, fn -> ExDiceRoller.roll("2d4 + 1d8", [], [:keep]) end
+    end
+
+    test "keep roll values" do
+      values = ExDiceRoller.roll("3d6", [], [:keep])
+      require Logger
+      assert length(values) == 3
+    end
+
     test "with spaces" do
       5 = ExDiceRoller.roll("1 d 4 - 2+ (50+1 ) / 2d5")
     end

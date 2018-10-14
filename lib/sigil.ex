@@ -1,16 +1,24 @@
 defmodule ExDiceRoller.Sigil do
   @moduledoc """
   Han dles the sigil `~a` for dice rolling. If no options are specified, the
-  sigil will return the compiled function based on the provided roll.
+  sigil will return the compiled function based on the provided roll. Note that
+  variables cannot be present in the expression when invoking a roll directly
+  from the sigil.
 
-  The following options are available:
+  Also note that if you wish to use the `/` operator with the sigil, you will
+  need to use a different delimeter. Example being `~a|1d4+4d6/2d4`.
+
+  The following options are available, with each invoking a roll:
 
   * `r`: Compiles and invokes the roll. Variables are not supported with this.
-  * `e`: Allows dice to explode. Can only be used alongside option `r`.
-  * `h`: If the dice roll contains any separators `,`, select the highest of the calculated values. Can only be used alongside option `r`.
-  * `l`: If the dice roll contains any separators `,`, select the lowest of the calculated values. Can only be used alongside option `r`.
+  * `e`: Turns on the exploding dice mechanic.
+  * `h`: Select the highest of the calculated values when using the `,`
+  separator.
+  * `l`: Select the highest of the calculated values when using the `,`
+  separator.
+  * `k`: Keeps the value for each dice roll and returns it as a list.
 
-  ## Example
+  ## Examples
 
       iex> import ExDiceRoller.Sigil
       ExDiceRoller.Sigil
@@ -31,22 +39,16 @@ defmodule ExDiceRoller.Sigil do
       iex> ~a/1d2/re
       7
 
-      iex> import ExDiceRoller.Sigil
-      iex> ~a/1d2/e
-      {:error, :explode_allowed_only_with_roll}
-
   """
 
-  @spec sigil_a(String.t(), charlist) :: function | integer | float
-
-  def sigil_a(_, [mod]) when mod == ?e, do: {:error, :explode_allowed_only_with_roll}
+  @spec sigil_a(String.t(), charlist) :: Compiler.compiled_val
 
   def sigil_a(roll_string, opts) do
     binary_opts = :binary.list_to_bin(opts)
 
     with {:ok, translated_opts} <- translate_opts(binary_opts, []),
          {:ok, fun} = ExDiceRoller.compile(roll_string) do
-      case :execute in translated_opts do
+      case length(translated_opts) > 0 do
         false ->
           {:ok, fun} = ExDiceRoller.compile(roll_string)
           fun
@@ -55,7 +57,7 @@ defmodule ExDiceRoller.Sigil do
           fun.([], translated_opts -- [:execute])
       end
     else
-      {:error, rest} -> {:error, {:invalid_option, rest}}
+      {:error, reason} -> {:error, {:invalid_option, reason}}
     end
   end
 
@@ -64,6 +66,7 @@ defmodule ExDiceRoller.Sigil do
   defp translate_opts(<<?e, t::binary>>, acc), do: translate_opts(t, [:explode | acc])
   defp translate_opts(<<?h, t::binary>>, acc), do: translate_opts(t, [:highest | acc])
   defp translate_opts(<<?l, t::binary>>, acc), do: translate_opts(t, [:lowest | acc])
+  defp translate_opts(<<?k, t::binary>>, acc), do: translate_opts(t, [:keep | acc])
   defp translate_opts(<<>>, acc), do: {:ok, acc}
   defp translate_opts(rest, _acc), do: {:error, rest}
 end
