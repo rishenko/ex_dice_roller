@@ -3,16 +3,15 @@ defmodule ExDiceRoller.Sigil do
   Han dles the sigil `~a` for dice rolling. If no options are specified, the
   sigil will return the compiled function based on the provided roll.
 
-  The following options are available:
+  The following options are available, with each invoking a roll:
 
   * `r`: Compiles and invokes the roll. Variables are not supported with this.
-  * `e`: Allows dice to explode. Can only be used alongside option `r`.
-  * `h`: If the dice roll contains any separators `,`, select the highest of the
-  calculated values. Can only be used alongside option `r`.
-  * `l`: If the dice roll contains any separators `,`, select the lowest of the
-  calculated values. Can only be used alongside option `r`.
-  * `k`: Keeps the value for each dice roll and returns it as a list. Refer to
-  `ExDiceRoller.Roll` for more information.
+  * `e`: Turns on the exploding dice mechanic.
+  * `h`: Select the highest of the calculated values when using the `,`
+  separator.
+  * `l`: Select the highest of the calculated values when using the `,`
+  separator.
+  * `k`: Keeps the value for each dice roll and returns it as a list.
 
   ## Example
 

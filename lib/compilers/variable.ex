@@ -15,6 +15,8 @@ defmodule ExDiceRoller.Compilers.Variable do
       iex(4)> ExDiceRoller.roll("xdy+z", [x: 5, y: 10, z: ~a/15d100/])
       739
 
+  Note that an error will be raised if values are not supplied for all varaibles
+  in an expression.
   """
 
   @behaviour ExDiceRoller.Compiler

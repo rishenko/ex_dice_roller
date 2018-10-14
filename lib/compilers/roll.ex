@@ -1,6 +1,116 @@
 defmodule ExDiceRoller.Compilers.Roll do
   @moduledoc """
   Handles compiling dice roll expressions.
+
+      iex> expr = "1d6"
+      "1d6"
+      iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize(expr)
+      {:ok, [{:digit, 1, '1'}, {:roll, 1, 'd'}, {:digit, 1, '6'}]}
+      iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
+      {:ok, {:roll, {:digit, '1'}, {:digit, '6'}}}
+      iex> fun = ExDiceRoller.Compilers.Roll.compile(parse_tree)
+      iex> fun.([], [])
+      3
+      iex> fun.([], [])
+      2
+
+  ## Options
+
+  ### Exploding Dice
+
+  Some systems use a dice mechanic known as 'exploding dice'. The mechanic works
+  as follows:
+
+  1. a multi-sided die, in this case a six-sided die, is rolled
+  2. if the value is anything other than six, they record the result and skip
+  to step 5
+  3. if the value is six, the result is recorded, and the die is rolled again
+  4. steps 1 and 3 are repeated until step 2 is reached
+  5. the sum total result of all rolls is recorded and used
+
+  You can utilize this mechanic by specifying the `:explode` option for
+  ExDiceRoller.roll/3 calls, or specifying the `e` flag when using the `~a`
+  sigil. This option can be used with any ExDiceRoller roll option.
+
+  Examples:
+
+      iex> expr = "1d6"
+      "1d6"
+      iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize(expr)
+      {:ok, [{:digit, 1, '1'}, {:roll, 1, 'd'}, {:digit, 1, '6'}]}
+      iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
+      {:ok, {:roll, {:digit, '1'}, {:digit, '6'}}}
+      iex> fun = ExDiceRoller.Compilers.Roll.compile(parse_tree)
+      iex> fun.([], [:explode])
+      3
+      iex> fun.([], [:explode])
+      2
+      iex> fun.([], [:explode])
+      10
+
+      iex> import ExDiceRoller.Sigil
+      iex> ~a/1d10/re
+      9
+      iex> ~a/1d10/re
+      14
+
+  When using the `~a` sigil, adding option `e` will cause dice to explode.
+
+
+  ### Keeping Dice Rolls
+
+  A batch of dice being rolled can be returned as either their sum total, or
+  as individual results. The former is the default handling of rolls by
+  ExDiceRoller. The latter, keeping each die rolled, requires the option
+  `:keep`. Note that a list of die roll results will be returned when using the
+  `:keep` option.
+
+      iex> expr = "5d6"
+      "5d6"
+      iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize(expr)
+      {:ok, [{:digit, 1, '5'}, {:roll, 1, 'd'}, {:digit, 1, '6'}]}
+      iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
+      {:ok, {:roll, {:digit, '5'}, {:digit, '6'}}}
+      iex> fun = ExDiceRoller.Compilers.Roll.compile(parse_tree)
+      iex> fun.([], [:keep])
+      [3, 2, 6, 4, 5]
+
+
+  #### Kept Rolls and List Comprehensions
+
+  ExDiceroller also has a certain amount of list comprehension support when
+  calculating dice roll equations and 'keeping' rolls. The default behavior when
+  working with kept rolls is as follows:
+
+  1. If one side of an expression is a list, and the other a value, the action
+  will apply the value to each value in the list.
+  2. If both sides of an expression are lists, the values of each list are
+  applied to their counterpart in the other list. An error is raised if the
+  lengths of the two lists are different.
+  3. Combination rolls, such as `3d5d6`, will perform each roll expressions in
+  succession. Kept values from each roll expression is then used as the number
+  of sides in the succeeding expression.
+
+  Example of one side of an expression being a kept list and the other a value:
+
+      iex> {:ok, fun} = ExDiceRoller.compile("5d6+11")
+      iex> fun.([], [:keep])
+      [14, 13, 17, 15, 16]
+
+  Example of both sides being lists:
+
+      iex> {:ok, fun} = ExDiceRoller.compile("5d6+(5d10+20)")
+      iex> fun.([], [:keep])
+      [25, 32, 34, 30, 26]
+
+  Example of dice rolls of dice rolls:
+
+      iex> ExDiceRoller.roll("1d1d4", [], [:keep])
+      [1]
+      iex> ExDiceRoller.roll("2d1d4", [], [:keep])
+      [4, 2]
+      iex> ExDiceRoller.roll("2d6d4", [], [:keep])
+      [2, 4, 4, 2, 3, 2, 4, 4, 4]
   """
 
   @behaviour ExDiceRoller.Compiler

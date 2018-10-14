@@ -1,6 +1,42 @@
 defmodule ExDiceRoller.Compilers.Separator do
   @moduledoc """
   Handles the `,` separator for rolls.
+
+  The separator allows for multiple, separate dice expressions to be evaluated
+  and only one returned based on provided options:
+
+  * `:highest`: returns the highest calculated value and is the default option
+  * `:lowest`: returns the lowest calculated value
+
+  Examples:
+
+      iex> ExDiceRoller.roll("1,2", [], [])
+      2
+      iex> ExDiceRoller.roll("1,1", [], [])
+      1
+      iex> ExDiceRoller.roll("1,2", [], [])
+      2
+      iex> ExDiceRoller.roll("1,2", [], [:highest])
+      2
+      iex> ExDiceRoller.roll("1,2", [], [:lowest])
+      1
+      iex> ExDiceRoller.roll("1d6,10d8", [], [:highest])
+      46
+      iex> ExDiceRoller.roll("1d6,10d8", [], [:lowest])
+      6
+
+  ## Separator Use And Keeping Dice
+
+  The separator can be used alongside kept dice rolls, provided both sides of
+  the expression are lists of equal length. Otherwise, it obeys the same rules
+  of kept roll list comprehension, where each die roll is compared to its
+  counterpart.
+
+
+      iex> ExDiceRoller.roll("5d6,5d100", [], [:keep, :lowest])
+      [2, 2, 6, 4, 5]
+      iex> ExDiceRoller.roll("5d6,5d100", [], [:keep, :highest])
+      [47, 6, 49, 91, 54]
   """
 
   @behaviour ExDiceRoller.Compiler

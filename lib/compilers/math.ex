@@ -10,6 +10,17 @@ defmodule ExDiceRoller.Compilers.Math do
       iex> fun.([x: 2], [])
       3
 
+  ExDiceRoller uses [infix notation](https://en.wikipedia.org/wiki/Infix_notation)
+  when working with mathematical operators. Below is the list of operators
+  currently supported by ExDiceRoller:
+
+  * `+`: adds the values on both sides of the expression
+  * `-`: subtracts the value on the right from the value on the left
+  * `*`: multiplies the values on both sides of the expression
+  * `/`: divides, with the left value as the dividend, the right the divisor
+  * `%`: [modulo](https://en.wikipedia.org/wiki/Modulo_operation), with the
+  left the dividend, the right the divisor
+  * `^`: exponentiation, with the left the base, the right the exponent
   """
 
   @behaviour ExDiceRoller.Compiler
@@ -20,7 +31,7 @@ defmodule ExDiceRoller.Compilers.Math do
     {'-', &Kernel.-/2, "sub"},
     {'*', &Kernel.*/2, "mul"},
     {'/', &Kernel.//2, "div"},
-    {'%', &__MODULE__.modulus/2, "mod"},
+    {'%', &__MODULE__.modulo/2, "mod"},
     {'^', &:math.pow/2, "exp"}
   ]
 
@@ -29,9 +40,9 @@ defmodule ExDiceRoller.Compilers.Math do
     compile_op(op, Compiler.delegate(left_expr), Compiler.delegate(right_expr))
   end
 
-  @doc "Function used for modulus calculations."
-  @spec modulus(number, number) :: integer
-  def modulus(l, r), do: rem(Compiler.round_val(l), Compiler.round_val(r))
+  @doc "Function used for modulo calculations."
+  @spec modulo(number, number) :: integer
+  def modulo(l, r), do: rem(Compiler.round_val(l), Compiler.round_val(r))
 
   @spec compile_op(charlist, Compiler.compiled_val(), Compiler.compiled_val()) ::
           Compiler.compiled_val()
