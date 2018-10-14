@@ -1,24 +1,37 @@
 defmodule ExDiceRoller.Compilers.Math do
   @moduledoc """
-  Handles compiling mathematical expressions.
+  Handles compiling expressions using common mathematical operators.
+
+      iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize("1+x")
+      {:ok, [{:digit, 1, '1'}, {:basic_operator, 1, '+'}, {:var, 1, 'x'}]}
+      iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
+      {:ok, {{:operator, '+'}, {:digit, '1'}, {:var, 'x'}}}
+      iex> fun = ExDiceRoller.Compilers.Math.compile(parse_tree)
+      iex> fun.([x: 2], [])
+      3
+
   """
 
   @behaviour ExDiceRoller.Compiler
   alias ExDiceRoller.Compiler
-
-  @impl true
-  def compile({{:operator, op}, left_expr, right_expr}) do
-    compile_op(op, Compiler.delegate(left_expr), Compiler.delegate(right_expr))
-  end
 
   @operators [
     {'+', &Kernel.+/2, "add"},
     {'-', &Kernel.-/2, "sub"},
     {'*', &Kernel.*/2, "mul"},
     {'/', &Kernel.//2, "div"},
-    {'%', &Kernel.rem/2, "mod"},
+    {'%', &__MODULE__.modulus/2, "mod"},
     {'^', &:math.pow/2, "exp"}
   ]
+
+  @impl true
+  def compile({{:operator, op}, left_expr, right_expr}) do
+    compile_op(op, Compiler.delegate(left_expr), Compiler.delegate(right_expr))
+  end
+
+  @doc "Function used for modulus calculations."
+  @spec modulus(number, number) :: integer
+  def modulus(l, r), do: rem(Compiler.round_val(l), Compiler.round_val(r))
 
   @spec compile_op(charlist, Compiler.compiled_val(), Compiler.compiled_val()) ::
           Compiler.compiled_val()
@@ -47,6 +60,7 @@ defmodule ExDiceRoller.Compilers.Math do
   end
 
   @spec op(list | number, list | number, function) :: list | number
+
   defp op(l, r, fun) when is_list(l) and is_list(r) do
     if length(l) != length(r) do
       raise ArgumentError, "you cannot add two lists of different sizes"
