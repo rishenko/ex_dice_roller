@@ -1,7 +1,9 @@
 defmodule ExDiceRoller.Sigil do
   @moduledoc """
   Han dles the sigil `~a` for dice rolling. If no options are specified, the
-  sigil will return the compiled function based on the provided roll.
+  sigil will return the compiled function based on the provided roll. Note that
+  variables cannot be present in the expression when invoking a roll directly
+  from the sigil.
 
   The following options are available, with each invoking a roll:
 
@@ -34,22 +36,16 @@ defmodule ExDiceRoller.Sigil do
       iex> ~a/1d2/re
       7
 
-      iex> import ExDiceRoller.Sigil
-      iex> ~a/1d2/e
-      {:error, :explode_allowed_only_with_roll}
-
   """
 
   @spec sigil_a(String.t(), charlist) :: function | integer | float
-
-  def sigil_a(_, [mod]) when mod == ?e, do: {:error, :explode_allowed_only_with_roll}
 
   def sigil_a(roll_string, opts) do
     binary_opts = :binary.list_to_bin(opts)
 
     with {:ok, translated_opts} <- translate_opts(binary_opts, []),
          {:ok, fun} = ExDiceRoller.compile(roll_string) do
-      case :execute in translated_opts do
+      case length(translated_opts) > 0 do
         false ->
           {:ok, fun} = ExDiceRoller.compile(roll_string)
           fun
