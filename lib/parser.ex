@@ -34,11 +34,11 @@ defmodule ExDiceRoller.Parser do
       iex> ExDiceRoller.Parser.parse(tokens)
       {:ok,
       {{:operator, '-'},
-        {{:operator, '+'}, {:roll, {:digit, '2'}, {:digit, '3'}}, {:digit, '9'}},
+        {{:operator, '+'}, {:roll, {:digit, 2}, {:digit, 3}}, {:digit, 9}},
         {{:operator, '/'},
         {:roll, {:roll, {:var, 'y'}, {:var, 'z'}},
-          {{:operator, '+'}, {:digit, '31'}, {:var, 'x'}}},
-        {{:operator, '+'}, {:roll, {:digit, '3'}, {:digit, '8'}}, {:digit, '2'}}}}}
+          {{:operator, '+'}, {:digit, 31}, {:var, 'x'}}},
+        {{:operator, '+'}, {:roll, {:digit, 3}, {:digit, 8}}, {:digit, 2}}}}}
 
   """
 
@@ -71,8 +71,8 @@ defmodule ExDiceRoller.Parser do
       ]}
       iex> {:ok, _} = ExDiceRoller.parse(tokens)
       {:ok,
-      {{:operator, '+'}, {:roll, {:digit, '2'}, {:digit, '8'}},
-        {{:operator, '+'}, {:digit, '1'}, {:digit, '2'}}}}
+      {{:operator, '+'}, {:roll, {:digit, 2}, {:digit, 8}},
+        {{:operator, '+'}, {:digit, 1}, {:digit, 2}}}}
 
   """
   @spec parse(Tokenizer.tokens()) :: {:ok, expression}

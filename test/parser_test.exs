@@ -8,7 +8,7 @@ defmodule ExDiceRoller.ParserTest do
 
   describe "basic parsing" do
     test "digit" do
-      assert {:ok, {:digit, '1'}} == Parser.parse([{:digit, 1, '1'}])
+      assert {:ok, {:digit, 1}} == Parser.parse([{:digit, 1, '1'}])
     end
 
     test "roll" do
@@ -18,7 +18,7 @@ defmodule ExDiceRoller.ParserTest do
         {:digit, 1, '4'}
       ]
 
-      expected = {:roll, {:digit, '1'}, {:digit, '4'}}
+      expected = {:roll, {:digit, 1}, {:digit, 4}}
       assert {:ok, expected} == Parser.parse(tokens)
     end
 
@@ -29,7 +29,7 @@ defmodule ExDiceRoller.ParserTest do
         {:digit, 1, '2'}
       ]
 
-      expected = {{:operator, '+'}, {:digit, '1'}, {:digit, '2'}}
+      expected = {{:operator, '+'}, {:digit, 1}, {:digit, 2}}
       assert {:ok, expected} == Parser.parse(tokens)
     end
 
@@ -44,8 +44,7 @@ defmodule ExDiceRoller.ParserTest do
         {:digit, 1, '6'}
       ]
 
-      expected =
-        {:sep, {:roll, {:digit, '2'}, {:digit, '4'}}, {:roll, {:digit, '1'}, {:digit, '6'}}}
+      expected = {:sep, {:roll, {:digit, 2}, {:digit, 4}}, {:roll, {:digit, 1}, {:digit, 6}}}
 
       assert {:ok, expected} == Parser.parse(tokens)
     end
@@ -59,7 +58,7 @@ defmodule ExDiceRoller.ParserTest do
         {:var, 1, 'x'}
       ]
 
-      expected = {{:operator, '+'}, {:roll, {:digit, '1'}, {:digit, '4'}}, {:var, 'x'}}
+      expected = {{:operator, '+'}, {:roll, {:digit, 1}, {:digit, 4}}, {:var, 'x'}}
       assert {:ok, expected} == Parser.parse(tokens)
     end
 
@@ -74,15 +73,15 @@ defmodule ExDiceRoller.ParserTest do
 
       expected = {
         {:operator, '*'},
-        {:digit, '78'},
-        {:digit, '5'}
+        {:digit, 78},
+        {:digit, 5}
       }
 
       assert {:ok, expected} == Parser.parse(tokens)
     end
 
     test "parses token with bad value" do
-      assert {:ok, {:digit, 'a'}} = Parser.parse([{:digit, 1, 'a'}])
+      assert {:ok, {:digit, :error}} = Parser.parse([{:digit, 1, 'a'}])
     end
 
     test "parsing error" do
@@ -116,8 +115,8 @@ defmodule ExDiceRoller.ParserTest do
 
       expected = {
         :roll,
-        {{:operator, '*'}, {:digit, '78'}, {:digit, '5'}},
-        {{:operator, '/'}, {:digit, '4'}, {:digit, '6'}}
+        {{:operator, '*'}, {:digit, 78}, {:digit, 5}},
+        {{:operator, '/'}, {:digit, 4}, {:digit, 6}}
       }
 
       assert {:ok, expected} == Parser.parse(tokens)
@@ -128,13 +127,11 @@ defmodule ExDiceRoller.ParserTest do
 
       expected =
         {{:operator, '+'},
-         {:roll,
-          {{:operator, '+'}, {:digit, '1'}, {{:operator, '*'}, {:digit, '4'}, {:digit, '5'}}},
-          {{:operator, '+'}, {{:operator, '*'}, {:digit, '9'}, {:digit, '7'}},
-           {{:operator, '/'}, {:digit, '4'}, {:digit, '3'}}}},
-         {{:operator, '-'},
-          {{:operator, '/'}, {:digit, '10'}, {:roll, {:digit, '1'}, {:digit, '4'}}},
-          {:digit, '7'}}}
+         {:roll, {{:operator, '+'}, {:digit, 1}, {{:operator, '*'}, {:digit, 4}, {:digit, 5}}},
+          {{:operator, '+'}, {{:operator, '*'}, {:digit, 9}, {:digit, 7}},
+           {{:operator, '/'}, {:digit, 4}, {:digit, 3}}}},
+         {{:operator, '-'}, {{:operator, '/'}, {:digit, 10}, {:roll, {:digit, 1}, {:digit, 4}}},
+          {:digit, 7}}}
 
       assert {:ok, expected} == Parser.parse(tokens)
     end

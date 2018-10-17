@@ -5,7 +5,7 @@ defmodule ExDiceRoller.Compilers.Math do
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize("1+x")
       {:ok, [{:digit, 1, '1'}, {:basic_operator, 1, '+'}, {:var, 1, 'x'}]}
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
-      {:ok, {{:operator, '+'}, {:digit, '1'}, {:var, 'x'}}}
+      {:ok, {{:operator, '+'}, {:digit, 1}, {:var, 'x'}}}
       iex> fun = ExDiceRoller.Compilers.Math.compile(parse_tree)
       iex> fun.([x: 2], [])
       3

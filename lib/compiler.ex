@@ -28,10 +28,10 @@ defmodule ExDiceRoller.Compiler do
 
       > parsed =
         {{:operator, '+'},
-        {{:operator, '-'}, {:roll, {:digit, '1'}, {:digit, '4'}},
-          {{:operator, '/'}, {:roll, {:digit, '3'}, {:digit, '6'}}, {:digit, '2'}}},
-        {:roll, {:roll, {:digit, '1'}, {:digit, '4'}},
-          {:roll, {:digit, '1'}, {:digit, '6'}}}}
+        {{:operator, '-'}, {:roll, {:digit, 1}, {:digit, 4}},
+          {{:operator, '/'}, {:roll, {:digit, 3}, {:digit, 6}}, {:digit, 2}}},
+        {:roll, {:roll, {:digit, 1}, {:digit, 4}},
+          {:roll, {:digit, 1}, {:digit, 6}}}}
 
       > fun = ExDiceRoller.Compiler.compile(parsed)
       #Function<0.47893785/2 in ExDiceRoller.Compiler.compile_add/4>
@@ -96,7 +96,7 @@ defmodule ExDiceRoller.Compiler do
         {:var, 1, 'x'}
       ]}
       iex> {:ok, parsed} = ExDiceRoller.Parser.parse(tokens)
-      {:ok, {{:operator, '+'}, {:roll, {:digit, '1'}, {:digit, '2'}}, {:var, 'x'}}}
+      {:ok, {{:operator, '+'}, {:roll, {:digit, 1}, {:digit, 2}}, {:var, 'x'}}}
       iex> fun = ExDiceRoller.Compiler.compile(parsed)
       iex> fun.([x: 1], [:explode])
       2
@@ -129,7 +129,7 @@ defmodule ExDiceRoller.Compiler do
   """
   @spec delegate(Parser.expression()) :: compiled_val
   def delegate({:digit, compiled_val}),
-    do: compiled_val |> to_string() |> String.to_integer()
+    do: compiled_val
 
   def delegate({:roll, _, _} = expr), do: Roll.compile(expr)
   def delegate({{:operator, _}, _, _} = expr), do: Math.compile(expr)

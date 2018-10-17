@@ -241,13 +241,13 @@ iex(5)> {:ok, ast} = ExDiceRoller.parse(tokens)
 {:ok,
 {:roll,
   {{:operator, '+'},
-    {:roll, {:digit, '1'}, {:digit, '4'}},
-    {:digit, '2'}},
+    {:roll, {:digit, 1}, {:digit, 4}},
+    {:digit, 2}},
   {{:operator, '-'},
     {:roll, 
-      {{:operator, '*'}, {:digit, '5'}, {:digit, '6'}},
-      {:digit, '20'}},
-    {:digit, '5'}}}}
+      {{:operator, '*'}, {:digit, 5}, {:digit, 6}},
+      {:digit, 20}},
+    {:digit, 5}}}}
 
 iex(6)> {:ok, roll_fun} = ExDiceRoller.compile(ast)
 {:ok, #Function<12.11371143/0 in ExDiceRoller.Compiler.compile_roll/4>}
