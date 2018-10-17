@@ -7,7 +7,7 @@ defmodule ExDiceRoller.Compilers.Roll do
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize(expr)
       {:ok, [{:digit, 1, '1'}, {:roll, 1, 'd'}, {:digit, 1, '6'}]}
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
-      {:ok, {:roll, {:digit, 1}, {:digit, 6}}}
+      {:ok, {:roll, 1, 6}}
       iex> fun = ExDiceRoller.Compilers.Roll.compile(parse_tree)
       iex> fun.([], [])
       3
@@ -42,7 +42,7 @@ defmodule ExDiceRoller.Compilers.Roll do
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize(expr)
       {:ok, [{:digit, 1, '1'}, {:roll, 1, 'd'}, {:digit, 1, '6'}]}
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
-      {:ok, {:roll, {:digit, 1}, {:digit, 6}}}
+      {:ok, {:roll, 1, 6}}
       iex> fun = ExDiceRoller.Compilers.Roll.compile(parse_tree)
       iex> fun.([], [:explode])
       3
@@ -71,7 +71,7 @@ defmodule ExDiceRoller.Compilers.Roll do
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize(expr)
       {:ok, [{:digit, 1, '5'}, {:roll, 1, 'd'}, {:digit, 1, '6'}]}
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
-      {:ok, {:roll, {:digit, 5}, {:digit, 6}}}
+      {:ok, {:roll, 5, 6}}
       iex> fun = ExDiceRoller.Compilers.Roll.compile(parse_tree)
       iex> fun.([], [:keep])
       [3, 2, 6, 4, 5]
