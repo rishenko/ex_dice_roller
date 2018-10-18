@@ -52,30 +52,30 @@ defmodule ExDiceRoller do
       iex> ExDiceRoller.tokenize("1+3d4*1-2/-3") |> elem(1) |> ExDiceRoller.parse()
       {:ok,
       {{:operator, '-'},
-        {{:operator, '+'}, {:digit, '1'},
-        {{:operator, '*'}, {:roll, {:digit, '3'}, {:digit, '4'}}, {:digit, '1'}}},
-        {{:operator, '/'}, {:digit, '2'}, {:digit, '-3'}}}}
+        {{:operator, '+'}, 1,
+        {{:operator, '*'}, {:roll, 3, 4}, 1}},
+        {{:operator, '/'}, 2, -3}}}
 
       iex> ExDiceRoller.tokenize("(1+3)d4*1-2/-3") |> elem(1) |> ExDiceRoller.parse()
       {:ok,
       {{:operator, '-'},
         {{:operator, '*'},
-        {:roll, {{:operator, '+'}, {:digit, '1'}, {:digit, '3'}}, {:digit, '4'}},
-        {:digit, '1'}}, {{:operator, '/'}, {:digit, '2'}, {:digit, '-3'}}}}
+        {:roll, {{:operator, '+'}, 1, 3}, 4},
+        1}, {{:operator, '/'}, 2, -3}}}
 
       iex> ExDiceRoller.tokenize("1+3d(4*1)-2/-3") |> elem(1) |> ExDiceRoller.parse()
       {:ok,
       {{:operator, '-'},
-        {{:operator, '+'}, {:digit, '1'},
-        {:roll, {:digit, '3'}, {{:operator, '*'}, {:digit, '4'}, {:digit, '1'}}}},
-        {{:operator, '/'}, {:digit, '2'}, {:digit, '-3'}}}}
+        {{:operator, '+'}, 1,
+        {:roll, 3, {{:operator, '*'}, 4, 1}}},
+        {{:operator, '/'}, 2, -3}}}
 
       iex> ExDiceRoller.tokenize("1+3d4*(1-2)/-3") |> elem(1) |> ExDiceRoller.parse()
       {:ok,
-      {{:operator, '+'}, {:digit, '1'},
+      {{:operator, '+'}, 1,
         {{:operator, '/'},
-        {{:operator, '*'}, {:roll, {:digit, '3'}, {:digit, '4'}},
-          {{:operator, '-'}, {:digit, '1'}, {:digit, '2'}}}, {:digit, '-3'}}}}
+        {{:operator, '*'}, {:roll, 3, 4},
+          {{:operator, '-'}, 1, 2}}, -3}}}
 
 
   ## Compiled Rolls
@@ -282,7 +282,7 @@ defmodule ExDiceRoller do
       3
 
   """
-  @spec roll(String.t() | Compiler.compiled_fun(), Compiler.args, Compiler.opts) :: integer
+  @spec roll(String.t() | Compiler.compiled_fun(), Compiler.args(), Compiler.opts()) :: integer
 
   def roll(roll_string, args, opts \\ [])
 
@@ -348,7 +348,7 @@ defmodule ExDiceRoller do
     end
   end
 
-  def compile(roll) when is_tuple(roll) do
+  def compile(roll) when is_tuple(roll) or is_number(roll) do
     {:ok, Compiler.compile(roll)}
   end
 
