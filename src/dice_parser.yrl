@@ -41,5 +41,5 @@ val({T,_,V})  ->  {T, V}.
 op({_, _, V}) ->  {operator, V}.
 last({_, _, V}) -> V.
 
-to_integer({T, _, V}) -> element(1, string:to_integer(V)).
+to_integer({_, _, V}) -> element(1, string:to_integer(V)).
 val_to_integer(V) -> element(1, string:to_integer(V)).

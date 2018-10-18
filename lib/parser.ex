@@ -46,9 +46,10 @@ defmodule ExDiceRoller.Parser do
 
   @type expression ::
           number
-          | {{:operator, list}, expression, expression}
+          | {{:operator, charlist}, expression, expression}
           | {:roll, expression, expression}
-          | {:var, String.t()}
+          | {:var, charlist}
+          | {:sep, expression, expression}
 
   @doc """
   Converts a series of tokens provided by `tokenize/1` and parses them into

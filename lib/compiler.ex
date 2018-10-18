@@ -71,9 +71,9 @@ defmodule ExDiceRoller.Compiler do
   alias ExDiceRoller.Parser
   alias ExDiceRoller.Compilers.{Math, Roll, Separator, Variable}
 
-  @type calculated_val :: number | list(integer)
   @type compiled_val :: compiled_fun | calculated_val
   @type compiled_fun :: (args, opts -> calculated_val)
+  @type calculated_val :: number | list(number)
   @type fun_info_tuple :: {function, atom, list(any)}
   @type args :: Keyword.t()
   @type opts :: list(atom | {atom, any})
@@ -132,7 +132,7 @@ defmodule ExDiceRoller.Compiler do
   def delegate({{:operator, _}, _, _} = expr), do: Math.compile(expr)
   def delegate({:sep, _, _} = expr), do: Separator.compile(expr)
   def delegate({:var, _} = var), do: Variable.compile(var)
-  def delegate(compiled_val) when is_integer(compiled_val), do: compiled_val
+  def delegate(compiled_val) when is_number(compiled_val), do: compiled_val
 
   @doc """
   Shows the nested functions and relationships of a compiled function. The
