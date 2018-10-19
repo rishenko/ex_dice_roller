@@ -20,6 +20,7 @@ defmodule ExDiceRollerTest do
   describe "rolls" do
     test "basic" do
       1 = ExDiceRoller.roll("1")
+      3 = ExDiceRoller.roll("3.14159")
       2 = ExDiceRoller.roll("1+1")
       1 = ExDiceRoller.roll("1d4")
       8 = ExDiceRoller.roll("2d6")
@@ -56,7 +57,7 @@ defmodule ExDiceRollerTest do
       1 = ExDiceRoller.roll("1d8+(-3/2)")
       3 = ExDiceRoller.roll("-3/2+2d4")
       6 = ExDiceRoller.roll("4d1, 6d1")
-      15 = ExDiceRoller.roll("3d6+9,1d4")
+      16 = ExDiceRoller.roll("3d6+9.5678,1d4")
       0 = ExDiceRoller.roll("13%(1d4)")
       2 = ExDiceRoller.roll("(5d3)%3")
       2 = ExDiceRoller.roll("(6d4)%(2d3)")
@@ -71,11 +72,11 @@ defmodule ExDiceRollerTest do
       -1 = ExDiceRoller.roll("1d4 - 2d8")
       24 = ExDiceRoller.roll("1d4 * 2d8")
       0 = ExDiceRoller.roll("1d4 / 2d8")
-      2 = ExDiceRoller.roll("1d4 + 1")
+      3 = ExDiceRoller.roll("1d4 + 1.54")
       -3 = ExDiceRoller.roll("1d4 - 4")
       6 = ExDiceRoller.roll("1d4 * 2")
       1 = ExDiceRoller.roll("1d4 / 3")
-      4 = ExDiceRoller.roll("4d1, 3")
+      4 = ExDiceRoller.roll("4d1, 3.1459")
       3 = ExDiceRoller.roll("3,10d1", [], [:lowest])
       60 = ExDiceRoller.roll("5d1,3d1,60d1,10d1", [], [:highest])
     end

@@ -3,12 +3,14 @@ defmodule ExDiceRoller.Compilers.Math do
   Handles compiling expressions using common mathematical operators.
 
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize("1+x")
-      {:ok, [{:digit, 1, '1'}, {:basic_operator, 1, '+'}, {:var, 1, 'x'}]}
+      {:ok, [{:int, 1, '1'}, {:basic_operator, 1, '+'}, {:var, 1, 'x'}]}
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
       {:ok, {{:operator, '+'}, 1, {:var, 'x'}}}
       iex> fun = ExDiceRoller.Compilers.Math.compile(parse_tree)
       iex> fun.([x: 2], [])
       3
+      iex> fun.([x: 2.4], [])
+      3.4
 
   ExDiceRoller uses [infix notation](https://en.wikipedia.org/wiki/Infix_notation)
   when working with mathematical operators. Below is the list of operators

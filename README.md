@@ -98,9 +98,6 @@ Parsed expressions can be compiled into a single, executable anonymous
 function. This function can be reused again and again, with any dice rolls
 being randomized and calculated for each call.
 
-Note that while `ExDiceRoller.roll/1` always returns integers,
-`ExDiceRoller.execute/1` will return either floats or integers.
-
 ```elixir
 iex> {:ok, roll_fun} = ExDiceRoller.compile("1d6 - (3d10)d5 + (1d50)/5")
 #=> {:ok, #Function<1.86580672/2 in ExDiceRoller.Compiler.compile/1>}
@@ -210,46 +207,46 @@ function.
 6. This final anonymous function is then executed and the value returned.
 
 ```elixir
-iex(3)> expr = "(1d4+2)d((5*6)d20-5)"
+iex(3)> expr = "(1d4+2.56)d((5*6)d20-5)"
 "(1d4+2)d((5*6)d20-5)"
 
 iex(4)> {:ok, tokens} = ExDiceRoller.tokenize(expr)
 {:ok,
 [
   {:"(", 1, '('},
-  {:digit, 1, '1'},
+  {:int, 1, '1'},
   {:roll, 1, 'd'},
-  {:digit, 1, '4'},
+  {:int, 1, '4'},
   {:basic_operator, 1, '+'},
-  {:digit, 1, '2'},
+  {:float, 1, '2.56'},
   {:")", 1, ')'},
   {:roll, 1, 'd'},
   {:"(", 1, '('},
   {:"(", 1, '('},
-  {:digit, 1, '5'},
+  {:int, 1, '5'},
   {:complex_operator, 1, '*'},
-  {:digit, 1, '6'},
+  {:int, 1, '6'},
   {:")", 1, ')'},
   {:roll, 1, 'd'},
-  {:digit, 1, '20'},
+  {:int, 1, '20'},
   {:basic_operator, 1, '-'},
-  {:digit, 1, '5'},
+  {:int, 1, '5'},
   {:")", 1, ')'}
 ]}
 
-iex(5)> {:ok, ast} = ExDiceRoller.parse(tokens)
+iex(5)> {:ok, parse_tree} = ExDiceRoller.parse(tokens)
 {:ok,
 {:roll,
   {{:operator, '+'},
     {:roll, 1, 4},
-    2},
+    2.56},
   {{:operator, '-'},
     {:roll, 
       {{:operator, '*'}, 5, 6},
       20},
     5}}}
 
-iex(6)> {:ok, roll_fun} = ExDiceRoller.compile(ast)
+iex(6)> {:ok, roll_fun} = ExDiceRoller.compile(parse_tree)
 {:ok, #Function<12.11371143/0 in ExDiceRoller.Compiler.compile_roll/4>}
 
 iex(7)> roll_fun.([], [])

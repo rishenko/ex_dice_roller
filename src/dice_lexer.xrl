@@ -18,7 +18,8 @@ Rules.
 {Roll}              : {token, {roll, TokenLine, TokenChars}}.
 {LeftParen}         : {token, {'(', TokenLine, TokenChars}}.
 {RightParen}        : {token, {')', TokenLine, TokenChars}}.
-{Number}            : {token, {digit, TokenLine, TokenChars}}.
+{Number}            : {token, {int, TokenLine, TokenChars}}.
+{Number}\.{Number}  : {token, {float, TokenLine, TokenChars}}.
 {Variable}          : {token, {var, TokenLine, TokenChars}}.
 {Separator}         : {token, {',', TokenLine, TokenChars}}.
 

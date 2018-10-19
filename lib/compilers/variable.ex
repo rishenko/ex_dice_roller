@@ -41,7 +41,7 @@ defmodule ExDiceRoller.Compilers.Variable do
   defp var_final_arg(nil, var, _),
     do: raise(ArgumentError, "no variable #{inspect(var)} was found in the arguments")
 
-  defp var_final_arg(val, _, _) when is_integer(val), do: val
+  defp var_final_arg(val, _, _) when is_number(val), do: val
   defp var_final_arg(val, _, opts) when is_function(val), do: val.([], opts)
 
   defp var_final_arg(val, var, opts) when is_bitstring(val) do

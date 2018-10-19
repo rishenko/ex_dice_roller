@@ -5,37 +5,37 @@ defmodule ExDiceRoller.Tokenizer do
       iex> ExDiceRoller.Tokenizer.tokenize("1d4+6-(2dy)d(5*2d7-x)/3d8")
       {:ok,
       [
-        {:digit, 1, '1'},
+        {:int, 1, '1'},
         {:roll, 1, 'd'},
-        {:digit, 1, '4'},
+        {:int, 1, '4'},
         {:basic_operator, 1, '+'},
-        {:digit, 1, '6'},
+        {:int, 1, '6'},
         {:basic_operator, 1, '-'},
         {:"(", 1, '('},
-        {:digit, 1, '2'},
+        {:int, 1, '2'},
         {:roll, 1, 'd'},
         {:var, 1, 'y'},
         {:")", 1, ')'},
         {:roll, 1, 'd'},
         {:"(", 1, '('},
-        {:digit, 1, '5'},
+        {:int, 1, '5'},
         {:complex_operator, 1, '*'},
-        {:digit, 1, '2'},
+        {:int, 1, '2'},
         {:roll, 1, 'd'},
-        {:digit, 1, '7'},
+        {:int, 1, '7'},
         {:basic_operator, 1, '-'},
         {:var, 1, 'x'},
         {:")", 1, ')'},
         {:complex_operator, 1, '/'},
-        {:digit, 1, '3'},
+        {:int, 1, '3'},
         {:roll, 1, 'd'},
-        {:digit, 1, '8'}
+        {:int, 1, '8'}
       ]}
   """
 
   @type tokens :: [token, ...]
   @type token :: {token_type, integer, list}
-  @type token_type :: :digit | :basic_operator | :complex_operator | :roll | :"(" | :")"
+  @type token_type :: :int | :basic_operator | :complex_operator | :roll | :"(" | :")"
 
   @doc """
   Converts a roll-based string into tokens using leex. The input definition
@@ -45,11 +45,11 @@ defmodule ExDiceRoller.Tokenizer do
       iex> ExDiceRoller.Tokenizer.tokenize("2d8+3")
       {:ok,
       [
-        {:digit, 1, '2'},
+        {:int, 1, '2'},
         {:roll, 1, 'd'},
-        {:digit, 1, '8'},
+        {:int, 1, '8'},
         {:basic_operator, 1, '+'},
-        {:digit, 1, '3'}
+        {:int, 1, '3'}
       ]}
   """
   @spec tokenize(String.t()) :: {:ok, tokens}
