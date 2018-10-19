@@ -255,6 +255,13 @@ defmodule ExDiceRoller do
 
   ### Examples
 
+      iex> ExDiceRoller.roll("1+x", [x: 1])
+      2
+      iex> ExDiceRoller.roll("1+x", [x: 1.4])
+      2
+      iex> ExDiceRoller.roll("1+x", [x: 1.5])
+      3
+
       iex> ExDiceRoller.roll("1d6+15", [])
       18
 
@@ -263,10 +270,6 @@ defmodule ExDiceRoller do
 
       iex> ExDiceRoller.roll("1d3", [], [:explode])
       5
-      iex> ExDiceRoller.roll("1d3", [], [:explode])
-      4
-      iex> ExDiceRoller.roll("1d3", [], [:explode])
-      2
 
       iex> ExDiceRoller.start_cache(ExDiceRoller.Cache)
       iex> ExDiceRoller.roll("(1d6)d4-3+y", [y: 3], [:cache])

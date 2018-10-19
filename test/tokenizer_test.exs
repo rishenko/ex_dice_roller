@@ -6,15 +6,19 @@ defmodule ExDiceRoller.TokenizerTest do
 
   alias ExDiceRoller.Tokenizer
 
-  test "digit" do
-    assert {:ok, [{:digit, 1, '2'}]} == Tokenizer.tokenize("2")
+  test "int" do
+    assert {:ok, [{:int, 1, '2'}]} == Tokenizer.tokenize("2")
+  end
+
+  test "float" do
+    assert {:ok, [{:float, 1, '3.1459'}]} == Tokenizer.tokenize("3.1459")
   end
 
   test "roll" do
     expected = [
-      {:digit, 1, '1'},
+      {:int, 1, '1'},
       {:roll, 1, 'd'},
-      {:digit, 1, '4'}
+      {:int, 1, '4'}
     ]
 
     assert {:ok, expected} == Tokenizer.tokenize("1d4")
@@ -22,33 +26,33 @@ defmodule ExDiceRoller.TokenizerTest do
 
   test "operator" do
     expected = [
-      {:digit, 1, '1'},
+      {:int, 1, '1'},
       {:basic_operator, 1, '+'},
-      {:digit, 1, '2'}
+      {:int, 1, '2'}
     ]
 
     assert {:ok, expected} == Tokenizer.tokenize("1+2")
 
     expected = [
-      {:digit, 1, '1'},
+      {:int, 1, '1'},
       {:basic_operator, 1, '-'},
-      {:digit, 1, '2'}
+      {:int, 1, '2'}
     ]
 
     assert {:ok, expected} == Tokenizer.tokenize("1-2")
 
     expected = [
-      {:digit, 1, '1'},
+      {:int, 1, '1'},
       {:complex_operator, 1, '*'},
-      {:digit, 1, '2'}
+      {:int, 1, '2'}
     ]
 
     assert {:ok, expected} == Tokenizer.tokenize("1*2")
 
     expected = [
-      {:digit, 1, '1'},
+      {:int, 1, '1'},
       {:complex_operator, 1, '/'},
-      {:digit, 1, '2'}
+      {:int, 1, '2'}
     ]
 
     assert {:ok, expected} == Tokenizer.tokenize("1/2")
@@ -57,9 +61,9 @@ defmodule ExDiceRoller.TokenizerTest do
   test "subexpressions" do
     expected = [
       {:"(", 1, '('},
-      {:digit, 1, '78'},
+      {:int, 1, '78'},
       {:complex_operator, 1, '*'},
-      {:digit, 1, '5'},
+      {:int, 1, '5'},
       {:")", 1, ')'}
     ]
 
@@ -68,11 +72,11 @@ defmodule ExDiceRoller.TokenizerTest do
 
   test "separator" do
     expected = [
-      {:digit, 1, '5'},
+      {:int, 1, '5'},
       {:",", 1, ','},
-      {:digit, 1, '6'},
+      {:int, 1, '6'},
       {:",", 1, ','},
-      {:digit, 1, '7'}
+      {:int, 1, '7'}
     ]
 
     assert {:ok, expected} == Tokenizer.tokenize("5,6,7")
@@ -83,9 +87,9 @@ defmodule ExDiceRoller.TokenizerTest do
 
     assert {:ok,
             [
-              {:digit, 1, '1'},
+              {:int, 1, '1'},
               {:roll, 1, 'd'},
-              {:digit, 1, '4'},
+              {:int, 1, '4'},
               {:basic_operator, 1, '+'},
               {:var, 1, 'x'}
             ]} = Tokenizer.tokenize("1d4+x")

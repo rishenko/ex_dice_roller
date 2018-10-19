@@ -89,9 +89,9 @@ defmodule ExDiceRoller.Compiler do
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize(expr)
       {:ok,
       [
-        {:digit, 1, '1'},
+        {:int, 1, '1'},
         {:roll, 1, 'd'},
-        {:digit, 1, '2'},
+        {:int, 1, '2'},
         {:basic_operator, 1, '+'},
         {:var, 1, 'x'}
       ]}
@@ -103,8 +103,8 @@ defmodule ExDiceRoller.Compiler do
 
   During calculation, float values are left as float for as long as possible.
   If a compiled roll is invoked with a float as the number of dice or sides,
-  that value will be rounded to an integer. Finally, the return value is an
-  integer. Rounding rules can be found at `Kernel.round/1`.
+  that value will be rounded to an integer. Finally, the return value is a
+  rounded integer. Rounding rules can be found at `Kernel.round/1`.
   """
   @spec compile(Parser.expression()) :: compiled_val
   def compile(expression) do

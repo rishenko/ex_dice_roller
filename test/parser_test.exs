@@ -7,15 +7,19 @@ defmodule ExDiceRoller.ParserTest do
   alias ExDiceRoller.Parser
 
   describe "basic parsing" do
-    test "digit" do
-      assert {:ok, 1} == Parser.parse([{:digit, 1, '1'}])
+    test "int" do
+      assert {:ok, 1} == Parser.parse([{:int, 1, '1'}])
+    end
+
+    test "float" do
+      assert {:ok, 2.56987} == Parser.parse([{:float, 1, '2.56987'}])
     end
 
     test "roll" do
       tokens = [
-        {:digit, 1, '1'},
+        {:int, 1, '1'},
         {:roll, 1, 'd'},
-        {:digit, 1, '4'}
+        {:int, 1, '4'}
       ]
 
       expected = {:roll, 1, 4}
@@ -24,9 +28,9 @@ defmodule ExDiceRoller.ParserTest do
 
     test "operator" do
       tokens = [
-        {:digit, 1, '1'},
+        {:int, 1, '1'},
         {:basic_operator, 1, '+'},
-        {:digit, 1, '2'}
+        {:int, 1, '2'}
       ]
 
       expected = {{:operator, '+'}, 1, 2}
@@ -35,13 +39,13 @@ defmodule ExDiceRoller.ParserTest do
 
     test "separator" do
       tokens = [
-        {:digit, 1, '2'},
+        {:int, 1, '2'},
         {:roll, 1, 'd'},
-        {:digit, 1, '4'},
+        {:int, 1, '4'},
         {:",", 1, ','},
-        {:digit, 1, '1'},
+        {:int, 1, '1'},
         {:roll, 1, 'd'},
-        {:digit, 1, '6'}
+        {:int, 1, '6'}
       ]
 
       expected = {:sep, {:roll, 2, 4}, {:roll, 1, 6}}
@@ -51,9 +55,9 @@ defmodule ExDiceRoller.ParserTest do
 
     test "variable" do
       tokens = [
-        {:digit, 1, '1'},
+        {:int, 1, '1'},
         {:roll, 1, 'd'},
-        {:digit, 1, '4'},
+        {:int, 1, '4'},
         {:basic_operator, 1, '+'},
         {:var, 1, 'x'}
       ]
@@ -65,9 +69,9 @@ defmodule ExDiceRoller.ParserTest do
     test "subexpressions" do
       tokens = [
         {:"(", 1, '('},
-        {:digit, 1, '78'},
+        {:int, 1, '78'},
         {:complex_operator, 1, '*'},
-        {:digit, 1, '5'},
+        {:int, 1, '5'},
         {:")", 1, ')'}
       ]
 
@@ -81,13 +85,13 @@ defmodule ExDiceRoller.ParserTest do
     end
 
     test "parses token with bad value" do
-      assert {:ok, :error} = Parser.parse([{:digit, 1, 'a'}])
+      assert {:ok, :error} = Parser.parse([{:int, 1, 'a'}])
     end
 
     test "parsing error" do
       assert {:error, {:token_parsing_failed, _}} =
                Parser.parse([
-                 {{:basic_operator, 1, '%'}, {:digit, 1, '1'}, {:digit, 1, '3'}}
+                 {{:basic_operator, 1, '%'}, {:int, 1, '1'}, {:int, 1, '3'}}
                ])
     end
 
@@ -101,15 +105,15 @@ defmodule ExDiceRoller.ParserTest do
     test "subexpr roll subexpr" do
       tokens = [
         {:"(", 1, '('},
-        {:digit, 1, '78'},
+        {:int, 1, '78'},
         {:complex_operator, 1, '*'},
-        {:digit, 1, '5'},
+        {:int, 1, '5'},
         {:")", 1, ')'},
         {:roll, 1, 'd'},
         {:"(", 1, '('},
-        {:digit, 1, '4'},
+        {:int, 1, '4'},
         {:complex_operator, 1, '/'},
-        {:digit, 1, '6'},
+        {:int, 1, '6'},
         {:")", 1, ')'}
       ]
 

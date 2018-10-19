@@ -5,7 +5,7 @@ defmodule ExDiceRoller.Compilers.Roll do
       iex> expr = "1d6"
       "1d6"
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize(expr)
-      {:ok, [{:digit, 1, '1'}, {:roll, 1, 'd'}, {:digit, 1, '6'}]}
+      {:ok, [{:int, 1, '1'}, {:roll, 1, 'd'}, {:int, 1, '6'}]}
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
       {:ok, {:roll, 1, 6}}
       iex> fun = ExDiceRoller.Compilers.Roll.compile(parse_tree)
@@ -40,7 +40,7 @@ defmodule ExDiceRoller.Compilers.Roll do
       iex> expr = "1d6"
       "1d6"
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize(expr)
-      {:ok, [{:digit, 1, '1'}, {:roll, 1, 'd'}, {:digit, 1, '6'}]}
+      {:ok, [{:int, 1, '1'}, {:roll, 1, 'd'}, {:int, 1, '6'}]}
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
       {:ok, {:roll, 1, 6}}
       iex> fun = ExDiceRoller.Compilers.Roll.compile(parse_tree)
@@ -69,7 +69,7 @@ defmodule ExDiceRoller.Compilers.Roll do
       iex> expr = "5d6"
       "5d6"
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize(expr)
-      {:ok, [{:digit, 1, '5'}, {:roll, 1, 'd'}, {:digit, 1, '6'}]}
+      {:ok, [{:int, 1, '5'}, {:roll, 1, 'd'}, {:int, 1, '6'}]}
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
       {:ok, {:roll, 5, 6}}
       iex> fun = ExDiceRoller.Compilers.Roll.compile(parse_tree)
@@ -159,7 +159,7 @@ defmodule ExDiceRoller.Compilers.Roll do
   end
 
   defp roll_prep(_, _, _),
-    do: raise(ArgumentError, "neither number of dice nor number of sides cannot be less than 0")
+    do: raise(ArgumentError, "neither number of dice nor number of sides can be less than 0")
 
   @spec roll(integer, boolean) :: integer
 
