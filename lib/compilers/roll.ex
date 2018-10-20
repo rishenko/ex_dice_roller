@@ -79,6 +79,8 @@ defmodule ExDiceRoller.Compilers.Roll do
 
   #### Kept Rolls and List Comprehensions
 
+  Kept rolls also support list comprehensions. See
+  `ExDiceRoller.ListComprehension` for more information.
 
   """
 

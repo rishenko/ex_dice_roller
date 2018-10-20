@@ -207,10 +207,10 @@ function.
 6. This final anonymous function is then executed and the value returned.
 
 ```elixir
-iex(3)> expr = "(1d4+2.56)d((5*6)d20-5)"
+iex> expr = "(1d4+2.56)d((5*6)d20-5)"
 "(1d4+2)d((5*6)d20-5)"
 
-iex(4)> {:ok, tokens} = ExDiceRoller.tokenize(expr)
+iex> {:ok, tokens} = ExDiceRoller.tokenize(expr)
 {:ok,
 [
   {:"(", 1, '('},
@@ -234,7 +234,7 @@ iex(4)> {:ok, tokens} = ExDiceRoller.tokenize(expr)
   {:")", 1, ')'}
 ]}
 
-iex(5)> {:ok, parse_tree} = ExDiceRoller.parse(tokens)
+iex> {:ok, parse_tree} = ExDiceRoller.parse(tokens)
 {:ok,
 {:roll,
   {{:operator, '+'},
@@ -246,16 +246,16 @@ iex(5)> {:ok, parse_tree} = ExDiceRoller.parse(tokens)
       20},
     5}}}
 
-iex(6)> {:ok, roll_fun} = ExDiceRoller.compile(parse_tree)
+iex> {:ok, roll_fun} = ExDiceRoller.compile(parse_tree)
 {:ok, #Function<12.11371143/0 in ExDiceRoller.Compiler.compile_roll/4>}
 
-iex(7)> roll_fun.([], [])
+iex> roll_fun.([], [])
 739
 
-iex(8)> roll_fun.([], [])
+iex> roll_fun.([], [])
 905
 
-iex(9)> ExDiceRoller.Compiler.fun_info(roll_fun)
+iex> ExDiceRoller.Compiler.fun_info(roll_fun)
 {#Function<9.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
 :"-compile_roll/4-fun-0-",
 [
