@@ -1,16 +1,10 @@
 defmodule ExDiceRoller.CompilerTest do
   @moduledoc false
 
-  use ExUnit.Case
+  use ExDiceRoller.Case
   doctest ExDiceRoller.Compiler
 
   alias ExDiceRoller.Compiler
-
-  setup do
-    # This is called to make doctests predictable.
-    :rand.seed(:exsplus, {5, 7, 13})
-    :ok
-  end
 
   test "basic expression" do
     {:ok, compiled} = ExDiceRoller.compile("1d4+1")

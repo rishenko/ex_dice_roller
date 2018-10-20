@@ -1,7 +1,7 @@
 defmodule ExDiceRoller.TokenizerTest do
   @moduledoc false
 
-  use ExUnit.Case
+  use ExDiceRoller.Case
   doctest ExDiceRoller.Tokenizer
 
   alias ExDiceRoller.Tokenizer

@@ -1,7 +1,7 @@
 defmodule ExDiceRoller.ParserTest do
   @moduledoc false
 
-  use ExUnit.Case
+  use ExDiceRoller.Case
   doctest ExDiceRoller.Parser
 
   alias ExDiceRoller.Parser
