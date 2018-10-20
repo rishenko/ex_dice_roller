@@ -41,7 +41,7 @@ defmodule ExDiceRoller.Sigil do
 
   """
 
-  @spec sigil_a(String.t(), charlist) :: Compiler.compiled_val
+  @spec sigil_a(String.t(), charlist) :: Compiler.compiled_val()
 
   def sigil_a(roll_string, opts) do
     binary_opts = :binary.list_to_bin(opts)

@@ -6,17 +6,37 @@ defmodule ExDiceRoller.Compilers.Variable do
   with a value, such as a number or an anonymous function that accepts list
   arguments (`args` and `opts`, respectively).
 
-      iex(1)> import ExDiceRoller.Sigil
-      ExDiceRoller.Sigil
-      iex(2)> ExDiceRoller.roll(~a/1+x/, [x: 5])
-      6
-      iex(3)> ExDiceRoller.roll("xdy+z", [x: 5, y: 10, z: 50])
-      82
-      iex(4)> ExDiceRoller.roll("xdy+z", [x: 5, y: 10, z: ~a/15d100/])
-      739
+  Acceptable variable values include:
+
+  * integers
+  * floats
+  * compiled functions matching `t:Compiler.compiled_fun/2`
+  * strings that can be parsed by ExDiceRoller
+  * lists composed of any of the above
+  * lists of lists
 
   Note that an error will be raised if values are not supplied for all varaibles
   in an expression.
+
+  ### Examples
+
+      iex> import ExDiceRoller.Sigil
+      ExDiceRoller.Sigil
+      iex> ExDiceRoller.roll(~a/1+x/, [x: 5])
+      6
+      iex> ExDiceRoller.roll("xdy+z", [x: 5, y: 10, z: 50])
+      82
+      iex> ExDiceRoller.roll("xdy+z", [x: 5, y: 10, z: ~a/15d100/])
+      739
+      iex> ExDiceRoller.roll("xdy+z", [x: [1, 2, 3], y: 1, z: 5], [:keep])
+      [6, 6, 6, 6, 6, 6]
+      iex> ExDiceRoller.roll("xdy+z", [x: 1, y: [1, 10, 100], z: -6], [:keep])
+      [-5, 0, 68]
+      iex> ExDiceRoller.roll("xdy+z", [x: [~a/1d2/, "1d4+1"], y: ["3,4d20/2", ~a/1d6/], z: 2], [:keep])
+      [3, 4, 5, 5, 3, 7, 4, 5, 4, 3, 5, 4, 3, 4, 7, 3, 5, 4, 4, 5]
+
+      iex> ExDiceRoller.roll("1+x")
+      ** (ArgumentError) no variable 'x' was found in the arguments
   """
 
   @behaviour ExDiceRoller.Compiler
@@ -48,7 +68,10 @@ defmodule ExDiceRoller.Compilers.Variable do
     {:ok, tokens} = Tokenizer.tokenize(val)
     {:ok, parsed} = Parser.parse(tokens)
     compiled_arg = Compiler.delegate(parsed)
-
     var_final_arg(compiled_arg, var, opts)
+  end
+
+  defp var_final_arg(val, var, opts) when is_list(val) do
+    Enum.map(val, &var_final_arg(&1, var, opts))
   end
 end

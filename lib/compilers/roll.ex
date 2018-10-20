@@ -79,43 +79,11 @@ defmodule ExDiceRoller.Compilers.Roll do
 
   #### Kept Rolls and List Comprehensions
 
-  ExDiceroller also has a certain amount of list comprehension support when
-  calculating dice roll equations and 'keeping' rolls. The default behavior when
-  working with kept rolls is as follows:
 
-  1. If one side of an expression is a list, and the other a value, the action
-  will apply the value to each value in the list.
-  2. If both sides of an expression are lists, the values of each list are
-  applied to their counterpart in the other list. An error is raised if the
-  lengths of the two lists are different.
-  3. Combination rolls, such as `3d5d6`, will perform each roll expressions in
-  succession. Kept values from each roll expression is then used as the number
-  of sides in the succeeding expression.
-
-  Example of one side of an expression being a kept list and the other a value:
-
-      iex> {:ok, fun} = ExDiceRoller.compile("5d6+11")
-      iex> fun.([], [:keep])
-      [14, 13, 17, 15, 16]
-
-  Example of both sides being lists:
-
-      iex> {:ok, fun} = ExDiceRoller.compile("5d6+(5d10+20)")
-      iex> fun.([], [:keep])
-      [25, 32, 34, 30, 26]
-
-  Example of dice rolls of dice rolls:
-
-      iex> ExDiceRoller.roll("1d1d4", [], [:keep])
-      [1]
-      iex> ExDiceRoller.roll("2d1d4", [], [:keep])
-      [4, 2]
-      iex> ExDiceRoller.roll("2d6d4", [], [:keep])
-      [2, 4, 4, 2, 3, 2, 4, 4, 4]
   """
 
   @behaviour ExDiceRoller.Compiler
-  alias ExDiceRoller.Compiler
+  alias ExDiceRoller.{Compiler, ListComprehension}
 
   @impl true
   def compile({:roll, left_expr, right_expr}) do
@@ -142,24 +110,26 @@ defmodule ExDiceRoller.Compilers.Roll do
   defp roll_prep(0, _, _), do: 0
   defp roll_prep(_, 0, _), do: 0
 
-  defp roll_prep(num, sides, opts) when num >= 0 and sides >= 0 do
+  defp roll_prep(n, s, _) when n < 0 or s < 0 do
+    raise(ArgumentError, "neither number of dice nor number of sides can be less than 0")
+  end
+
+  defp roll_prep(num, sides, opts) do
     num = Compiler.round_val(num)
     sides = Compiler.round_val(sides)
     explode? = :explode in opts
 
-    case :keep in opts do
-      true ->
-        keep_roll(num, sides, explode?)
+    fun =
+      case :keep in opts do
+        true ->
+          fn n, s, e? -> Enum.map(1..n, fn _ -> roll(s, e?) end) end
 
-      false ->
-        Enum.reduce(1..num, 0, fn _, total ->
-          total + roll(sides, explode?)
-        end)
-    end
+        false ->
+          fn n, s, e? -> Enum.reduce(1..n, 0, fn _, acc -> acc + roll(s, e?) end) end
+      end
+
+    ListComprehension.flattened_apply(num, sides, explode?, fun)
   end
-
-  defp roll_prep(_, _, _),
-    do: raise(ArgumentError, "neither number of dice nor number of sides can be less than 0")
 
   @spec roll(integer, boolean) :: integer
 
@@ -182,23 +152,4 @@ defmodule ExDiceRoller.Compilers.Roll do
   end
 
   defp explode_roll(_, _, acc), do: acc
-
-  @spec keep_roll(Compiler.calculated_val(), Compiler.calculated_val(), boolean) ::
-          Compiler.calculated_val()
-
-  defp keep_roll(num, sides, explode?) when is_number(num) do
-    keep_roll([num], sides, explode?)
-  end
-
-  defp keep_roll(num, sides, explode?) when is_number(sides) do
-    keep_roll(num, [sides], explode?)
-  end
-
-  defp keep_roll(num, sides, explode?) do
-    Enum.flat_map(num, fn n ->
-      Enum.flat_map(1..n, fn _ ->
-        Enum.map(sides, &roll(&1, explode?))
-      end)
-    end)
-  end
 end
