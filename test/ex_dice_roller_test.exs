@@ -96,12 +96,12 @@ defmodule ExDiceRollerTest do
       [1] = ExDiceRoller.roll("1d4 - 2", [], [:keep])
       [12, 8] = ExDiceRoller.roll("2 * 2d8", [], [:keep])
       [4, 6] = ExDiceRoller.roll("2d6,2d8", [], [:keep])
+      [6, 3] = ExDiceRoller.roll("2d6, 3", [], [:keep])
+      [6, 3, 3] = ExDiceRoller.roll("3, 3d6", [], [:keep])
     end
 
     test "errors using separator with lists" do
       assert_raise ArgumentError, fn -> ExDiceRoller.roll("2d4, 1d8", [], [:keep]) end
-      assert_raise ArgumentError, fn -> ExDiceRoller.roll("2d4, 1", [], [:keep]) end
-      assert_raise ArgumentError, fn -> ExDiceRoller.roll("1, 1d8", [], [:keep]) end
     end
 
     test "errors with lists" do

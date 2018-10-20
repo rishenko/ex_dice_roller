@@ -36,10 +36,13 @@ defmodule ExDiceRoller.Compilers.Separator do
 
   ## Separator Use And Keeping Dice
 
-  The separator can be used alongside kept dice rolls, provided both sides of
-  the expression are lists of equal length. Otherwise, it obeys the same rules
-  of kept roll list comprehension, where each die roll is compared to its
-  counterpart.
+  The separator can be used alongside kept dice rolls, provided:
+
+  * one side is a list and the other a number
+  * both sides are lists of equal length
+
+  When both sides are lists of equal length, separator will begin comparing the
+  values from both lists by index location.
 
 
       iex> ExDiceRoller.roll("5d6,5d100", [], [:keep, :lowest])
@@ -51,12 +54,21 @@ defmodule ExDiceRoller.Compilers.Separator do
       [7, 9, 9, 11, 6]
       iex> ExDiceRoller.roll("(5d1,5d100)+5", [], [:lowest, :keep])
       [6, 6, 6, 6, 6]
+
+      iex> ExDiceRoller.roll("5d6, 3", [], [:keep])
+      [3, 3, 6, 4, 5]
+      iex> ExDiceRoller.roll("3, 5d6", [], [:keep])
+      [3, 4, 4, 6, 3]
+
+      iex> ExDiceRoller.roll("4, xd5", [x: ["1d4", 2.5]], [:keep])
+      [5, 4, 4, 4]
+
+      iex> ExDiceRoller.roll("2d4, 1d8", [], [:keep])
+      ** (ArgumentError) cannot use separator on lists of differing lengths
   """
 
   @behaviour ExDiceRoller.Compiler
-  alias ExDiceRoller.Compiler
-
-  @error_both_sides "separator can only be used when both sides are a list or both sides are a number"
+  alias ExDiceRoller.{Compiler, ListComprehension}
 
   @impl true
   def compile({:sep, left_expr, right_expr}) do
@@ -81,23 +93,14 @@ defmodule ExDiceRoller.Compilers.Separator do
 
   defp high_low(l, r, opts) when is_list(opts) do
     case Enum.find(opts, &(&1 in [:highest, :lowest])) do
-      :highest -> do_high_low(l, r, :highest)
-      :lowest -> do_high_low(l, r, :lowest)
-      _ -> do_high_low(l, r, :highest)
+      :highest -> ListComprehension.apply(l, r, :highest, "separator", &do_high_low/3)
+      :lowest -> ListComprehension.apply(l, r, :lowest, "separator", &do_high_low/3)
+      _ -> ListComprehension.apply(l, r, :highest, "separator", &do_high_low/3)
     end
   end
 
-  @spec do_high_low(Compiler.calculated_val, Compiler.calculated_val, :highest | :lowest) :: Compiler.calculated_val
-  defp do_high_low(l, r, level) when is_list(l) and is_list(r) do
-    if length(l) != length(r) do
-      raise ArgumentError, "cannot use separator on lists of differing lengths"
-    end
-
-    Enum.map(0..(length(l) - 1), &do_high_low(Enum.at(l, &1), Enum.at(r, &1), level))
-  end
-
-  defp do_high_low(l, _, _) when is_list(l), do: raise(ArgumentError, @error_both_sides)
-  defp do_high_low(_, r, _) when is_list(r), do: raise(ArgumentError, @error_both_sides)
+  @spec do_high_low(Compiler.calculated_val(), Compiler.calculated_val(), :highest | :lowest) ::
+          Compiler.calculated_val()
   defp do_high_low(l, r, :highest) when l > r, do: l
   defp do_high_low(_, r, :highest), do: r
   defp do_high_low(l, r, :lowest) when l < r, do: l

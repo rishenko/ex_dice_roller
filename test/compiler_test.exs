@@ -29,7 +29,7 @@ defmodule ExDiceRoller.CompilerTest do
         |> elem(1)
         |> Compiler.fun_info()
 
-      assert {_, :"-compile_add/2-fun-0-",
+      assert {_, :"-compile_add/2-fun-1-",
               [
                 {_, :"-compile_roll/2-fun-3-", [1, 4]},
                 {_, :"-compile_var/1-fun-0-", ['x']}
@@ -43,14 +43,14 @@ defmodule ExDiceRoller.CompilerTest do
         |> elem(1)
         |> Compiler.fun_info()
 
-      assert {_, :"-compile_add/2-fun-0-",
+      assert {_, :"-compile_add/2-fun-1-",
               [
                 {_, :"-compile_roll/2-fun-3-", [1, 4]},
                 {_, :"-compile_roll/2-fun-0-",
                  [
                    {_, :"-compile_roll/2-fun-2-", [1, {_, :"-compile_var/1-fun-0-", ['y']}]},
-                   {_, :"-compile_add/2-fun-1-",
-                    [{_, :"-compile_mul/2-fun-2-", [5, {_, :"-compile_var/1-fun-0-", ['x']}]}, 2]}
+                   {_, :"-compile_add/2-fun-3-",
+                    [{_, :"-compile_mul/2-fun-5-", [5, {_, :"-compile_var/1-fun-0-", ['x']}]}, 2]}
                  ]}
               ]} = result
     end
