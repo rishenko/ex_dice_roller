@@ -177,6 +177,8 @@ defmodule ExDiceRoller.Compiler do
 
   @doc "Performs rounding on both numbers and lists of numbers."
   @spec round_val(calculated_val | float) :: calculated_val
+
+  def round_val([]), do: []
   def round_val(val) when is_list(val), do: Enum.map(val, &round_val(&1))
 
   def round_val(val) when is_number(val), do: Kernel.round(val)

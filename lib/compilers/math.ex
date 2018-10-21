@@ -34,14 +34,29 @@ defmodule ExDiceRoller.Compilers.Math do
     {'+', &Kernel.+/2, "add"},
     {'-', &Kernel.-/2, "sub"},
     {'*', &Kernel.*/2, "mul"},
-    {'/', &Kernel.//2, "div"},
+    {'/', &__MODULE__.divide/2, "div"},
     {'%', &__MODULE__.modulo/2, "mod"},
     {'^', &:math.pow/2, "exp"}
   ]
 
-  @doc "Function used for modulo calculations."
-  @spec modulo(number, number) :: integer
-  def modulo(l, r), do: rem(Compiler.round_val(l), Compiler.round_val(r))
+  @doc "Function used for modulo calculations. Only accepts integer values."
+  @spec modulo(integer, integer) :: integer
+
+  def modulo(_, 0), do: raise(ArgumentError, "the divisor cannot be 0")
+
+  def modulo(l, r) when is_integer(l) and is_integer(r) do
+    rem(Compiler.round_val(l), Compiler.round_val(r))
+  end
+
+  def modulo(_, _), do: raise(ArgumentError, "modulo only accepts integer values")
+
+  @doc "Function used for division calculations."
+  @spec divide(Compiler.calculated_val(), Compiler.calculated_val()) :: float
+  def divide(_, 0), do: raise(ArgumentError, "the divisor cannot be 0")
+
+  def divide(l, r) do
+    l / r
+  end
 
   @impl true
   def compile({{:operator, op}, left_expr, right_expr}) do

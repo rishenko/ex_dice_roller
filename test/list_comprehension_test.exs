@@ -3,5 +3,4 @@ defmodule ExDiceRoller.ListComprehensionTest do
 
   use ExDiceRoller.Case
   doctest ExDiceRoller.ListComprehension
-
 end

@@ -44,6 +44,12 @@ defmodule ExDiceRollerTest do
       5 = ExDiceRoller.roll("1+x", x: "1+3")
     end
 
+    test "variable with list" do
+      [1, 6, 9] = ExDiceRoller.roll("xdy", x: [1, 2, 3], y: 4)
+      [19, 20, 19] = ExDiceRoller.roll("xdy", x: 5, y: [6, 7, 8])
+      [13, 4, 10, 14, 12, 22, 24, 16, 12] = ExDiceRoller.roll("xdy", x: [3, 4, 5], y: [6, 7, 8])
+    end
+
     test "complex" do
       25 = ExDiceRoller.roll("(1/3*6)d(6d4+3-4) + (4*3d5-18)")
       16_298 = ExDiceRoller.roll("2d5d6d7d8d9d10")
@@ -100,6 +106,11 @@ defmodule ExDiceRollerTest do
 
     test "errors with lists" do
       assert_raise ArgumentError, fn -> ExDiceRoller.roll("2d4 + 1d8", [], [:keep]) end
+    end
+
+    test "errors with 0 divisors" do
+      assert_raise ArgumentError, fn -> ExDiceRoller.roll("1/0") end
+      assert_raise ArgumentError, fn -> ExDiceRoller.roll("2%0") end
     end
 
     test "keep roll values" do

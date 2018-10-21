@@ -58,11 +58,17 @@ defmodule ExDiceRoller.ListComprehension do
   @spec flattened_apply(left, right, opts, function) :: return_val
 
   def flattened_apply(l, r, opts, fun) when is_list(l) do
-    Enum.flat_map(l, &flattened_apply(&1, r, opts, fun))
+    l
+    |> List.flatten()
+    |> Enum.map(&flattened_apply(&1, r, opts, fun))
+    |> List.flatten()
   end
 
   def flattened_apply(l, r, opts, fun) when is_list(r) do
-    Enum.flat_map(r, &flattened_apply(l, &1, opts, fun))
+    r
+    |> List.flatten()
+    |> Enum.map(&flattened_apply(l, &1, opts, fun))
+    |> List.flatten()
   end
 
   def flattened_apply(l, r, opts, fun), do: fun.(l, r, opts)
