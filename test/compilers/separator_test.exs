@@ -3,5 +3,4 @@ defmodule ExDiceRoller.Compilers.SeparatorTest do
 
   use ExDiceRoller.Case
   doctest ExDiceRoller.Compilers.Separator
-
 end
