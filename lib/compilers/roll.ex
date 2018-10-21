@@ -123,14 +123,19 @@ defmodule ExDiceRoller.Compilers.Roll do
 
     fun =
       case :keep in opts do
-        true ->
-          fn n, s, e? -> Enum.map(1..n, fn _ -> roll(s, e?) end) end
-
-        false ->
-          fn n, s, e? -> Enum.reduce(1..n, 0, fn _, acc -> acc + roll(s, e?) end) end
+        true -> keep_roll()
+        false -> normal_roll()
       end
 
     ListComprehension.flattened_apply(num, sides, explode?, fun)
+  end
+
+  defp keep_roll do
+    fn n, s, e? -> Enum.map(1..n, fn _ -> roll(s, e?) end) end
+  end
+
+  defp normal_roll do
+    fn n, s, e? -> Enum.reduce(1..n, 0, fn _, acc -> acc + roll(s, e?) end) end
   end
 
   @spec roll(integer, boolean) :: integer

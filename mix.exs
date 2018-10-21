@@ -8,6 +8,7 @@ defmodule ExDiceRoller.MixProject do
       app: :ex_dice_roller,
       version: @version,
       elixir: "~> 1.6",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       package: package(),
@@ -24,6 +25,9 @@ defmodule ExDiceRoller.MixProject do
       docs: docs()
     ]
   end
+
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 
   def description do
     "Adds simple or complex dice roll calculations to your application."

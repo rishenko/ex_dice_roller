@@ -1,14 +1,12 @@
 defmodule ExDiceRoller.SigilTest do
   @moduledoc false
 
-  use ExUnit.Case
+  use ExDiceRoller.Case
   doctest ExDiceRoller.Sigil
   import ExDiceRoller.Sigil
   alias ExDiceRoller.Cache
 
   setup do
-    # This is called to make doctests predictable.
-    :rand.seed(:exsplus, {5, 7, 13})
     {:ok, _} = Cache.start_link()
     :ok
   end
