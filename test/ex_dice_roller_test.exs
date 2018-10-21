@@ -108,11 +108,6 @@ defmodule ExDiceRollerTest do
       assert_raise ArgumentError, fn -> ExDiceRoller.roll("2d4 + 1d8", [], [:keep]) end
     end
 
-    test "errors with 0 divisors" do
-      assert_raise ArgumentError, fn -> ExDiceRoller.roll("1/0") end
-      assert_raise ArgumentError, fn -> ExDiceRoller.roll("2%0") end
-    end
-
     test "keep roll values" do
       values = ExDiceRoller.roll("3d6", [], [:keep])
       require Logger

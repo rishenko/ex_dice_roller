@@ -91,11 +91,11 @@ defmodule ExDiceRoller.ListComprehension do
     Enum.map(0..(length(l) - 1), &fun.(Enum.at(l, &1), Enum.at(r, &1), opts))
   end
 
-  def apply(l, r, opts, err_name, fun) when is_list(l) and not is_list(r) do
+  def apply(l, r, opts, err_name, fun) when is_list(l) do
     Enum.map(l, &apply(&1, r, opts, err_name, fun))
   end
 
-  def apply(l, r, opts, err_name, fun) when not is_list(l) and is_list(r) do
+  def apply(l, r, opts, err_name, fun) when is_list(r) do
     Enum.map(r, &apply(l, &1, opts, err_name, fun))
   end
 

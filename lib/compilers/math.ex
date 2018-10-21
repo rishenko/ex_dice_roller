@@ -43,20 +43,20 @@ defmodule ExDiceRoller.Compilers.Math do
   @spec modulo(integer, integer) :: integer
 
   def modulo(_, 0), do: raise(ArgumentError, "the divisor cannot be 0")
+  def modulo(_, 0.0), do: raise(ArgumentError, "the divisor cannot be 0")
 
   def modulo(l, r) when is_integer(l) and is_integer(r) do
     rem(Compiler.round_val(l), Compiler.round_val(r))
   end
 
-  def modulo(_, _), do: raise(ArgumentError, "modulo only accepts integer values")
+  def modulo(_, _), do: raise(ArgumentError, "modulo operator only accepts integer values")
 
   @doc "Function used for division calculations."
   @spec divide(Compiler.calculated_val(), Compiler.calculated_val()) :: float
-  def divide(_, 0), do: raise(ArgumentError, "the divisor cannot be 0")
 
-  def divide(l, r) do
-    l / r
-  end
+  def divide(_, 0), do: raise(ArgumentError, "the divisor cannot be 0")
+  def divide(_, 0.0), do: raise(ArgumentError, "the divisor cannot be 0")
+  def divide(l, r) when is_number(l) and is_number(r), do: l / r
 
   @impl true
   def compile({{:operator, op}, left_expr, right_expr}) do
@@ -101,5 +101,7 @@ defmodule ExDiceRoller.Compilers.Math do
 
   @spec op(Compiler.calculated_val(), Compiler.calculated_val(), function) ::
           Compiler.calculated_val()
-  defp op(l, r, fun), do: fun.(l, r)
+  defp op(l, r, fun) do
+    ListComprehension.apply(l, r, [], @err_name, fn l, r, _ -> fun.(l, r) end)
+  end
 end

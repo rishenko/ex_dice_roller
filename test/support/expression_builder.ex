@@ -1,7 +1,7 @@
 defmodule ExDiceRoller.ExpressionBuilder do
   @moduledoc """
   Builds randomized ExDiceRoller dice roll expressions. Does not include
-  variables nor exponentiation.
+  exponentiation.
   """
 
   @numbers [&__MODULE__.int/0, &__MODULE__.float/0, &__MODULE__.int/0, &__MODULE__.int/0]
@@ -16,20 +16,18 @@ defmodule ExDiceRoller.ExpressionBuilder do
     &__MODULE__.roll/2
   ]
 
-  def fg, do: Enum.random([:fun, :group, :fun, :fun])
+  @lowercase for n <- ?a..?z, do: <<n::utf8>>
+  @uppercase for n <- ?A..?Z, do: <<n::utf8>>
+  @possible_vars @lowercase -- (["d"] ++ @uppercase)
 
-  def randomize(max_depth) do
-    randomize(max_depth, fg())
-  end
-
-  def randomize(0, _), do: Enum.random(@numbers).()
-
-  def randomize(max_depth, :group) do
-    group(randomize(max_depth - 1, fg()))
-  end
-
-  def randomize(max_depth, :fun) do
-    Enum.random(@funcs).(randomize(max_depth - 1, fg()), randomize(max_depth - 1, fg()))
+  @doc """
+  Generates a random ExDiceRoller roll expression, including nesting expressions
+  up to a maximum depth of `max_depth`. `vars?` determines whether or not the
+  expression can potentially include variables.
+  """
+  @spec randomize(integer, boolean) :: String.t()
+  def randomize(max_depth, vars?) do
+    do_randomize(max_depth, fg(vars?), vars?)
   end
 
   def add(l, r), do: l <> " + " <> r
@@ -41,6 +39,10 @@ defmodule ExDiceRoller.ExpressionBuilder do
   def roll(l, r), do: l <> "d" <> r
   def group(expr), do: "(" <> expr <> ")"
 
+  def var do
+    Enum.random(@possible_vars)
+  end
+
   def int, do: to_string(Enum.random(1..20))
 
   def float do
@@ -49,5 +51,28 @@ defmodule ExDiceRoller.ExpressionBuilder do
     float
     |> Float.round(3)
     |> to_string()
+  end
+
+  defp fg(false) do
+    Enum.random([:fun, :group, :fun, :fun])
+  end
+
+  defp fg(true) do
+    Enum.random([:fun, :group, :var, :fun, :fun])
+  end
+
+  defp do_randomize(0, _, false), do: Enum.random(@numbers).()
+  defp do_randomize(0, _, true), do: Enum.random([&__MODULE__.var/0] ++ @numbers).()
+  defp do_randomize(_, :var, _), do: var()
+
+  defp do_randomize(max_depth, :group, vars?) do
+    group(do_randomize(max_depth - 1, fg(vars?), vars?))
+  end
+
+  defp do_randomize(max_depth, :fun, vars?) do
+    Enum.random(@funcs).(
+      do_randomize(max_depth - 1, fg(vars?), vars?),
+      do_randomize(max_depth - 1, fg(vars?), vars?)
+    )
   end
 end
