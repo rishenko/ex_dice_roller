@@ -3,5 +3,4 @@ defmodule ExDiceRoller.Compilers.VariableTest do
 
   use ExDiceRoller.Case
   doctest ExDiceRoller.Compilers.Variable
-
 end

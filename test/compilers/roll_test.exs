@@ -3,5 +3,4 @@ defmodule ExDiceRoller.Compilers.RollTest do
 
   use ExDiceRoller.Case
   doctest ExDiceRoller.Compilers.Roll
-
 end
