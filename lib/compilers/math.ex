@@ -7,9 +7,9 @@ defmodule ExDiceRoller.Compilers.Math do
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
       {:ok, {{:operator, '+'}, 1, {:var, 'x'}}}
       iex> fun = ExDiceRoller.Compilers.Math.compile(parse_tree)
-      iex> fun.([x: 2], [])
+      iex> fun.([x: 2])
       3
-      iex> fun.([x: 2.4], [])
+      iex> fun.([x: 2.4])
       3.4
 
   ExDiceRoller uses [infix notation](https://en.wikipedia.org/wiki/Infix_notation)
@@ -75,25 +75,25 @@ defmodule ExDiceRoller.Compilers.Math do
             Compiler.compiled_val()
 
     defp unquote(:"compile_#{name}")(l, r) when is_function(l) and is_function(r) do
-      fn args, opts ->
-        ListComprehension.apply(l.(args, opts), r.(args, opts), unquote(fun), @err_name, &op/3)
+      fn args ->
+        ListComprehension.apply(l.(args), r.(args), unquote(fun), @err_name, &op/3)
       end
     end
 
     defp unquote(:"compile_#{name}")(l, r) when is_function(l) do
-      fn args, opts ->
-        ListComprehension.apply(l.(args, opts), r, unquote(fun), @err_name, &op/3)
+      fn args ->
+        ListComprehension.apply(l.(args), r, unquote(fun), @err_name, &op/3)
       end
     end
 
     defp unquote(:"compile_#{name}")(l, r) when is_function(r) do
-      fn args, opts ->
-        ListComprehension.apply(l, r.(args, opts), unquote(fun), @err_name, &op/3)
+      fn args ->
+        ListComprehension.apply(l, r.(args), unquote(fun), @err_name, &op/3)
       end
     end
 
     defp unquote(:"compile_#{name}")(l, r) do
-      fn _, _ ->
+      fn _ ->
         ListComprehension.apply(l, r, unquote(fun), @err_name, &op/3)
       end
     end

@@ -70,7 +70,7 @@ iex> ExDiceRoller.roll("1d20-(5*6)")
 iex> ExDiceRoller.roll("1d4d6")    
 #=> 10
 
-iex> ExDiceRoller.roll("(1d4+2)d((5*6)d20-5)", []) 
+iex> ExDiceRoller.roll("(1d4+2)d((5*6)d20-5)") 
 #=> 566
 
 # variable usage
@@ -78,17 +78,17 @@ iex> ExDiceRoller.roll("1dx+y", [x: 20, y: 13])
 #=> 16
 
 # save each die roll
-iex> ExDiceRoller.roll("3d8", [], [:keep])
+iex> ExDiceRoller.roll("3d8", opts: [:keep])
 #=> [3, 3, 4]
 
 # save each die roll, adding each die's counterpart to the other
-iex> ExDiceRoller.roll("5d1+5d10", [], [:keep])    
+iex> ExDiceRoller.roll("5d1+5d10", opts: [:keep])    
 #=> [3, 5, 7, 7, 2]
 
-iex> ExDiceRoller.roll("5d1+5d10", [], [:keep, :explode])
+iex> ExDiceRoller.roll("5d1+5d10", opts: [:keep, :explode])
 #=> [7, 3, 2, 4, 10]
 
-iex> ExDiceRoller.roll("1d6", [], [:explode])
+iex> ExDiceRoller.roll("1d6", opts: [:explode])
 #=> 9
 ```
 
@@ -105,7 +105,7 @@ iex> {:ok, roll_fun} = ExDiceRoller.compile("1d6 - (3d10)d5 + (1d50)/5")
 iex> ExDiceRoller.execute(roll_fun)
 #=> -16
 
-iex> roll_fun.([], [])
+iex> roll_fun.([])
 #=> -43
 
 iex> {:ok, roll_fun} = ExDiceRoller.compile("1dx+10")
@@ -117,13 +117,13 @@ iex> ExDiceRoller.execute(roll_fun, [x: 5])
 iex> ExDiceRoller.execute(roll_fun, x: "10d100")
 #=> 523
 
-iex> ExDiceRoller.execute(roll_fun, [x: "10d100"], [:keep])
+iex> ExDiceRoller.execute(roll_fun, x: "10d100", opts: [:keep])
 #=> [11, 11, 16, 25, 27, 16, 55, 24, 50, 12]
 ```
 
 ## Sigil Usage
 
-ExDiceRoller introduces a new sigil, `~a`, with the same set of options as `ExDiceRoller.roll/3`.
+ExDiceRoller introduces a new sigil, `~a`, with the same set of options as `ExDiceRoller.roll/2`.
 
 ```elixir
 # import the sigil inside any module that will use it
@@ -165,19 +165,19 @@ iex> ~a/5d1+5d10/k
 iex> ExDiceRoller.start_cache()
 #=> {:ok, ExDiceRoller.Cache}
 
-iex> ExDiceRoller.roll("xdy-2d4", [x: 10, y: 5], [:cache])
+iex> ExDiceRoller.roll("xdy-2d4", [x: 10, y: 5, cache: true])
 #=> 34
 
 iex> ExDiceRoller.Cache.all()
 #=> [{"xdy-2d4", #Function<1.86580672/2 in ExDiceRoller.Compiler.compile/1>}]
 
-iex> ExDiceRoller.roll("xdy-2d4", [x: 10, y: "2d6"], [:cache])
+iex> ExDiceRoller.roll("xdy-2d4", [x: 10, y: "2d6", cache: true])
 #=> 29
 
 iex> ExDiceRoller.Cache.all()
 #=> [{"xdy-2d4", #Function<1.86580672/2 in ExDiceRoller.Compiler.compile/1>}]
 
-iex> ExDiceRoller.roll("1d6+3d4", [], [:cache])
+iex> ExDiceRoller.roll("1d6+3d4", cache: true)
 #=> 10
 
 iex> ExDiceRoller.Cache.all()
@@ -249,31 +249,36 @@ iex(5)> {:ok, parse_tree} = ExDiceRoller.parse(tokens)
 iex(6)> {:ok, roll_fun} = ExDiceRoller.compile(parse_tree)
 {:ok, #Function<12.11371143/0 in ExDiceRoller.Compiler.compile_roll/4>}
 
-iex(7)> roll_fun.([], [])
+iex(7)> roll_fun.([])
 739
 
-iex(8)> roll_fun.([], [])
+iex(8)> roll_fun.([])
 905
 
 iex(9)> ExDiceRoller.Compiler.fun_info(roll_fun)
-{#Function<9.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
-:"-compile_roll/4-fun-0-",
-[
-  {#Function<1.16543174/1 in ExDiceRoller.Compiler.compile_add/4>,
-    :"-compile_add/4-fun-1-",
+{#Function<0.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
+ :"-compile_roll/2-fun-0-",
+ [
+   {#Function<1.102777967/1 in ExDiceRoller.Compilers.Math.compile_add/2>,
+    :"-compile_add/2-fun-3-",
     [
-      {#Function<12.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
-      :"-compile_roll/4-fun-3-", [1, 4]},
-      2
+      {#Function<3.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
+       :"-compile_roll/2-fun-3-", [1, 4]},
+      2.56
     ]},
-  {#Function<14.16543174/1 in ExDiceRoller.Compiler.compile_sub/4>,
-    :"-compile_sub/4-fun-1-",
+   {#Function<21.102777967/1 in ExDiceRoller.Compilers.Math.compile_sub/2>,
+    :"-compile_sub/2-fun-3-",
     [
-      {#Function<12.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
-      :"-compile_roll/4-fun-3-", [30, 20]},
+      {#Function<1.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
+       :"-compile_roll/2-fun-1-",
+       [
+         {#Function<19.102777967/1 in ExDiceRoller.Compilers.Math.compile_mul/2>,
+          :"-compile_mul/2-fun-7-", [5, 6]},
+         20
+       ]},
       5
     ]}
-]}
+ ]}
 ```
 
 

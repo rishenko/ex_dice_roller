@@ -23,14 +23,14 @@ defmodule ExDiceRoller.Sigil do
       iex> import ExDiceRoller.Sigil
       ExDiceRoller.Sigil
       iex> fun = ~a/1+1/
-      iex> fun.([], [])
+      iex> fun.([])
       2
 
       iex> import ExDiceRoller.Sigil
       iex> fun = ~a/1d4/
-      iex> fun.([], [])
+      iex> fun.([])
       1
-      iex> fun.([], [])
+      iex> fun.([])
       4
 
       iex> import ExDiceRoller.Sigil
@@ -54,7 +54,7 @@ defmodule ExDiceRoller.Sigil do
           fun
 
         true ->
-          fun.([], translated_opts -- [:execute])
+          fun.(opts: translated_opts -- [:execute])
       end
     else
       {:error, reason} -> {:error, {:invalid_option, reason}}

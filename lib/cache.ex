@@ -21,16 +21,16 @@ defmodule ExDiceRoller.Cache do
       iex> ExDiceRoller.start_cache()
       iex> ExDiceRoller.Cache.all()
       []
-      iex> ExDiceRoller.roll("2d6+1d5", [], [:cache])
+      iex> ExDiceRoller.roll("2d6+1d5", cache: true)
       9
       iex> [{"2d6+1d5", _}] = ExDiceRoller.Cache.all()
-      iex> ExDiceRoller.roll("2d6+1d5", [], [:cache])
+      iex> ExDiceRoller.roll("2d6+1d5", cache: true)
       11
       iex> [{"2d6+1d5", _}] = ExDiceRoller.Cache.all()
-      iex> ExDiceRoller.roll("1d4+x", [x: 3], [:cache])
+      iex> ExDiceRoller.roll("1d4+x", [x: 3, cache: true])
       7
       iex> [{"1d4+x", _}, {"2d6+1d5", _}] = ExDiceRoller.Cache.all()
-      iex> ExDiceRoller.roll("1d4+x", [x: 3], [:cache])
+      iex> ExDiceRoller.roll("1d4+x", [x: 3, cache: true])
       7
   """
 

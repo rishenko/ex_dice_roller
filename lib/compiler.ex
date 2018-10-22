@@ -34,37 +34,37 @@ defmodule ExDiceRoller.Compiler do
           {:roll, 1, 6}}}
 
       > fun = ExDiceRoller.Compiler.compile(parsed)
-      #Function<0.47893785/2 in ExDiceRoller.Compiler.compile_add/4>
+      #Function<1.51809653/1 in ExDiceRoller.Compiler.compile/1>
 
-      > fun.([], [])
-      4
+      > fun.([])
+      11
 
       > ExDiceRoller.Compiler.fun_info(fun)
-      {#Function<0.47893785/2 in ExDiceRoller.Compiler.compile_add/4>,
-        :"-compile_add/4-fun-0-",
-        [
-          {#Function<13.47893785/2 in ExDiceRoller.Compiler.compile_sub/4>,
-            :"-compile_sub/4-fun-0-",
+      {#Function<0.102777967/1 in ExDiceRoller.Compilers.Math.compile_add/2>,
+      :"-compile_add/2-fun-1-",
+      [
+        {#Function<20.102777967/1 in ExDiceRoller.Compilers.Math.compile_sub/2>,
+          :"-compile_sub/2-fun-1-",
+          [
+            {#Function<3.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
+            :"-compile_roll/2-fun-3-", [1, 4]},
+            {#Function<5.102777967/1 in ExDiceRoller.Compilers.Math.compile_div/2>,
+            :"-compile_div/2-fun-3-",
             [
-              {#Function<12.47893785/2 in ExDiceRoller.Compiler.compile_roll/4>,
-              :"-compile_roll/4-fun-3-", [1, 4]},
-              {#Function<4.47893785/2 in ExDiceRoller.Compiler.compile_div/4>,
-              :"-compile_div/4-fun-1-",
-              [
-                {#Function<12.47893785/2 in ExDiceRoller.Compiler.compile_roll/4>,
-                  :"-compile_roll/4-fun-3-", [3, 6]},
-                2
-              ]}
-            ]},
-          {#Function<9.47893785/2 in ExDiceRoller.Compiler.compile_roll/4>,
-            :"-compile_roll/4-fun-0-",
-            [
-              {#Function<12.47893785/2 in ExDiceRoller.Compiler.compile_roll/4>,
-              :"-compile_roll/4-fun-3-", [1, 4]},
-              {#Function<12.47893785/2 in ExDiceRoller.Compiler.compile_roll/4>,
-              :"-compile_roll/4-fun-3-", [1, 6]}
+              {#Function<3.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
+                :"-compile_roll/2-fun-3-", [3, 6]},
+              2
             ]}
-        ]}
+          ]},
+        {#Function<0.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
+          :"-compile_roll/2-fun-0-",
+          [
+            {#Function<3.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
+            :"-compile_roll/2-fun-3-", [1, 4]},
+            {#Function<3.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
+            :"-compile_roll/2-fun-3-", [1, 6]}
+          ]}
+      ]}
 
   """
 
@@ -72,11 +72,10 @@ defmodule ExDiceRoller.Compiler do
   alias ExDiceRoller.Compilers.{Math, Roll, Separator, Variable}
 
   @type compiled_val :: compiled_fun | calculated_val
-  @type compiled_fun :: (args, opts -> calculated_val)
+  @type compiled_fun :: (args -> calculated_val)
   @type calculated_val :: number | list(number)
   @type fun_info_tuple :: {function, atom, list(any)}
   @type args :: Keyword.t()
-  @type opts :: list(atom | {atom, any})
 
   @doc "Compiles the expression into a `t:compiled_val/0`."
   @callback compile(Parser.expression()) :: compiled_val
@@ -98,7 +97,7 @@ defmodule ExDiceRoller.Compiler do
       iex> {:ok, parsed} = ExDiceRoller.Parser.parse(tokens)
       {:ok, {{:operator, '+'}, {:roll, 1, 2}, {:var, 'x'}}}
       iex> fun = ExDiceRoller.Compiler.compile(parsed)
-      iex> fun.([x: 1], [:explode])
+      iex> fun.([x: 1, opts: [:explode]])
       2
 
   During calculation, float values are left as float for as long as possible.
@@ -112,13 +111,13 @@ defmodule ExDiceRoller.Compiler do
 
     compiled =
       case is_function(compiled) do
-        false -> fn _args, _opts -> compiled end
+        false -> fn _args -> compiled end
         true -> compiled
       end
 
-    fn args, opts ->
+    fn args ->
       args
-      |> compiled.(opts)
+      |> compiled.()
       |> round_val()
     end
   end

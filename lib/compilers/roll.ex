@@ -9,9 +9,9 @@ defmodule ExDiceRoller.Compilers.Roll do
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
       {:ok, {:roll, 1, 6}}
       iex> fun = ExDiceRoller.Compilers.Roll.compile(parse_tree)
-      iex> fun.([], [])
+      iex> fun.([])
       3
-      iex> fun.([], [])
+      iex> fun.([])
       2
 
   ## Options
@@ -29,7 +29,7 @@ defmodule ExDiceRoller.Compilers.Roll do
   5. the sum total result of all rolls is recorded and used
 
   You can utilize this mechanic by specifying the `:explode` option for
-  ExDiceRoller.roll/3 calls, or specifying the `e` flag when using the `~a`
+  ExDiceRoller.roll/2 calls, or specifying the `e` flag when using the `~a`
   sigil. This option can be used with any ExDiceRoller roll option.
 
   It should also be noted that the exploding dice mechanic is not applied to a
@@ -44,11 +44,11 @@ defmodule ExDiceRoller.Compilers.Roll do
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
       {:ok, {:roll, 1, 6}}
       iex> fun = ExDiceRoller.Compilers.Roll.compile(parse_tree)
-      iex> fun.([], [:explode])
+      iex> fun.(opts: [:explode])
       3
-      iex> fun.([], [:explode])
+      iex> fun.(opts: [:explode])
       2
-      iex> fun.([], [:explode])
+      iex> fun.(opts: [:explode])
       10
 
       iex> import ExDiceRoller.Sigil
@@ -73,7 +73,7 @@ defmodule ExDiceRoller.Compilers.Roll do
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
       {:ok, {:roll, 5, 6}}
       iex> fun = ExDiceRoller.Compilers.Roll.compile(parse_tree)
-      iex> fun.([], [:keep])
+      iex> fun.(opts: [:keep])
       [3, 2, 6, 4, 5]
 
 
@@ -93,19 +93,19 @@ defmodule ExDiceRoller.Compilers.Roll do
   @spec compile_roll(Compiler.compiled_val(), Compiler.compiled_val()) :: Compiler.compiled_fun()
 
   defp compile_roll(num, sides) when is_function(num) and is_function(sides) do
-    fn args, opts -> roll_prep(num.(args, opts), sides.(args, opts), opts) end
+    fn args -> roll_prep(num.(args), sides.(args), args) end
   end
 
   defp compile_roll(num, sides) when is_function(num),
-    do: fn args, opts -> roll_prep(num.(args, opts), sides, opts) end
+    do: fn args -> roll_prep(num.(args), sides, args) end
 
   defp compile_roll(num, sides) when is_function(sides),
-    do: fn args, opts -> roll_prep(num, sides.(args, opts), opts) end
+    do: fn args -> roll_prep(num, sides.(args), args) end
 
   defp compile_roll(num, sides),
-    do: fn _args, opts -> roll_prep(num, sides, opts) end
+    do: fn args -> roll_prep(num, sides, args) end
 
-  @spec roll_prep(number, number, list(atom | tuple)) :: integer
+  @spec roll_prep(Compiler.calculated_val, Compiler.calculated_val, list(atom | tuple)) :: integer
 
   defp roll_prep(0, _, _), do: 0
   defp roll_prep(_, 0, _), do: 0
@@ -114,13 +114,13 @@ defmodule ExDiceRoller.Compilers.Roll do
     raise(ArgumentError, "neither number of dice nor number of sides can be less than 0")
   end
 
-  defp roll_prep(num, sides, opts) do
+  defp roll_prep(num, sides, args) do
     num = Compiler.round_val(num)
     sides = Compiler.round_val(sides)
-    explode? = :explode in opts
+    explode? = :explode in Keyword.get(args, :opts, [])
 
     fun =
-      case :keep in opts do
+      case :keep in Keyword.get(args, :opts, []) do
         true -> keep_roll()
         false -> normal_roll()
       end

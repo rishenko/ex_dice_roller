@@ -10,17 +10,17 @@ defmodule ExDiceRoller.Compilers.Separator do
 
   Examples:
 
-      iex> ExDiceRoller.roll("1,2", [], [])
+      iex> ExDiceRoller.roll("1,2")
       2
-      iex> ExDiceRoller.roll("1,1", [], [])
+      iex> ExDiceRoller.roll("1,1")
       1
-      iex> ExDiceRoller.roll("1,2", [], [:highest])
+      iex> ExDiceRoller.roll("1,2", opts: [:highest])
       2
-      iex> ExDiceRoller.roll("1,2", [], [:lowest])
+      iex> ExDiceRoller.roll("1,2", opts: [:lowest])
       1
-      iex> ExDiceRoller.roll("1d6+2,10d8+3", [], [:highest])
+      iex> ExDiceRoller.roll("1d6+2,10d8+3", opts: [:highest])
       49
-      iex> ExDiceRoller.roll("1d6+8,10d8+5", [], [:lowest])
+      iex> ExDiceRoller.roll("1d6+8,10d8+5", opts: [:lowest])
       14
 
 
@@ -29,9 +29,9 @@ defmodule ExDiceRoller.Compilers.Separator do
 
   Examples:
 
-      iex> ExDiceRoller.roll("(5d1,2d1)+5", [], [:highest])
+      iex> ExDiceRoller.roll("(5d1,2d1)+5", opts: [:highest])
       10
-      iex> ExDiceRoller.roll("(5d1,2d1)+5", [], [:lowest])
+      iex> ExDiceRoller.roll("(5d1,2d1)+5", opts: [:lowest])
       7
 
   ## Separator Use And Keeping Dice
@@ -45,25 +45,25 @@ defmodule ExDiceRoller.Compilers.Separator do
   values from both lists by index location.
 
 
-      iex> ExDiceRoller.roll("5d6,5d100", [], [:keep, :lowest])
+      iex> ExDiceRoller.roll("5d6,5d100", opts: [:keep, :lowest])
       [2, 2, 6, 4, 5]
-      iex> ExDiceRoller.roll("5d6,5d100", [], [:keep, :highest])
+      iex> ExDiceRoller.roll("5d6,5d100", opts: [:keep, :highest])
       [47, 6, 49, 91, 54]
 
-      iex> ExDiceRoller.roll("(5d2,5d6)+5", [], [:highest, :keep])
+      iex> ExDiceRoller.roll("(5d2,5d6)+5", opts: [:highest, :keep])
       [7, 9, 9, 11, 6]
-      iex> ExDiceRoller.roll("(5d1,5d100)+5", [], [:lowest, :keep])
+      iex> ExDiceRoller.roll("(5d1,5d100)+5", opts: [:lowest, :keep])
       [6, 6, 6, 6, 6]
 
-      iex> ExDiceRoller.roll("5d6, 3", [], [:keep])
+      iex> ExDiceRoller.roll("5d6, 3", opts: [:keep])
       [3, 3, 6, 4, 5]
-      iex> ExDiceRoller.roll("3, 5d6", [], [:keep])
+      iex> ExDiceRoller.roll("3, 5d6", opts: [:keep])
       [3, 4, 4, 6, 3]
 
-      iex> ExDiceRoller.roll("4, xd5", [x: ["1d4", 2.5]], [:keep])
+      iex> ExDiceRoller.roll("4, xd5", x: ["1d4", 2.5], opts: [:keep])
       [5, 4, 4, 4]
 
-      iex> ExDiceRoller.roll("2d4, 1d8", [], [:keep])
+      iex> ExDiceRoller.roll("2d4, 1d8", opts: [:keep])
       ** (ArgumentError) cannot use separator on lists of differing lengths
   """
 
@@ -77,21 +77,23 @@ defmodule ExDiceRoller.Compilers.Separator do
 
   @spec compile_sep(Compiler.compiled_val(), Compiler.compiled_val()) :: Compiler.compiled_fun()
   defp compile_sep(l, r) when is_function(l) and is_function(r),
-    do: fn args, opts -> high_low(l.(args, opts), r.(args, opts), opts) end
+    do: fn args -> high_low(l.(args), r.(args), args) end
 
   defp compile_sep(l, r) when is_function(l),
-    do: fn args, opts -> high_low(l.(args, opts), r, opts) end
+    do: fn args -> high_low(l.(args), r, args) end
 
   defp compile_sep(l, r) when is_function(r),
-    do: fn args, opts -> high_low(l, r.(args, opts), opts) end
+    do: fn args -> high_low(l, r.(args), args) end
 
-  defp compile_sep(l, r), do: fn _args, opts -> high_low(l, r, opts) end
+  defp compile_sep(l, r), do: fn args -> high_low(l, r, args) end
 
-  @spec high_low(Compiler.calculated_val(), Compiler.calculated_val(), Compiler.opts()) ::
+  @spec high_low(Compiler.calculated_val(), Compiler.calculated_val(), Compiler.args()) ::
           Compiler.calculated_val()
   defp high_low(l, l, _), do: l
 
-  defp high_low(l, r, opts) when is_list(opts) do
+  defp high_low(l, r, args) when is_list(args) do
+    opts = Keyword.get(args, :opts, [])
+
     case Enum.find(opts, &(&1 in [:highest, :lowest])) do
       :highest -> ListComprehension.apply(l, r, :highest, "separator", &do_high_low/3)
       :lowest -> ListComprehension.apply(l, r, :lowest, "separator", &do_high_low/3)
