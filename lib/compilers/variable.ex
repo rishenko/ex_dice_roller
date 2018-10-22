@@ -24,15 +24,15 @@ defmodule ExDiceRoller.Compilers.Variable do
       ExDiceRoller.Sigil
       iex> ExDiceRoller.roll(~a/1+x/, [x: 5])
       6
-      iex> ExDiceRoller.roll("xdy+z", [x: 5, y: 10, z: 50])
+      iex> ExDiceRoller.roll("xdy+z", x: 5, y: 10, z: 50)
       82
       iex> ExDiceRoller.roll("xdy+z", [x: 5, y: 10, z: ~a/15d100/])
       739
-      iex> ExDiceRoller.roll("xdy+z", [x: [1, 2, 3], y: 1, z: 5, opts: [:keep]])
+      iex> ExDiceRoller.roll("xdy+z", x: [1, 2, 3], y: 1, z: 5, opts: [:keep])
       [6, 6, 6, 6, 6, 6]
       iex> ExDiceRoller.roll("xdy+z", [x: 1, y: [1, 10, 100], z: -6, opts: [:keep]])
       [-5, 0, 68]
-      iex> ExDiceRoller.roll("xdy+z", [x: [~a/1d2/, "1d4+1"], y: ["3,4d20/2", ~a/1d6/], z: 2, opts: [:keep]])
+      iex> ExDiceRoller.roll("xdy+z", x: [~a/1d2/, "1d4+1"], y: ["3,4d20/2", ~a/1d6/], z: 2, opts: [:keep])
       [3, 4, 5, 5, 3, 7, 4, 5, 4, 3, 5, 4, 3, 4, 7, 3, 5, 4, 4, 5]
 
       iex> ExDiceRoller.roll("1+x")

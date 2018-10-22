@@ -117,13 +117,13 @@ iex> ExDiceRoller.execute(roll_fun, [x: 5])
 iex> ExDiceRoller.execute(roll_fun, x: "10d100")
 #=> 523
 
-iex> ExDiceRoller.execute(roll_fun, [x: "10d100", opts: [:keep]])
+iex> ExDiceRoller.execute(roll_fun, x: "10d100", opts: [:keep])
 #=> [11, 11, 16, 25, 27, 16, 55, 24, 50, 12]
 ```
 
 ## Sigil Usage
 
-ExDiceRoller introduces a new sigil, `~a`, with the same set of options as `ExDiceRoller.roll/3`.
+ExDiceRoller introduces a new sigil, `~a`, with the same set of options as `ExDiceRoller.roll/2`.
 
 ```elixir
 # import the sigil inside any module that will use it
@@ -256,24 +256,29 @@ iex(8)> roll_fun.([])
 905
 
 iex(9)> ExDiceRoller.Compiler.fun_info(roll_fun)
-{#Function<9.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
-:"-compile_roll/4-fun-0-",
-[
-  {#Function<1.16543174/1 in ExDiceRoller.Compiler.compile_add/4>,
-    :"-compile_add/4-fun-1-",
+{#Function<0.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
+ :"-compile_roll/2-fun-0-",
+ [
+   {#Function<1.102777967/1 in ExDiceRoller.Compilers.Math.compile_add/2>,
+    :"-compile_add/2-fun-3-",
     [
-      {#Function<12.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
-      :"-compile_roll/4-fun-3-", [1, 4]},
-      2
+      {#Function<3.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
+       :"-compile_roll/2-fun-3-", [1, 4]},
+      2.56
     ]},
-  {#Function<14.16543174/1 in ExDiceRoller.Compiler.compile_sub/4>,
-    :"-compile_sub/4-fun-1-",
+   {#Function<21.102777967/1 in ExDiceRoller.Compilers.Math.compile_sub/2>,
+    :"-compile_sub/2-fun-3-",
     [
-      {#Function<12.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
-      :"-compile_roll/4-fun-3-", [30, 20]},
+      {#Function<1.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
+       :"-compile_roll/2-fun-1-",
+       [
+         {#Function<19.102777967/1 in ExDiceRoller.Compilers.Math.compile_mul/2>,
+          :"-compile_mul/2-fun-7-", [5, 6]},
+         20
+       ]},
       5
     ]}
-]}
+ ]}
 ```
 
 

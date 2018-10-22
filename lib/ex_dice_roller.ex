@@ -2,7 +2,7 @@ defmodule ExDiceRoller do
   @moduledoc """
   Converts strings into dice rolls and returns expected results. Ignores any
   spaces, including tabs and newlines, in the provided string. A roll can be
-  invoked via `ExDiceRoller.roll/3`.
+  invoked via `ExDiceRoller.roll/2`.
 
       iex> ExDiceRoller.roll("2d6+3")
       8
@@ -257,7 +257,7 @@ defmodule ExDiceRoller do
 
       iex> ExDiceRoller.roll("1+x", [x: 1])
       2
-      iex> ExDiceRoller.roll("1+x", [x: 1.4])
+      iex> ExDiceRoller.roll("1+x", x: 1.4)
       2
       iex> ExDiceRoller.roll("1+x", [x: 1.5])
       3
@@ -274,7 +274,7 @@ defmodule ExDiceRoller do
       iex> ExDiceRoller.start_cache(ExDiceRoller.Cache)
       iex> ExDiceRoller.roll("(1d6)d4-3+y", [y: 3, cache: true])
       10
-      iex> ExDiceRoller.roll("1d2+y", [y: 1, opts: [:cache, :explode]])
+      iex> ExDiceRoller.roll("1d2+y", y: 1, opts: [:cache, :explode])
       2
       iex> ExDiceRoller.roll("1d2+y", [y: 2, opts: [:cache, :explode]])
       11

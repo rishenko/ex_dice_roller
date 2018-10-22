@@ -60,7 +60,7 @@ defmodule ExDiceRoller.Compilers.Separator do
       iex> ExDiceRoller.roll("3, 5d6", opts: [:keep])
       [3, 4, 4, 6, 3]
 
-      iex> ExDiceRoller.roll("4, xd5", [x: ["1d4", 2.5], opts: [:keep]])
+      iex> ExDiceRoller.roll("4, xd5", x: ["1d4", 2.5], opts: [:keep])
       [5, 4, 4, 4]
 
       iex> ExDiceRoller.roll("2d4, 1d8", opts: [:keep])

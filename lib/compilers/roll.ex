@@ -29,7 +29,7 @@ defmodule ExDiceRoller.Compilers.Roll do
   5. the sum total result of all rolls is recorded and used
 
   You can utilize this mechanic by specifying the `:explode` option for
-  ExDiceRoller.roll/3 calls, or specifying the `e` flag when using the `~a`
+  ExDiceRoller.roll/2 calls, or specifying the `e` flag when using the `~a`
   sigil. This option can be used with any ExDiceRoller roll option.
 
   It should also be noted that the exploding dice mechanic is not applied to a
