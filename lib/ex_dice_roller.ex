@@ -11,7 +11,7 @@ defmodule ExDiceRoller do
       11
 
       iex> import ExDiceRoller.Sigil
-      iex> ExDiceRoller.roll(~a/1d2+z/, [z: ~a/1d2/], [:explode])
+      iex> ExDiceRoller.roll(~a/1d2+z/, [z: ~a/1d2/, opts: [:explode]])
       8
 
 
@@ -131,13 +131,13 @@ defmodule ExDiceRoller do
   ExDiceRoller can cache and reuse dice rolls.
 
       iex> ExDiceRoller.start_cache()
-      iex> ExDiceRoller.roll("8d6-(4d5)", [], [:cache])
+      iex> ExDiceRoller.roll("8d6-(4d5)", opts: [cache: true])
       20
-      iex> ExDiceRoller.roll("8d6-(4d5)", [], [:cache])
+      iex> ExDiceRoller.roll("8d6-(4d5)", opts: [cache: true])
       13
-      iex> ExDiceRoller.roll("1d3+x", [x: 4], [:cache])
+      iex> ExDiceRoller.roll("1d3+x", [x: 4, cache: true])
       6
-      iex> ExDiceRoller.roll("1d3+x", [x: 1], [:cache, :explode])
+      iex> ExDiceRoller.roll("1d3+x", [x: 1, opts: [:cache, :explode]])
       6
 
   More details can be found in the documentation for `ExDiceRoller.Cache`.
@@ -187,22 +187,22 @@ defmodule ExDiceRoller do
       iex> ExDiceRoller.roll("1+\t2*3d 4")
       15
 
-      iex> ExDiceRoller.roll("1dx+6-y", x: 10, y: 5)
+      iex> ExDiceRoller.roll("1dx+6-y", [x: 10, y: 5])
       10
 
       iex> import ExDiceRoller.Sigil
       iex> ExDiceRoller.roll(~a/2+5dx/, x: ~a|3d(7/2)|)
       19
 
-      iex> ExDiceRoller.roll("1d2", [], [:explode])
+      iex> ExDiceRoller.roll("1d2", opts: [:explode])
       1
-      iex> ExDiceRoller.roll("1d2", [], [:explode])
+      iex> ExDiceRoller.roll("1d2", opts: [:explode])
       7
 
       iex> ExDiceRoller.start_cache()
-      iex> ExDiceRoller.roll("1d2+x", [x: 3], [:cache])
+      iex> ExDiceRoller.roll("1d2+x", [x: 3, cache: true])
       4
-      iex> ExDiceRoller.roll("1d2+x", [x: 3], [:cache, :explode])
+      iex> ExDiceRoller.roll("1d2+x", [x: 3, opts: [:cache, :explode]])
       10
 
       iex> import ExDiceRoller.Sigil
@@ -229,13 +229,13 @@ defmodule ExDiceRoller do
   variables, use `roll/3` instead.
   """
   @spec roll(String.t()) :: integer | list(integer)
-  def roll(roll_string), do: roll(roll_string, [], [])
+  def roll(roll_string), do: roll(roll_string, [])
 
   @doc """
   Processes a given string as a dice roll and returns the calculated result. The
   result is a rounded integer.
 
-  Any variable values should be specified in `args`. Options can be passed in
+  Any variable values should be specified in `vars`. Options can be passed in
   `opts`.
 
   Possible values for `opts` include:
@@ -265,47 +265,47 @@ defmodule ExDiceRoller do
       iex> ExDiceRoller.roll("1d6+15", [])
       18
 
-      iex> ExDiceRoller.roll("1d8+x", x: 5)
+      iex> ExDiceRoller.roll("1d8+x", [x: 5])
       6
 
-      iex> ExDiceRoller.roll("1d3", [], [:explode])
+      iex> ExDiceRoller.roll("1d3", opts: [:explode])
       5
 
       iex> ExDiceRoller.start_cache(ExDiceRoller.Cache)
-      iex> ExDiceRoller.roll("(1d6)d4-3+y", [y: 3], [:cache])
+      iex> ExDiceRoller.roll("(1d6)d4-3+y", [y: 3, cache: true])
       10
-      iex> ExDiceRoller.roll("1d2+y", [y: 1], [:cache, :explode])
+      iex> ExDiceRoller.roll("1d2+y", [y: 1, opts: [:cache, :explode]])
       2
-      iex> ExDiceRoller.roll("1d2+y", [y: 2], [:cache, :explode])
+      iex> ExDiceRoller.roll("1d2+y", [y: 2, opts: [:cache, :explode]])
       11
 
-      iex> ExDiceRoller.roll("1,2", [], [:highest])
+      iex> ExDiceRoller.roll("1,2", opts: [:highest])
       2
-      iex> ExDiceRoller.roll("10,12,45,3,100", [], [:lowest])
+      iex> ExDiceRoller.roll("10,12,45,3,100", opts: [:lowest])
       3
 
   """
-  @spec roll(String.t() | Compiler.compiled_fun(), Compiler.args(), Compiler.opts()) :: integer
+  @spec roll(String.t() | Compiler.compiled_fun(), Keyword.t()) :: integer
 
-  def roll(roll_string, args, opts \\ [])
+  def roll(roll_string, args) when is_bitstring(roll_string) do
+    case Keyword.get(args, :cache, false) do
+      false ->
+        with {:ok, tokens} <- Tokenizer.tokenize(roll_string),
+             {:ok, parsed_tokens} <- Parser.parse(tokens) do
+          calculate(parsed_tokens, args)
+        else
+          {:error, _} = err -> err
+        end
 
-  def roll(roll_string, args, [:cache | rest]) do
-    @cache_table
-    |> Cache.obtain(roll_string)
-    |> execute(args, rest)
-  end
-
-  def roll(roll_string, args, opts) when is_bitstring(roll_string) do
-    with {:ok, tokens} <- Tokenizer.tokenize(roll_string),
-         {:ok, parsed_tokens} <- Parser.parse(tokens) do
-      calculate(parsed_tokens, args, opts)
-    else
-      {:error, _} = err -> err
+      true ->
+        @cache_table
+        |> Cache.obtain(roll_string)
+        |> execute(args)
     end
   end
 
-  def roll(compiled, args, opts) when is_function(compiled) do
-    execute(compiled, args, opts)
+  def roll(compiled, args) when is_function(compiled) do
+    execute(compiled, args)
   end
 
   @doc "Helper function that calls `ExDiceRoller.Tokenizer.tokenize/1`."
@@ -319,12 +319,12 @@ defmodule ExDiceRoller do
   @doc """
   Takes a given expression from parse and calculates the result.
   """
-  @spec calculate(Parser.expression(), Compiler.args(), Compiler.opts()) :: number
-  def calculate(expression, args \\ [], opts \\ []) do
+  @spec calculate(Parser.expression(), Keyword.t()) :: number
+  def calculate(expression, args) do
     expression
     |> compile()
     |> elem(1)
-    |> execute(args, opts)
+    |> execute(args)
   end
 
   @doc """
@@ -358,9 +358,9 @@ defmodule ExDiceRoller do
   def compile(other), do: {:error, {:cannot_compile_roll, other}}
 
   @doc "Executes a function built by `compile/1`."
-  @spec execute(function, Compiler.args(), Compiler.opts()) :: integer | list(integer)
-  def execute(compiled, args \\ [], opts \\ []) when is_function(compiled) do
-    compiled.(args, opts)
+  @spec execute(function, Keyword.t()) :: integer | list(integer)
+  def execute(compiled, args \\ []) when is_function(compiled) do
+    compiled.(args)
   end
 
   @doc """

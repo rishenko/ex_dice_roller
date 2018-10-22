@@ -52,7 +52,7 @@ defmodule ExDiceRoller.RandomizedRolls do
       |> generate_var_values(max_depth - 1)
 
     try do
-      ExDiceRoller.roll(expr, var_values, build_options())
+      ExDiceRoller.roll(expr, var_values ++ build_options())
       acc
     rescue
       err -> handle_error(err, acceptable_errors, var_values, expr, acc)

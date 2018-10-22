@@ -36,7 +36,7 @@ defmodule ExDiceRoller.Compiler do
       > fun = ExDiceRoller.Compiler.compile(parsed)
       #Function<0.47893785/2 in ExDiceRoller.Compiler.compile_add/4>
 
-      > fun.([], [])
+      > fun.([])
       4
 
       > ExDiceRoller.Compiler.fun_info(fun)
@@ -72,11 +72,10 @@ defmodule ExDiceRoller.Compiler do
   alias ExDiceRoller.Compilers.{Math, Roll, Separator, Variable}
 
   @type compiled_val :: compiled_fun | calculated_val
-  @type compiled_fun :: (args, opts -> calculated_val)
+  @type compiled_fun :: (args -> calculated_val)
   @type calculated_val :: number | list(number)
   @type fun_info_tuple :: {function, atom, list(any)}
   @type args :: Keyword.t()
-  @type opts :: list(atom | {atom, any})
 
   @doc "Compiles the expression into a `t:compiled_val/0`."
   @callback compile(Parser.expression()) :: compiled_val
@@ -98,7 +97,7 @@ defmodule ExDiceRoller.Compiler do
       iex> {:ok, parsed} = ExDiceRoller.Parser.parse(tokens)
       {:ok, {{:operator, '+'}, {:roll, 1, 2}, {:var, 'x'}}}
       iex> fun = ExDiceRoller.Compiler.compile(parsed)
-      iex> fun.([x: 1], [:explode])
+      iex> fun.([x: 1, opts: [:explode]])
       2
 
   During calculation, float values are left as float for as long as possible.
@@ -112,13 +111,13 @@ defmodule ExDiceRoller.Compiler do
 
     compiled =
       case is_function(compiled) do
-        false -> fn _args, _opts -> compiled end
+        false -> fn _args -> compiled end
         true -> compiled
       end
 
-    fn args, opts ->
+    fn args ->
       args
-      |> compiled.(opts)
+      |> compiled.()
       |> round_val()
     end
   end

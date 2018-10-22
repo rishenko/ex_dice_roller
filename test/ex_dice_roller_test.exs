@@ -22,7 +22,7 @@ defmodule ExDiceRollerTest do
       2 = ExDiceRoller.roll("1,2")
       3 = ExDiceRoller.roll("3,3")
       83 = ExDiceRoller.roll("11,5,83,42,36")
-      1 = ExDiceRoller.roll("2,1", [], [:lowest])
+      1 = ExDiceRoller.roll("2,1", opts: [:lowest])
       2 = ExDiceRoller.roll("5%3")
       8 = ExDiceRoller.roll("2^3")
     end
@@ -77,8 +77,8 @@ defmodule ExDiceRollerTest do
       6 = ExDiceRoller.roll("1d4 * 2")
       1 = ExDiceRoller.roll("1d4 / 3")
       4 = ExDiceRoller.roll("4d1, 3.1459")
-      3 = ExDiceRoller.roll("3,10d1", [], [:lowest])
-      60 = ExDiceRoller.roll("5d1,3d1,60d1,10d1", [], [:highest])
+      3 = ExDiceRoller.roll("3,10d1", opts: [:lowest])
+      60 = ExDiceRoller.roll("5d1,3d1,60d1,10d1", opts: [:highest])
     end
 
     test "basic arithmetic with variables" do
@@ -92,24 +92,24 @@ defmodule ExDiceRollerTest do
     end
 
     test "list comprehensions" do
-      [3, 12] = ExDiceRoller.roll("2d4 + 2d8", [], [:keep])
-      [1] = ExDiceRoller.roll("1d4 - 2", [], [:keep])
-      [12, 8] = ExDiceRoller.roll("2 * 2d8", [], [:keep])
-      [4, 6] = ExDiceRoller.roll("2d6,2d8", [], [:keep])
-      [6, 3] = ExDiceRoller.roll("2d6, 3", [], [:keep])
-      [6, 3, 3] = ExDiceRoller.roll("3, 3d6", [], [:keep])
+      [3, 12] = ExDiceRoller.roll("2d4 + 2d8", opts: [:keep])
+      [1] = ExDiceRoller.roll("1d4 - 2", opts: [:keep])
+      [12, 8] = ExDiceRoller.roll("2 * 2d8", opts: [:keep])
+      [4, 6] = ExDiceRoller.roll("2d6,2d8", opts: [:keep])
+      [6, 3] = ExDiceRoller.roll("2d6, 3", opts: [:keep])
+      [6, 3, 3] = ExDiceRoller.roll("3, 3d6", opts: [:keep])
     end
 
     test "errors using separator with lists" do
-      assert_raise ArgumentError, fn -> ExDiceRoller.roll("2d4, 1d8", [], [:keep]) end
+      assert_raise ArgumentError, fn -> ExDiceRoller.roll("2d4, 1d8", opts: [:keep]) end
     end
 
     test "errors with lists" do
-      assert_raise ArgumentError, fn -> ExDiceRoller.roll("2d4 + 1d8", [], [:keep]) end
+      assert_raise ArgumentError, fn -> ExDiceRoller.roll("2d4 + 1d8", opts: [:keep]) end
     end
 
     test "keep roll values" do
-      values = ExDiceRoller.roll("3d6", [], [:keep])
+      values = ExDiceRoller.roll("3d6", opts: [:keep])
       require Logger
       assert length(values) == 3
     end
@@ -131,11 +131,11 @@ defmodule ExDiceRollerTest do
 
     test "exploding dice" do
       {:ok, fun} = ExDiceRoller.compile("1d2")
-      assert 1 == ExDiceRoller.execute(fun, [], [:explode])
-      assert 7 == ExDiceRoller.execute(fun, [], [:explode])
-      assert 9 == ExDiceRoller.execute(fun, [], [:explode])
-      assert 9 == ExDiceRoller.execute(fun, [], [:explode])
-      assert 1 == ExDiceRoller.execute(fun, [], [:explode])
+      assert 1 == ExDiceRoller.execute(fun, opts: [:explode])
+      assert 7 == ExDiceRoller.execute(fun, opts: [:explode])
+      assert 9 == ExDiceRoller.execute(fun, opts: [:explode])
+      assert 9 == ExDiceRoller.execute(fun, opts: [:explode])
+      assert 1 == ExDiceRoller.execute(fun, opts: [:explode])
     end
 
     test "that error on a negative number of dice" do
@@ -173,7 +173,7 @@ defmodule ExDiceRollerTest do
 
       assert [] == Cache.all()
 
-      assert 9 == ExDiceRoller.roll(roll, [], [:cache])
+      assert 9 == ExDiceRoller.roll(roll, cache: true)
       assert length(Cache.all()) == 1
     end
 
@@ -183,7 +183,7 @@ defmodule ExDiceRollerTest do
 
       assert [] == Cache.all()
 
-      assert 6 == ExDiceRoller.roll(roll, [x: 7, y: 4], [:cache])
+      assert 6 == ExDiceRoller.roll(roll, x: 7, y: 4, cache: true)
       assert length(Cache.all()) == 1
     end
   end
