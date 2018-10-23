@@ -3,7 +3,7 @@
 There are a large number of dice mechanics in use across video-games, text-based
 games, tabletop games, role-playing games, and more. This guide shows how to
 replicate various dice mechanics using ExDiceRoller. Where possible, the
-examples show the use of both `ExDiceRoller.roll/3` and the `~a` sigil, as
+examples show the use of both `ExDiceRoller.roll/2` and the `~a` sigil, as
 detailed in `ExDiceRoller.Sigil`.
 
 ## Relationship Matrix
@@ -50,11 +50,11 @@ iex> ~a/3d6/r
 A player needs to roll six ten-sided dice (6d10) at once, and keep the result of each die. Upon rolling, they get a 2, 1, 7, 10, 4, 4. They record each individual die result.
 
 * Real World: Rolling 6d10 results in 2, 1, 7, 10, 4, and 4, all of which are saved.
-* ExDiceRoller: `ExDiceRoller.roll("6d10", [], [:keep])` returns a list of six integers where each integer is between 1 and 10, such as `[1, 10, 4, 2, 1, 6]`
+* ExDiceRoller: `ExDiceRoller.roll("6d10", opts: [:keep])` returns a list of six integers where each integer is between 1 and 10, such as `[1, 10, 4, 2, 1, 6]`
 * Sigil: `~a/6d10/k` returns the same as ExDiceRoller above.
 
 ```elixir
-iex> ExDiceRoller.roll("6d10", [], [:keep])
+iex> ExDiceRoller.roll("6d10", opts: [:keep])
 [4, 10, 8, 5, 10, 7]
 iex> import ExDiceRoller.Sigil
 ExDiceRoller.Sigil
@@ -86,7 +86,7 @@ The exact same logic as above applies to keeping the lowest of all rolls.
 * Sigil: `~a/1d8,1d6/r` returns the same as ExDiceRoller above.
 
 ```elixir
-iex> ExDiceRoller.roll("1d8,1d6", [], [:lowest])
+iex> ExDiceRoller.roll("1d8,1d6", opts: [:lowest])
 4
 iex> import ExDiceRoller.Sigil
 iex> ~a/1d8,1d6/rl
@@ -128,11 +128,11 @@ Note that any expression can be used as a modifier, whether it is adding, subtra
 A player needs to roll a six-sided die. Should the result be a six, the player records it and rolls the die again. This is repeated until the player rolls something other than a six. When that happens, the player adds all of the die rolls together and records the final value.
 
 * Real World: Rolling 1d6 results in 6. The next roll is also a 6. The final roll is a 3. All rolls are added together for a final result of 15.
-* ExDiceRoller: `ExDiceRoller.roll("1d6", [], [:explode])` returns an integer between `1` and any multiple of `6` plus the final roll.
+* ExDiceRoller: `ExDiceRoller.roll("1d6", opts: [:explode])` returns an integer between `1` and any multiple of `6` plus the final roll.
 * Sigil: `~a/1d6/e`
 
 ```elixir
-iex> ExDiceRoller.roll("1d6", [], [:explode])
+iex> ExDiceRoller.roll("1d6", opts: [:explode])
 16
 iex> import ExDiceRoller.Sigil
 iex> ~a/1d6/e

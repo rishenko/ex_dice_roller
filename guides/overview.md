@@ -56,7 +56,7 @@ Example sigil usage:
 
 ExDiceRoller also supports various options that can be used when executing a dice roll.
 
-    iex> ExDiceRoller.roll("1d6+3", [], [:explode])
+    iex> ExDiceRoller.roll("1d6+3", opts: [:explode])
     14
 
 The same can be done with the sigil:
@@ -109,15 +109,15 @@ ExDiceRoller provides caching.
 
     iex> ExDiceRoller.start_cache()
     {:ok, ExDiceRoller.Cache}
-    iex> ExDiceRoller.roll("1d6+3", [], [:cache])
+    iex> ExDiceRoller.roll("1d6+3", cache: true)
     4
     iex> ExDiceRoller.Cache.all()
     [{"1d6+3", #Function<1.36415363/2 in ExDiceRoller.Compiler.compile/1>}]
-    iex> ExDiceRoller.roll("1d6+3", [], [:cache])
+    iex> ExDiceRoller.roll("1d6+3", cache: true)
     8
     iex> ExDiceRoller.Cache.all()
     [{"1d6+3", #Function<1.36415363/2 in ExDiceRoller.Compiler.compile/1>}]
-    iex> ExDiceRoller.roll("2d10-5+3d6/8", [], [:cache])
+    iex> ExDiceRoller.roll("2d10-5+3d6/8", cache: true)
     5
     iex> ExDiceRoller.Cache.all()
     [
