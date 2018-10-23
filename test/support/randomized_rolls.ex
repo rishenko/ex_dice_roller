@@ -9,6 +9,7 @@ defmodule ExDiceRoller.RandomizedRolls do
   @type error_keyword :: [err: any, expr: String.t(), var_values: Keyword.t(), stacktrace: list]
 
   @var_value_types [:number, :list, :expression, :function]
+  @timeout_error %RuntimeError{message: "roll task timed out"}
 
   @doc """
   Generates and rolls `num_expressions` number of expressions, where each
@@ -19,20 +20,18 @@ defmodule ExDiceRoller.RandomizedRolls do
   from being returned in the final error list.
   """
   @spec run(integer, integer, list(String.t())) :: list(error_keyword)
-  def run(num_expressions, max_depth, acceptable_errors) do
+  def run(num_expressions, max_depth, known_errors) do
+    {:ok, pid} = Task.Supervisor.start_link()
+
     Enum.reduce(1..num_expressions, [], fn _, acc ->
-      do_run(max_depth, acceptable_errors, acc)
+      do_run(pid, max_depth, known_errors, acc)
     end)
   end
 
-  def handle_error(
-        %ArgumentError{message: message} = err,
-        acceptable_errors,
-        expr,
-        args,
-        acc
-      ) do
-    case message in acceptable_errors do
+  @doc "Handles processing errors generated while executing dice roll expressions."
+  @spec handle_error(any, list(String.t()), String.t(), Keyword.t(), list(any)) :: list(any)
+  def handle_error(%{message: msg} = err, known_errors, expr, args, acc) do
+    case msg in known_errors do
       true -> acc
       false -> [create_error_list(err, expr, args)] ++ acc
     end
@@ -42,25 +41,39 @@ defmodule ExDiceRoller.RandomizedRolls do
     [create_error_list(err, expr, args)] ++ acc
   end
 
-  defp do_run(max_depth, acceptable_errors, acc) do
+  defp do_run(pid, max_depth, known_errors, acc) do
     expr = ExpressionBuilder.randomize(Enum.random(1..max_depth), true)
-
-    var_values =
-      ~r/[abce-z]/
-      |> Regex.scan(expr)
-      |> List.flatten()
-      |> generate_var_values(max_depth - 1)
-
+    var_values = build_variable_values(expr, max_depth)
     args = var_values ++ [opts: options()] ++ filters()
 
     try do
-      ExDiceRoller.roll(expr, args)
-      acc
+      task = Task.Supervisor.async_nolink(pid, roll_func(expr, args), trap_exit: true)
+
+      case Task.yield(task, 1000) || Task.shutdown(task) do
+        {:ok, :ok} -> acc
+        {:ok, err} -> handle_error(err, known_errors, expr, args, acc)
+        nil -> handle_error(@timeout_error, known_errors, expr, args, acc)
+      end
     rescue
-      err -> handle_error(err, acceptable_errors, expr, args, acc)
+      err -> handle_error(err, known_errors, expr, args, acc)
     end
   end
 
+  # the roll function used in the async task
+  @spec roll_func(String.t(), Keyword.t()) :: :ok | any
+  defp roll_func(expr, args) do
+    fn ->
+      try do
+        ExDiceRoller.roll(expr, args)
+        :ok
+      rescue
+        err -> err
+      end
+    end
+  end
+
+  # randomly selects whether or not to use filters, and which to use
+  @spec filters() :: Keyword.t()
   defp filters do
     case Enum.random(1..2) do
       1 ->
@@ -81,6 +94,8 @@ defmodule ExDiceRoller.RandomizedRolls do
     end
   end
 
+  # randomly selects whether or not to use options, and which to use
+  @spec options() :: Keyword.t()
   defp options do
     case Enum.random(1..2) do
       1 ->
@@ -97,8 +112,18 @@ defmodule ExDiceRoller.RandomizedRolls do
     end
   end
 
+  @spec create_error_list(any, String.t(), Keyword.t()) :: Keyword.t()
   defp create_error_list(err, expr, args) do
     [err: err, expr: expr, args: args, stacktrace: System.stacktrace()]
+  end
+
+  @spec build_variable_values(String.t(), integer) :: Keyword.t()
+  defp build_variable_values(expr, max_depth) do
+    ~r/[aAbBcCe-zE-Z]/
+    |> Regex.scan(expr)
+    |> List.flatten()
+    |> Enum.uniq()
+    |> generate_var_values(max_depth - 1)
   end
 
   @spec generate_var_values(list(String.t()), integer) :: Keyword.t()
