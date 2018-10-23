@@ -71,8 +71,12 @@ defmodule ExDiceRoller.RandomizedRolls do
           [>=: Enum.random(1..10)],
           [<=: Enum.random(1..10)],
           [=: Enum.random(1..10)],
+          [!=: Enum.random(1..10)],
           [>: Enum.random(1..10)],
-          [<: Enum.random(1..10)]
+          [<: Enum.random(1..10)],
+          [drop_highest: true],
+          [drop_lowest: true],
+          [drop_highest_lowest: true]
         ])
     end
   end
