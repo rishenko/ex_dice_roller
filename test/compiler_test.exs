@@ -48,5 +48,13 @@ defmodule ExDiceRoller.CompilerTest do
                  ]}
               ]} = result
     end
+
+    test "filters" do
+      assert [4] == ExDiceRoller.roll("6d6", =: 4, opts: :keep)
+      assert [4, 4, 2] == ExDiceRoller.roll("3d8", <: 5, opts: :keep)
+      assert [6, 8, 8] == ExDiceRoller.roll("5d8", >: 4, opts: :keep)
+      assert [7, 5] == ExDiceRoller.roll("5d8", >=: 4, opts: :keep)
+      assert [4, 4, 1] == ExDiceRoller.roll("5d8", <=: 4, opts: :keep)
+    end
   end
 end

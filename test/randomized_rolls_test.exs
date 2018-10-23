@@ -1,7 +1,7 @@
 defmodule ExDiceRoller.RandomizedRollsTest do
   @moduledoc false
 
-  use ExDiceRoller.Case
+  use ExUnit.Case
   require Logger
   alias ExDiceRoller.RandomizedRolls
 
@@ -34,8 +34,8 @@ defmodule ExDiceRoller.RandomizedRollsTest do
     RandomizedRolls.handle_error(
       %ArithmeticError{message: "bad argument in arithmetic expression"},
       [],
-      [],
       "1/0",
+      [],
       []
     )
   end
@@ -46,8 +46,8 @@ defmodule ExDiceRoller.RandomizedRollsTest do
     RandomizedRolls.handle_error(
       %ArgumentError{message: "unexpected error"},
       acceptable_errors,
-      [],
       "1/0",
+      [],
       []
     )
   end
