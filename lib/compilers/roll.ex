@@ -105,7 +105,8 @@ defmodule ExDiceRoller.Compilers.Roll do
   defp compile_roll(num, sides),
     do: fn args -> roll_prep(num, sides, args) end
 
-  @spec roll_prep(Compiler.calculated_val, Compiler.calculated_val, list(atom | tuple)) :: integer
+  @spec roll_prep(Compiler.calculated_val(), Compiler.calculated_val(), list(atom | tuple)) ::
+          integer
 
   defp roll_prep(0, _, _), do: 0
   defp roll_prep(_, 0, _), do: 0

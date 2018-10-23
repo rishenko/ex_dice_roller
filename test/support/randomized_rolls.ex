@@ -28,18 +28,18 @@ defmodule ExDiceRoller.RandomizedRolls do
   def handle_error(
         %ArgumentError{message: message} = err,
         acceptable_errors,
-        var_values,
         expr,
+        args,
         acc
       ) do
     case message in acceptable_errors do
       true -> acc
-      false -> [create_error_list(err, expr, var_values)] ++ acc
+      false -> [create_error_list(err, expr, args)] ++ acc
     end
   end
 
-  def handle_error(err, _, var_values, expr, acc) do
-    [create_error_list(err, expr, var_values)] ++ acc
+  def handle_error(err, _, expr, args, acc) do
+    [create_error_list(err, expr, args)] ++ acc
   end
 
   defp do_run(max_depth, acceptable_errors, acc) do
@@ -51,26 +51,50 @@ defmodule ExDiceRoller.RandomizedRolls do
       |> List.flatten()
       |> generate_var_values(max_depth - 1)
 
+    args = var_values ++ [opts: options()] ++ filters()
+
     try do
-      ExDiceRoller.roll(expr, var_values ++ build_options())
+      ExDiceRoller.roll(expr, args)
       acc
     rescue
-      err -> handle_error(err, acceptable_errors, var_values, expr, acc)
+      err -> handle_error(err, acceptable_errors, expr, args, acc)
     end
   end
 
-  defp build_options do
-    options = [:keep, :explode, :highest, :lowest]
-    len = length(options)
-    max = Enum.random(1..(len + 2))
+  defp filters do
+    case Enum.random(1..2) do
+      1 ->
+        []
 
-    1..max
-    |> Enum.map(fn _ -> Enum.random(options) end)
-    |> Enum.uniq()
+      2 ->
+        Enum.random([
+          [>=: Enum.random(1..10)],
+          [<=: Enum.random(1..10)],
+          [=: Enum.random(1..10)],
+          [>: Enum.random(1..10)],
+          [<: Enum.random(1..10)]
+        ])
+    end
   end
 
-  defp create_error_list(err, expr, var_values) do
-    [err: err, expr: expr, var_values: var_values, stacktrace: System.stacktrace()]
+  defp options do
+    case Enum.random(1..2) do
+      1 ->
+        []
+
+      2 ->
+        options = [:keep, :explode, :highest, :lowest]
+        len = length(options)
+        max = Enum.random(1..(len + 2))
+
+        1..max
+        |> Enum.map(fn _ -> Enum.random(options) end)
+        |> Enum.uniq()
+    end
+  end
+
+  defp create_error_list(err, expr, args) do
+    [err: err, expr: expr, args: args, stacktrace: System.stacktrace()]
   end
 
   @spec generate_var_values(list(String.t()), integer) :: Keyword.t()
