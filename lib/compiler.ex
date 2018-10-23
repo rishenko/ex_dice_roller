@@ -68,7 +68,7 @@ defmodule ExDiceRoller.Compiler do
 
   """
 
-  alias ExDiceRoller.Parser
+  alias ExDiceRoller.{Filters, Parser}
   alias ExDiceRoller.Compilers.{Math, Roll, Separator, Variable}
 
   @type compiled_val :: compiled_fun | calculated_val
@@ -122,63 +122,13 @@ defmodule ExDiceRoller.Compiler do
           val -> Keyword.put(args, :opts, [val])
         end
 
-      {filters, args} = get_filters(args)
+      {filters, args} = Filters.get_filters(args)
 
       args
       |> compiled.()
       |> round_val()
-      |> filter(filters)
+      |> Filters.filter(filters)
     end
-  end
-
-  @doc """
-  Filters the final value using either a provided comparator and comparison number,
-  such as `>=: 3`, or dropping highest or lowest value, such as `drop_highest:
-  true`. Possible comparators include:
-
-  * numerical: `>=`, `<=`, `=`, `!=`, <`, and `>` in the format `<comparator>:
-    <number>`.
-  * boolean: `drop_highest`, `drop_lowest`, `drop_highest_lowest` in the format
-    `<comparator>: true | false`.
-
-  Note that boolean filters require a list of values, such as adding the
-  separator (`,`) comparator or using the `:keep` option.
-
-  Examples:
-
-      iex> ExDiceRoller.roll("1d4", >=: 5)
-      []
-
-      iex> ExDiceRoller.roll("6d6", <=: 4, opts: :keep)
-      [3, 2, 4, 2]
-
-      iex> ExDiceRoller.roll("4d10", drop_highest: true, opts: :keep)
-      [9, 6, 4]
-
-      iex> ExDiceRoller.roll("4d10", drop_highest_lowest: true, opts: :keep)
-      [6, 9]
-
-  """
-  def filter(val, []), do: val
-  def filter(val, filters) when is_number(val), do: filter([val], filters)
-
-  def filter(val, filters) when length(filters) > 0 do
-    Enum.reduce(filters, val, &do_filter(&2, &1))
-  end
-
-  defp do_filter(val, {:>=, num}), do: Enum.filter(val, &(&1 >= num))
-  defp do_filter(val, {:<=, num}), do: Enum.filter(val, &(&1 <= num))
-  defp do_filter(val, {:=, num}), do: Enum.filter(val, &(&1 == num))
-  defp do_filter(val, {:!=, num}), do: Enum.filter(val, &(&1 != num))
-  defp do_filter(val, {:>, num}), do: Enum.filter(val, &(&1 > num))
-  defp do_filter(val, {:<, num}), do: Enum.filter(val, &(&1 < num))
-  defp do_filter(val, {:drop_lowest, true}), do: val |> Enum.sort() |> Enum.drop(1)
-
-  defp do_filter(val, {:drop_highest, true}),
-    do: val |> Enum.sort() |> Enum.reverse() |> Enum.drop(1)
-
-  defp do_filter(val, {:drop_highest_lowest, true}) do
-    val |> Enum.sort() |> Enum.drop(1) |> Enum.drop(-1)
   end
 
   @doc """
@@ -256,28 +206,4 @@ defmodule ExDiceRoller.Compiler do
 
   defp do_fun_info(num) when is_number(num), do: num
   defp do_fun_info(str) when is_list(str), do: str
-
-  defp get_filters(args) do
-    filters = do_get_filter(args, [])
-
-    {filters,
-     Enum.filter(args, fn {k, _} ->
-       k not in [:>=, :!=, :<=, :=, :>, :<, :drop_lowest, :drop_highest, :drop_highest_lowest]
-     end)}
-  end
-
-  defp do_get_filter([], acc), do: acc
-  defp do_get_filter([{:>=, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:<=, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:=, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:!=, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:>, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:<, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:drop_lowest, true} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:drop_highest, true} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-
-  defp do_get_filter([{:drop_highest_lowest, true} = f | rest], acc),
-    do: do_get_filter(rest, [f] ++ acc)
-
-  defp do_get_filter([_ | rest], acc), do: do_get_filter(rest, acc)
 end
