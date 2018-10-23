@@ -68,7 +68,7 @@ defmodule ExDiceRoller.Compiler do
 
   """
 
-  alias ExDiceRoller.Parser
+  alias ExDiceRoller.{Filters, Parser}
   alias ExDiceRoller.Compilers.{Math, Roll, Separator, Variable}
 
   @type compiled_val :: compiled_fun | calculated_val
@@ -122,32 +122,14 @@ defmodule ExDiceRoller.Compiler do
           val -> Keyword.put(args, :opts, [val])
         end
 
-      {filter, args} = get_filter(args)
+      {filters, args} = Filters.get_filters(args)
 
       args
       |> compiled.()
       |> round_val()
-      |> filter(filter)
+      |> Filters.filter(filters)
     end
   end
-
-  @doc """
-  Filters the final value using the provided comparator and comparison number,
-  such as `>=: 3`. Possible comparators include `:>=`, `:<=`, `=`, `<`, and `>`.
-
-      iex> ExDiceRoller.roll("1d4", >=: 5)
-      []
-
-      iex> ExDiceRoller.roll("6d6", <=: 4, opts: :keep)
-      [3, 2, 4, 2]
-
-  """
-  def filter(val, {:>=, num}), do: val |> to_list() |> Enum.filter(&(&1 >= num))
-  def filter(val, {:<=, num}), do: val |> to_list() |> Enum.filter(&(&1 <= num))
-  def filter(val, {:=, num}), do: val |> to_list() |> Enum.filter(&(&1 == num))
-  def filter(val, {:>, num}), do: val |> to_list() |> Enum.filter(&(&1 > num))
-  def filter(val, {:<, num}), do: val |> to_list() |> Enum.filter(&(&1 < num))
-  def filter(val, _), do: val
 
   @doc """
   Delegates expression compilation to an appropriate module that implements
@@ -224,20 +206,4 @@ defmodule ExDiceRoller.Compiler do
 
   defp do_fun_info(num) when is_number(num), do: num
   defp do_fun_info(str) when is_list(str), do: str
-
-  defp get_filter(args) do
-    filter = do_get_filter(args)
-    {filter, Enum.filter(args, fn {k, _} -> k not in [:>=, :<=, :=, :>, :<] end)}
-  end
-
-  defp do_get_filter([]), do: nil
-  defp do_get_filter([{:>=, _} = f | _]), do: f
-  defp do_get_filter([{:<=, _} = f | _]), do: f
-  defp do_get_filter([{:=, _} = f | _]), do: f
-  defp do_get_filter([{:>, _} = f | _]), do: f
-  defp do_get_filter([{:<, _} = f | _]), do: f
-  defp do_get_filter([_ | rest]), do: do_get_filter(rest)
-
-  defp to_list(v) when is_list(v), do: v
-  defp to_list(v), do: [v]
 end

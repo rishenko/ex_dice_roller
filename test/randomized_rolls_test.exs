@@ -12,7 +12,8 @@ defmodule ExDiceRoller.RandomizedRollsTest do
       "the right hand expression in a filter must evaluate to a number",
       "cannot use math operators on lists of differing lengths",
       "cannot use separator on lists of differing lengths",
-      "modulo operator only accepts integer values"
+      "modulo operator only accepts integer values",
+      "roll task timed out"
     ]
 
     errors = RandomizedRolls.run(10_000, 5, acceptable_errors)
