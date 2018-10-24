@@ -52,4 +52,16 @@ defmodule ExDiceRoller.RandomizedRollsTest do
       []
     )
   end
+
+  test "intentionally fail a task" do
+    {:ok, pid} = Task.Supervisor.start_link()
+
+    RandomizedRolls.execute_roll(
+      pid,
+      "100d100d100d10000, 100d100d100d100d10000",
+      [opts: :keep],
+      [],
+      []
+    )
+  end
 end
