@@ -83,7 +83,7 @@ defmodule ExDiceRoller.Compilers.Roll do
   """
 
   @behaviour ExDiceRoller.Compiler
-  alias ExDiceRoller.{Compiler, ListComprehension}
+  alias ExDiceRoller.{Args, Compiler, ListComprehension}
 
   @impl true
   def compile({:roll, left_expr, right_expr}) do
@@ -118,14 +118,14 @@ defmodule ExDiceRoller.Compilers.Roll do
   defp roll_prep(num, sides, args) do
     num = Compiler.round_val(num)
     sides = Compiler.round_val(sides)
-    explode? = :explode in Keyword.get(args, :opts, [])
 
     fun =
-      case :keep in Keyword.get(args, :opts, []) do
+      case Args.has_option?(args, :keep) do
         true -> keep_roll()
         false -> normal_roll()
       end
 
+    explode? = Args.has_option?(args, :explode)
     ListComprehension.flattened_apply(num, sides, explode?, fun)
   end
 
