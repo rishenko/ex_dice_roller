@@ -68,7 +68,7 @@ defmodule ExDiceRoller.Compilers.Separator do
   """
 
   @behaviour ExDiceRoller.Compiler
-  alias ExDiceRoller.{Compiler, ListComprehension}
+  alias ExDiceRoller.{Args, Compiler, ListComprehension}
 
   @impl true
   def compile({:sep, left_expr, right_expr}) do
@@ -92,9 +92,7 @@ defmodule ExDiceRoller.Compilers.Separator do
   defp high_low(l, l, _), do: l
 
   defp high_low(l, r, args) when is_list(args) do
-    opts = Keyword.get(args, :opts, [])
-
-    case Enum.find(opts, &(&1 in [:highest, :lowest])) do
+    case Args.find_first(args, [:highest, :lowest]) do
       :highest -> ListComprehension.apply(l, r, :highest, "separator", &do_high_low/3)
       :lowest -> ListComprehension.apply(l, r, :lowest, "separator", &do_high_low/3)
       _ -> ListComprehension.apply(l, r, :highest, "separator", &do_high_low/3)

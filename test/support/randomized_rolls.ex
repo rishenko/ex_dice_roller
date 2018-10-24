@@ -37,26 +37,30 @@ defmodule ExDiceRoller.RandomizedRolls do
     end
   end
 
-  def handle_error(err, _, expr, args, acc) do
-    [create_error_list(err, expr, args)] ++ acc
+  @doc """
+  Executes an individual role as its own supervised task. If the a roll task
+  takes too long to execute, it is shutdown and a timeout error added to the
+  provided `acc` accumulator. If any other error is encountered, it too is added
+  to the accumulator. Finally, the accumulator is returned.
+  """
+  @spec execute_roll(pid, String.t(), Keyword.t(), list(String.t()), list) :: list
+  def execute_roll(supervisor, expr, args, known_errors, acc) do
+    task = Task.Supervisor.async_nolink(supervisor, roll_func(expr, args), trap_exit: true)
+
+    case Task.yield(task, 500) || Task.shutdown(task) do
+      {:ok, :ok} -> acc
+      {:ok, err} -> handle_error(err, known_errors, expr, args, acc)
+      nil -> handle_error(@timeout_error, known_errors, expr, args, acc)
+    end
   end
 
+  # builds and executes a single dice roll expression
+  @spec do_run(pid, integer, list(String.t()), list) :: list
   defp do_run(pid, max_depth, known_errors, acc) do
     expr = ExpressionBuilder.randomize(Enum.random(1..max_depth), true)
     var_values = build_variable_values(expr, max_depth)
     args = var_values ++ [opts: options()] ++ filters()
-
-    try do
-      task = Task.Supervisor.async_nolink(pid, roll_func(expr, args), trap_exit: true)
-
-      case Task.yield(task, 1000) || Task.shutdown(task) do
-        {:ok, :ok} -> acc
-        {:ok, err} -> handle_error(err, known_errors, expr, args, acc)
-        nil -> handle_error(@timeout_error, known_errors, expr, args, acc)
-      end
-    rescue
-      err -> handle_error(err, known_errors, expr, args, acc)
-    end
+    execute_roll(pid, expr, args, known_errors, acc)
   end
 
   # the roll function used in the async task

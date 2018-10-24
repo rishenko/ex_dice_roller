@@ -40,7 +40,7 @@ defmodule ExDiceRoller.Compilers.Variable do
   """
 
   @behaviour ExDiceRoller.Compiler
-  alias ExDiceRoller.{Compiler, Tokenizer, Parser}
+  alias ExDiceRoller.{Args, Compiler, Tokenizer, Parser}
 
   @impl true
   def compile({:var, _} = var), do: compile_var(var)
@@ -53,7 +53,7 @@ defmodule ExDiceRoller.Compilers.Variable do
     key = var |> to_string() |> String.to_atom()
 
     args
-    |> Keyword.get(key)
+    |> Args.get_var(key)
     |> var_final_arg(var, args)
   end
 
