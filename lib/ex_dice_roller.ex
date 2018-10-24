@@ -213,7 +213,7 @@ defmodule ExDiceRoller do
 
   """
 
-  alias ExDiceRoller.{Cache, Compiler, Parser, Tokenizer}
+  alias ExDiceRoller.{Args, Cache, Compiler, Parser, Tokenizer}
 
   @cache_table Application.fetch_env!(:ex_dice_roller, :cache_table)
 
@@ -229,7 +229,7 @@ defmodule ExDiceRoller do
   variables, use `roll/3` instead.
   """
   @spec roll(String.t()) :: integer | list(integer)
-  def roll(roll_string), do: roll(roll_string, [])
+  def roll(roll_string), do: roll(roll_string, opts: [])
 
   @doc """
   Processes a given string as a dice roll and returns the calculated result. The
@@ -288,7 +288,7 @@ defmodule ExDiceRoller do
   @spec roll(String.t() | Compiler.compiled_fun(), Keyword.t()) :: integer
 
   def roll(roll_string, args) when is_bitstring(roll_string) do
-    case Keyword.get(args, :cache, false) do
+    case Args.use_cache?(args) do
       false ->
         with {:ok, tokens} <- Tokenizer.tokenize(roll_string),
              {:ok, parsed_tokens} <- Parser.parse(tokens) do

@@ -68,7 +68,7 @@ defmodule ExDiceRoller.Compiler do
 
   """
 
-  alias ExDiceRoller.Parser
+  alias ExDiceRoller.{Args, Filters, Parser}
   alias ExDiceRoller.Compilers.{Math, Roll, Separator, Variable}
 
   @type compiled_val :: compiled_fun | calculated_val
@@ -107,19 +107,10 @@ defmodule ExDiceRoller.Compiler do
   """
   @spec compile(Parser.expression()) :: compiled_val
   def compile(expression) do
-    compiled = delegate(expression)
-
-    compiled =
-      case is_function(compiled) do
-        false -> fn _args -> compiled end
-        true -> compiled
-      end
-
-    fn args ->
-      args
-      |> compiled.()
-      |> round_val()
-    end
+    expression
+    |> delegate()
+    |> wrap_compiled_expression()
+    |> build_final_function()
   end
 
   @doc """
@@ -179,7 +170,6 @@ defmodule ExDiceRoller.Compiler do
 
   def round_val([]), do: []
   def round_val(val) when is_list(val), do: Enum.map(val, &round_val(&1))
-
   def round_val(val) when is_number(val), do: Kernel.round(val)
 
   @spec do_fun_info(function | number | charlist) :: function | number | charlist
@@ -197,4 +187,26 @@ defmodule ExDiceRoller.Compiler do
 
   defp do_fun_info(num) when is_number(num), do: num
   defp do_fun_info(str) when is_list(str), do: str
+
+  @spec wrap_compiled_expression(compiled_val) :: function
+  defp wrap_compiled_expression(compiled) do
+    case is_function(compiled) do
+      false -> fn _args -> compiled end
+      true -> compiled
+    end
+  end
+
+  @spec build_final_function(function) :: compiled_fun
+  defp build_final_function(compiled) do
+    fn args when is_list(args) ->
+      args = Args.sanitize(args)
+
+      {filters, args} = Args.get_filters(args)
+
+      args
+      |> compiled.()
+      |> round_val()
+      |> Filters.filter(filters)
+    end
+  end
 end

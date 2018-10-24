@@ -1,7 +1,7 @@
 defmodule ExDiceRoller.RandomizedRollsTest do
   @moduledoc false
 
-  use ExDiceRoller.Case
+  use ExUnit.Case
   require Logger
   alias ExDiceRoller.RandomizedRolls
 
@@ -12,7 +12,8 @@ defmodule ExDiceRoller.RandomizedRollsTest do
       "the right hand expression in a filter must evaluate to a number",
       "cannot use math operators on lists of differing lengths",
       "cannot use separator on lists of differing lengths",
-      "modulo operator only accepts integer values"
+      "modulo operator only accepts integer values",
+      "roll task timed out"
     ]
 
     errors = RandomizedRolls.run(10_000, 5, acceptable_errors)
@@ -34,8 +35,8 @@ defmodule ExDiceRoller.RandomizedRollsTest do
     RandomizedRolls.handle_error(
       %ArithmeticError{message: "bad argument in arithmetic expression"},
       [],
-      [],
       "1/0",
+      [],
       []
     )
   end
@@ -46,8 +47,20 @@ defmodule ExDiceRoller.RandomizedRollsTest do
     RandomizedRolls.handle_error(
       %ArgumentError{message: "unexpected error"},
       acceptable_errors,
-      [],
       "1/0",
+      [],
+      []
+    )
+  end
+
+  test "intentionally fail a task" do
+    {:ok, pid} = Task.Supervisor.start_link()
+
+    RandomizedRolls.execute_roll(
+      pid,
+      "100d100d100d10000, 100d100d100d100d10000",
+      [opts: :keep],
+      [],
       []
     )
   end
