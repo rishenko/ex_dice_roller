@@ -1,7 +1,7 @@
 defmodule ExDiceRoller.MixProject do
   use Mix.Project
 
-  @version "0.5.0-alpha"
+  @version "1.0.0-rc.0"
 
   def project do
     [

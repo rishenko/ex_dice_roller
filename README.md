@@ -42,7 +42,7 @@ in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:ex_dice_roller, "~> 0.5.0-alpha"}
+    {:ex_dice_roller, "~> 1.0.0-rc.0"}
   ]
 end
 ```

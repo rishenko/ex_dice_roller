@@ -1,5 +1,36 @@
 # Changelog
 
+## v1.0.0-rc.0
+
+* Architectural Changes
+  * consolidated dice rolling calls across the library, moving:
+    * from `roll.(args, options)`where args are a Keyword, and options a list
+      of atoms
+    * to `roll.(args)` where args is a Keyword with an `opts: [] | :atom`
+      argument
+  * modified yecc script to:
+    * return numbers as numbers and not `{:digit, String.t()}` tuples
+    * return strings as strings and not charlists
+
+* Enhancements
+  * added float as possible value in expressions and variable values
+  * consolidated improved list comprehension code to
+    `ExDiceRoller.ListComprehension`
+  * added lists as possible variable values
+  * added a randomized expression builder (with variable expression depth) and
+    roll tester for testing large numbers of expression permutations
+    * this led to finding various edge case bugs and their subsequent fixes
+  * added final result list filtering via `ExDiceRoller.Filters`
+    * allows dropping highest/lowest/both rolls from dice rolls with multiple
+      values
+    * filtering values that are above/below a numerical threshold
+  * overhauled and improved documentation across all modules and README, as well
+    as adding _Dice Mechanics_ and _Overview_ guides to documentation
+
+* Bugfixes
+  * numerous major and minor fixes that came out of automated large-volume
+    randomized roll testing and new features
+
 ## v0.5.0-alpha
 
 * Enhancements
