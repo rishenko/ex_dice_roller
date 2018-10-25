@@ -6,7 +6,7 @@ defmodule ExDiceRoller.Sigil do
   from the sigil.
 
   Also note that if you wish to use the `/` operator with the sigil, you will
-  need to use a different delimeter. Example being `~a|1d4+4d6/2d4`.
+  need to use a different delimeter. Example: `~a|1d4+4d6/2d4|`.
 
   The following options are available, with each invoking a roll:
 
