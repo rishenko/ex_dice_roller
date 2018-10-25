@@ -14,8 +14,8 @@ Main Features:
 * Generates dice rolls with any number of dice and sides of dice.
 * Supports common math operators: `+`, `-`, `*`, `/`, `%` modulo, `^` exponentiation
 * Supports `+` and `-` unary operators.
-* Supports using single-letter variables in expressions that can be given values
-  upon invocation, such as `1dx+y`.
+* Supports using single-letter variables in expressions, such as `1dx+y`, that
+  can be given values upon invocation.
 * Supports parenthetically grouped expressions such as `(1d4)d(3d6)-(1d4+7)`.
 * Supports compiling dice rolls into reuseable anonymous functions.
 * Introduces a new sigil, `~a`. This can be used as a shorthand for compiling
@@ -29,6 +29,8 @@ Other Features:
   expressions with other mathematical operators and lists.
 * Optional support for caching compiled rolls. This can be especially useful
   in an application that generates various rolls during runtime.
+* Supports filtering final values, such as dropping lowest/highest/both, or
+  filtering using standard comparators, such as '<=', '>', and more.
 
 
 ## Installation
