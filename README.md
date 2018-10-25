@@ -29,13 +29,15 @@ Other Features:
   expressions with other mathematical operators and lists.
 * Optional support for caching compiled rolls. This can be especially useful
   in an application that generates various rolls during runtime.
-* Supports filtering final values, such as dropping lowest/highest/both, or
-  filtering using standard comparators, such as '<=', '>', and more.
+* Supports filtering final values, such as dropping lowest/highest/both
+  (`drop_lowest: true` and more), or filtering using standard comparators (`<=`,
+  `>`, and more).
 
 
 ## Installation
 
-Add `:ex_dice_roller` to your list of dependencies in `mix.exs`:
+Add the latest stable release of `:ex_dice_roller` to your list of dependencies
+in `mix.exs`:
 
 ```elixir
 def deps do
@@ -49,6 +51,9 @@ Next, run:
 ```
 $ mix deps.get
 ```
+
+Please note that the README file reflects the _latest features_ in ExDiceRoller,
+whether or not they are available in the _latest release_.
 
 ## General Usage
 
