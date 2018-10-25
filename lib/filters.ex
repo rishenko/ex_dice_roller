@@ -1,14 +1,11 @@
 defmodule ExDiceRoller.Filters do
-  @moduledoc "Manages functionality around filtering results."
+  @moduledoc """
+  Filters are used to filter the final value of an evaluated dice roll using
+  either a provided comparator and comparison number, such as `>=: 3`, or
+  dropping highest or lowest value, such as `drop_highest: true`. Possible
+  comparators include:
 
-  alias ExDiceRoller.Compiler
-
-  @doc """
-  Filters the final value using either a provided comparator and comparison number,
-  such as `>=: 3`, or dropping highest or lowest value, such as `drop_highest:
-  true`. Possible comparators include:
-
-  * numerical: `>=`, `<=`, `=`, `!=`, <`, and `>` in the format `<comparator>:
+  * numerical: `>=`, `<=`, `=`, `!=`, `<`, and `>` in the format `<comparator>:
     <number>`.
   * boolean: `drop_highest`, `drop_lowest`, `drop_highest_lowest` in the format
     `<comparator>: true | false`.
@@ -24,12 +21,26 @@ defmodule ExDiceRoller.Filters do
       iex> ExDiceRoller.roll("6d6", <=: 4, opts: :keep)
       [3, 2, 4, 2]
 
+      iex> ExDiceRoller.roll("xd6", x: [1, 2, 3, 2], >=: 4, opts: :keep)
+      [6, 4, 5, 4, 4]
+
       iex> ExDiceRoller.roll("4d10", drop_highest: true, opts: :keep)
       [9, 6, 4]
 
       iex> ExDiceRoller.roll("4d10", drop_highest_lowest: true, opts: :keep)
       [6, 9]
+  """
 
+  alias ExDiceRoller.Compiler
+
+  @doc """
+  Filter the calculated value using the list of provided filters.
+
+      iex> ExDiceRoller.Filters.filter([1, 2, 3, 4, 5, 6], [>=: 3])
+      [3, 4, 5, 6]
+
+      iex> ExDiceRoller.Filters.filter([1, 2, 3, 4, 5, 6], [drop_lowest: true])
+      [2, 3, 4, 5, 6]
   """
   @spec filter(Compiler.calculated_val(), list(tuple)) :: Compiler.calculated_val()
   def filter(val, []), do: val

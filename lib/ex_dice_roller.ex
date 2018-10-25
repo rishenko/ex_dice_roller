@@ -26,10 +26,11 @@ defmodule ExDiceRoller do
   sums the total of all rolls and returns that value.
   * `:keep`: Retains each dice roll.
   For more information, see `ExDiceRoller.Compilers.Roll`.
-  * `:highest`: Selects the highest of all calculated values when using the `,`
-  operator.
-  * `:lowest`: Selects the lowest of all calculated values when using the `,`
-  operator.
+  * `:highest`: compares and selects the highest value(s) from a set of
+  expressions separated by the `,` operator
+  * `:lowest`: compares and selects the lowest value(s) from a set of
+  expressions separated by the `,` operator
+
 
   ## Order of Precedence
 
@@ -109,6 +110,7 @@ defmodule ExDiceRoller do
   * expressions, such as "1d6+2"
   * compiled dice rolls
   * results of `~a` sigil, as described in `ExDiceRoller.Sigil`
+  * lists of any of the above
 
       ```elixir
       iex> {:ok, fun} = ExDiceRoller.compile("2d4+x")
@@ -125,6 +127,7 @@ defmodule ExDiceRoller do
       ```
 
   More information can be found in `ExDiceRoller.Compilers.Variable`.
+
 
   ## Caching
 
@@ -154,19 +157,17 @@ defmodule ExDiceRoller do
       7
       iex> ExDiceRoller.roll(~a|1d4+x/5|, [x: 43])
       11
-      iex> ExDiceRoller.roll(~a|xdy|, [x: fun, y: ~a/12d4-15/])
+      iex> ExDiceRoller.roll(~a/xdy/, [x: fun, y: ~a/12d4-15/])
       111
 
   More information can be found in `ExDiceRoller.Sigil`.
+
 
   ## ExDiceRoller Examples
 
   The following examples show a variety of types of rolls, and includes examples
   of basic and complex rolls, caching, sigil support, variables, and
   combinations of thereof.
-
-      iex> ExDiceRoller.roll("1")
-      1
 
       iex> ExDiceRoller.roll("1d8")
       1
@@ -180,9 +181,6 @@ defmodule ExDiceRoller do
 
       iex> ExDiceRoller.roll("(1d4)d(6*5) - (2/3+1)")
       18
-
-      iex> ExDiceRoller.roll("1+2-3*4+5/6*7+8-9")
-      -4
 
       iex> ExDiceRoller.roll("1+\t2*3d 4")
       15
@@ -202,7 +200,7 @@ defmodule ExDiceRoller do
       iex> ExDiceRoller.start_cache()
       iex> ExDiceRoller.roll("1d2+x", [x: 3, cache: true])
       4
-      iex> ExDiceRoller.roll("1d2+x", [x: 3, opts: [:cache, :explode]])
+      iex> ExDiceRoller.roll("1d2+x", [x: 3, cache: true, opts: :explode])
       10
 
       iex> import ExDiceRoller.Sigil
@@ -210,7 +208,6 @@ defmodule ExDiceRoller do
       4
       iex> ~a/1d2+2/re
       9
-
   """
 
   alias ExDiceRoller.{Args, Cache, Compiler, Parser, Tokenizer}
@@ -257,10 +254,6 @@ defmodule ExDiceRoller do
 
       iex> ExDiceRoller.roll("1+x", [x: 1])
       2
-      iex> ExDiceRoller.roll("1+x", x: 1.4)
-      2
-      iex> ExDiceRoller.roll("1+x", [x: 1.5])
-      3
 
       iex> ExDiceRoller.roll("1d6+15", [])
       18
@@ -268,15 +261,15 @@ defmodule ExDiceRoller do
       iex> ExDiceRoller.roll("1d8+x", [x: 5])
       6
 
-      iex> ExDiceRoller.roll("1d3", opts: [:explode])
+      iex> ExDiceRoller.roll("1d3", opts: :explode)
       5
 
       iex> ExDiceRoller.start_cache(ExDiceRoller.Cache)
       iex> ExDiceRoller.roll("(1d6)d4-3+y", [y: 3, cache: true])
       10
-      iex> ExDiceRoller.roll("1d2+y", y: 1, opts: [:cache, :explode])
+      iex> ExDiceRoller.roll("1d2+y", y: 1, cache: true, opts: [:explode])
       2
-      iex> ExDiceRoller.roll("1d2+y", [y: 2, opts: [:cache, :explode]])
+      iex> ExDiceRoller.roll("1d2+y", y: 2, cache: true, opts: [:explode])
       11
 
       iex> ExDiceRoller.roll("1,2", opts: [:highest])
@@ -317,7 +310,7 @@ defmodule ExDiceRoller do
   def parse(tokens), do: Parser.parse(tokens)
 
   @doc """
-  Takes a given expression from parse and calculates the result.
+  Takes an `t:ExDiceRoller.Parser.expression/0` from parse and calculates the result.
   """
   @spec calculate(Parser.expression(), Keyword.t()) :: number
   def calculate(expression, args) do

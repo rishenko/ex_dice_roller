@@ -14,7 +14,10 @@ defmodule ExDiceRoller.Compiler do
     compiled anonymous function
     * sends sub-expressions back to Compiler to be delegated appropriately
   * wraps the nested set of compiled functions with an anonymous function that
-  also rounds the final value
+  also:
+    * checks for cache usage and acts accordingly
+    * applies any `ExDiceRoller.Filters` present in the arguments
+    * rounds and returns the final value
 
   Note that all compiled functions outputted by Compiler accept both arguments
   and options. Arguments are used exclusively for replacing variables with
@@ -34,7 +37,7 @@ defmodule ExDiceRoller.Compiler do
           {:roll, 1, 6}}}
 
       > fun = ExDiceRoller.Compiler.compile(parsed)
-      #Function<1.51809653/1 in ExDiceRoller.Compiler.compile/1>
+      #Function<1.51809653/1 in ExDiceRoller.Compiler.build_final_function/1>
 
       > fun.([])
       11

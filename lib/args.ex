@@ -1,5 +1,5 @@
 defmodule ExDiceRoller.Args do
-  @moduledoc "Manages arguments used in ExDiceRoller rolls."
+  @moduledoc false
 
   alias ExDiceRoller.Filters
 

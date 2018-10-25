@@ -1,10 +1,12 @@
 defmodule ExDiceRoller.MixProject do
   use Mix.Project
 
+  @version "0.5.0-alpha"
+
   def project do
     [
       app: :ex_dice_roller,
-      version: "0.5.0-alpha",
+      version: @version,
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -12,13 +14,15 @@ defmodule ExDiceRoller.MixProject do
       package: package(),
       description: description(),
       name: "ExDiceRoller",
+      source_url: "https://github.com/rishenko/ex_dice_roller",
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test
-      ]
+      ],
+      docs: docs()
     ]
   end
 
@@ -51,6 +55,23 @@ defmodule ExDiceRoller.MixProject do
       {:excoveralls, "~> 0.10", only: [:test]},
       {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.18.0", only: :dev, runtime: false}
+    ]
+  end
+
+  defp docs do
+    [
+      main: "overview",
+      source_ref: "v#{@version}",
+      source_url: "https://github.com/rishenko/ex_dice_roller",
+      extra_section: "GUIDES",
+      extras: doc_extras()
+    ]
+  end
+
+  defp doc_extras do
+    [
+      "guides/overview.md",
+      "guides/dice_mechanics.md"
     ]
   end
 end

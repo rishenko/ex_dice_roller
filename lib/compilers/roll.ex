@@ -14,9 +14,7 @@ defmodule ExDiceRoller.Compilers.Roll do
       iex> fun.([])
       2
 
-  ## Options
-
-  ### Exploding Dice
+  ## Exploding Dice
 
   Some systems use a dice mechanic known as 'exploding dice'. The mechanic works
   as follows:
@@ -58,7 +56,7 @@ defmodule ExDiceRoller.Compilers.Roll do
       14
 
 
-  ### Keeping Dice Rolls
+  ## Keeping Dice Rolls
 
   A batch of dice being rolled can be returned as either their sum total, or
   as individual results. The former is the default handling of rolls by
@@ -77,8 +75,10 @@ defmodule ExDiceRoller.Compilers.Roll do
       [3, 2, 6, 4, 5]
 
 
-  #### Kept Rolls and List Comprehensions
+  ### Kept Rolls and List Comprehensions
 
+  Kept rolls also support list comprehensions. See
+  `ExDiceRoller.ListComprehension` for more information.
 
   """
 
