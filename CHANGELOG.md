@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.0-rc.1
+
+* Documentation changes
+  * added CONTRIBUTING.md for contribution guidelines
+  * added cache configure to README
+  * updated package description
+
 ## v1.0.0-rc.0
 
 * Architectural Changes
