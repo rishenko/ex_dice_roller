@@ -1,7 +1,7 @@
 defmodule ExDiceRoller.MixProject do
   use Mix.Project
 
-  @version "1.0.0-rc.0"
+  @version "1.0.0-rc.1"
 
   def project do
     [
@@ -30,7 +30,7 @@ defmodule ExDiceRoller.MixProject do
   defp elixirc_paths(_), do: ["lib"]
 
   def description do
-    "Adds simple or complex dice roll calculations to your application."
+    "Add a dice-rolling DSL with sigil support and reusable compiled functions to your application."
   end
 
   def package do

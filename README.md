@@ -55,6 +55,20 @@ $ mix deps.get
 Please note that the README file reflects the _latest features_ in ExDiceRoller,
 whether or not they are available in the _latest release_.
 
+
+## Configuring
+
+ExDiceRoller has the following configuration properties:
+
+* `:cache_table`: the name of the cache table used by ExDiceRoller, only used with optional caching
+
+Example:
+```elixir
+config :ex_dice_roller,
+  cache_table: ExDiceRoller.Cache
+```
+
+
 ## General Usage
 
 ExDiceRoller supports a variety of possible dice roll permutations that can be
@@ -301,6 +315,12 @@ iex(9)> ExDiceRoller.Compiler.fun_info(roll_fun)
     ]}
  ]}
 ```
+
+
+## Contributing
+
+Please refer to CONTRIBUTING.md for more information on how you can contribute
+to this project.
 
 
 ## Test Coverage and More
