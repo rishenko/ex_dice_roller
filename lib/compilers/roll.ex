@@ -140,11 +140,11 @@ defmodule ExDiceRoller.Compilers.Roll do
   @spec roll(integer, boolean) :: integer
 
   defp roll(sides, false) do
-    Enum.random(1..sides)
+    :rand.uniform(sides)
   end
 
   defp roll(sides, true) do
-    result = Enum.random(1..sides)
+    result = :rand.uniform(sides)
     explode_roll(sides, result, result)
   end
 
@@ -153,7 +153,7 @@ defmodule ExDiceRoller.Compilers.Roll do
   defp explode_roll(_, 1, acc), do: acc
 
   defp explode_roll(sides, sides, acc) do
-    result = Enum.random(1..sides)
+    result = :rand.uniform(sides)
     explode_roll(sides, result, acc + result)
   end
 

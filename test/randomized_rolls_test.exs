@@ -13,7 +13,8 @@ defmodule ExDiceRoller.RandomizedRollsTest do
       "cannot use math operators on lists of differing lengths",
       "cannot use separator on lists of differing lengths",
       "modulo operator only accepts integer values",
-      "roll task timed out"
+      "roll task timed out",
+      {:rand, :uniform_s}
     ]
 
     errors = RandomizedRolls.run(10_000, 5, acceptable_errors)
@@ -31,23 +32,25 @@ defmodule ExDiceRoller.RandomizedRollsTest do
     end
   end
 
-  test "handle unexpected non-ArgumentError error" do
-    RandomizedRolls.handle_error(
-      %ArithmeticError{message: "bad argument in arithmetic expression"},
-      [],
-      "1/0",
-      [],
-      []
-    )
-  end
-
-  test "handle unexpected ArgumentError error" do
+  test "handle unexpected error with a message" do
     acceptable_errors = ["acceptable error"]
 
     RandomizedRolls.handle_error(
       %ArgumentError{message: "unexpected error"},
       acceptable_errors,
       "1/0",
+      [],
+      []
+    )
+  end
+
+  test "handle unexpected error with an unexpected function" do
+    acceptable_errors = ["acceptable error"]
+
+    RandomizedRolls.handle_error(
+      %FunctionClauseError{module: :ets, function: :new},
+      acceptable_errors,
+      "1d4",
       [],
       []
     )

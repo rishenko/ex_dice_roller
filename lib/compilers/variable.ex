@@ -31,9 +31,9 @@ defmodule ExDiceRoller.Compilers.Variable do
       iex> ExDiceRoller.roll("xdy+z", x: [1, 2, 3], y: 1, z: 5, opts: [:keep])
       [6, 6, 6, 6, 6, 6]
       iex> ExDiceRoller.roll("xdy+z", [x: 1, y: [1, 10, 100], z: -6, opts: [:keep]])
-      [-5, 0, 68]
+      [-5, -4, 66]
       iex> ExDiceRoller.roll("xdy+z", x: [~a/1d2/, "1d4+1"], y: ["3,4d20/2", ~a/1d6/], z: 2, opts: [:keep])
-      [3, 4, 5, 5, 3, 7, 4, 5, 4, 3, 5, 4, 3, 4, 7, 3, 5, 4, 4, 5]
+      [8, 8, 3, 3, 3, 10, 4, 7, 6, 3, 5, 4, 4, 4, 3]
 
       iex> ExDiceRoller.roll("1+x")
       ** (ArgumentError) no variable 'x' was found in the arguments
