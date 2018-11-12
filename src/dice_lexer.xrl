@@ -2,7 +2,8 @@ Definitions.
 
 Number          = [0-9]+
 BasicOperator   = [\+\-]
-ComplexOperator = [\*\/%^]
+ComplexOperator = [\*\/%]
+ExponOperator   = \^
 Roll            = d
 Space           = [\s\t\n\r]+
 LeftParen       = \(
@@ -13,6 +14,7 @@ Separator       = ,
 Rules.
 
 {Space}             : skip_token.
+{ExponOperator}     : {token, {exp_operator, TokenLine, TokenChars}}.
 {BasicOperator}     : {token, {basic_operator, TokenLine, TokenChars}}.
 {ComplexOperator}   : {token, {complex_operator, TokenLine, TokenChars}}.
 {Roll}              : {token, {roll, TokenLine, TokenChars}}.
