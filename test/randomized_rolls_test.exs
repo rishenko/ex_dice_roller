@@ -13,7 +13,8 @@ defmodule ExDiceRoller.RandomizedRollsTest do
       "cannot use math operators on lists of differing lengths",
       "cannot use separator on lists of differing lengths",
       "modulo operator only accepts integer values",
-      "roll task timed out"
+      "roll task timed out",
+      {:rand, :uniform_s}
     ]
 
     errors = RandomizedRolls.run(10_000, 5, acceptable_errors)

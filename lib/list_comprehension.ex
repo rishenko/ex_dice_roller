@@ -35,11 +35,11 @@ defmodule ExDiceRoller.ListComprehension do
   Example of dice rolls of dice rolls:
 
       iex> ExDiceRoller.roll("1d1d4", opts: [:keep])
-      [1]
+      [4]
       iex> ExDiceRoller.roll("2d1d4", opts: [:keep])
-      [4, 2]
+      [3, 2]
       iex> ExDiceRoller.roll("2d6d4", opts: [:keep])
-      [2, 4, 4, 2, 3, 2, 4, 4, 4]
+      [2, 3, 2, 4, 4, 4, 3, 3]
   """
 
   alias ExDiceRoller.Compiler

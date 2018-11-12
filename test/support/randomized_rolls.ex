@@ -37,6 +37,13 @@ defmodule ExDiceRoller.RandomizedRolls do
     end
   end
 
+  def handle_error(%FunctionClauseError{} = err, known_errors, expr, args, acc) do
+    case {err.module, err.function} in known_errors do
+      true -> acc
+      false -> [create_error_list(err, expr, args)] ++ acc
+    end
+  end
+
   @doc """
   Executes an individual role as its own supervised task. If the a roll task
   takes too long to execute, it is shutdown and a timeout error added to the
@@ -79,18 +86,18 @@ defmodule ExDiceRoller.RandomizedRolls do
   # randomly selects whether or not to use filters, and which to use
   @spec filters() :: Keyword.t()
   defp filters do
-    case Enum.random(1..2) do
+    case :rand.uniform(2) do
       1 ->
         []
 
       2 ->
         Enum.random([
-          [>=: Enum.random(1..10)],
-          [<=: Enum.random(1..10)],
-          [=: Enum.random(1..10)],
-          [!=: Enum.random(1..10)],
-          [>: Enum.random(1..10)],
-          [<: Enum.random(1..10)],
+          [>=: :rand.uniform(10)],
+          [<=: :rand.uniform(10)],
+          [=: :rand.uniform(10)],
+          [!=: :rand.uniform(10)],
+          [>: :rand.uniform(10)],
+          [<: :rand.uniform(10)],
           [drop_highest: true],
           [drop_lowest: true],
           [drop_highest_lowest: true]
@@ -101,14 +108,14 @@ defmodule ExDiceRoller.RandomizedRolls do
   # randomly selects whether or not to use options, and which to use
   @spec options() :: Keyword.t()
   defp options do
-    case Enum.random(1..2) do
+    case :rand.uniform(2) do
       1 ->
         []
 
       2 ->
         options = [:keep, :explode, :highest, :lowest]
         len = length(options)
-        max = Enum.random(1..(len + 2))
+        max = :rand.uniform(len + 2)
 
         1..max
         |> Enum.map(fn _ -> Enum.random(options) end)
@@ -147,14 +154,14 @@ defmodule ExDiceRoller.RandomizedRolls do
   end
 
   defp do_generate_var_value(:number, _) do
-    case Enum.random(1..2) do
+    case :rand.uniform(2) do
       1 -> ExpressionBuilder.int()
       2 -> ExpressionBuilder.float()
     end
   end
 
   defp do_generate_var_value(:list, max_depth) do
-    max = Enum.random(1..5)
+    max = :rand.uniform(5)
 
     Enum.map(1..max, fn _ ->
       do_generate_var_value(Enum.random(@var_value_types), max_depth - 2)

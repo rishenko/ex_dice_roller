@@ -53,17 +53,17 @@ defmodule ExDiceRollerTest do
     test "complex" do
       25 = ExDiceRoller.roll("(1/3*6)d(6d4+3-4) + (4*3d5-18)")
       16_298 = ExDiceRoller.roll("2d5d6d7d8d9d10")
-      -24 = ExDiceRoller.roll("1d7d(9/8)+(5-6d8)")
-      1 = ExDiceRoller.roll("1d8+(-3/2)")
-      3 = ExDiceRoller.roll("-3/2+2d4")
+      -18 = ExDiceRoller.roll("1d7d(9/8)+(5-6d8)")
+      4 = ExDiceRoller.roll("1d8+(-3/2)")
+      5 = ExDiceRoller.roll("-3/2+2d4")
       6 = ExDiceRoller.roll("4d1, 6d1")
-      16 = ExDiceRoller.roll("3d6+9.5678,1d4")
-      0 = ExDiceRoller.roll("13%(1d4)")
-      2 = ExDiceRoller.roll("(5d3)%3")
-      2 = ExDiceRoller.roll("(6d4)%(2d3)")
-      28_561 = ExDiceRoller.roll("13^(1d4)")
-      1331 = ExDiceRoller.roll("(5d3)^3")
-      50_625 = ExDiceRoller.roll("(6d4)^(2d3)")
+      18 = ExDiceRoller.roll("3d6+9.5678,1d4")
+      1 = ExDiceRoller.roll("13%(1d4)")
+      0 = ExDiceRoller.roll("(5d3)%3")
+      1 = ExDiceRoller.roll("(6d4)%(2d3)")
+      169 = ExDiceRoller.roll("13^(1d4)")
+      2197 = ExDiceRoller.roll("(5d3)^3")
+      196 = ExDiceRoller.roll("(6d4)^(2d3)")
     end
 
     test "variations of expressions" do
