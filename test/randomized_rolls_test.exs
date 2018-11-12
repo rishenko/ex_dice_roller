@@ -32,23 +32,25 @@ defmodule ExDiceRoller.RandomizedRollsTest do
     end
   end
 
-  test "handle unexpected non-ArgumentError error" do
-    RandomizedRolls.handle_error(
-      %ArithmeticError{message: "bad argument in arithmetic expression"},
-      [],
-      "1/0",
-      [],
-      []
-    )
-  end
-
-  test "handle unexpected ArgumentError error" do
+  test "handle unexpected error with a message" do
     acceptable_errors = ["acceptable error"]
 
     RandomizedRolls.handle_error(
       %ArgumentError{message: "unexpected error"},
       acceptable_errors,
       "1/0",
+      [],
+      []
+    )
+  end
+
+  test "handle unexpected error with an unexpected function" do
+    acceptable_errors = ["acceptable error"]
+
+    RandomizedRolls.handle_error(
+      %FunctionClauseError{module: :ets, function: :new},
+      acceptable_errors,
+      "1d4",
       [],
       []
     )
