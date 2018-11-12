@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.0-rc.2
+
+* Enhancements
+  * Replaced Enum.random/1 calls with erlang's rand:uniform/1, greatly
+    increasing speed for equations with dice rolls.
+  * Fixed an issue with exponent operator precedence.
+
 ## v1.0.0-rc.1
 
 * Documentation changes
