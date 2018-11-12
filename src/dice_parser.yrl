@@ -29,7 +29,7 @@ expr -> expr ',' expr               : {sep, '$1', '$3'}.
 expr -> expr roll expr              : {roll, '$1', '$3'}.
 expr -> expr complex_operator expr  : {op('$2'), '$1', '$3'}.
 expr -> expr basic_operator expr    : {op('$2'), '$1', '$3'}.
-expr -> expr exp_operator expr    : {op('$2'), '$1', '$3'}.
+expr -> expr exp_operator expr      : {op('$2'), '$1', '$3'}.
 
 expr -> '(' expr ')'          : '$2'.
 expr -> int                   : to_integer('$1').
