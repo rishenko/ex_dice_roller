@@ -12,7 +12,8 @@ Main Features:
 
 * Generates dice rolls with any number of dice and sides of dice.
 * Supports common math operators: `+`, `-`, `*`, `/`, `%` modulo, `^` exponentiation
-* Supports `+` and `-` unary operators on numbers, such as `-3` or `+2.5`.
+* Supports `+` and `-` unary operators on numbers and expressions, such as
+  `-3`, `-x`, or `-(1d4)`.
 * Supports using single-letter variables in expressions, such as `1dx+y`, that
   can be given values upon invocation. Any letter except `d`/`D` can be a
   variable.

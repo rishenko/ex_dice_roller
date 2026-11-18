@@ -44,6 +44,9 @@
   * `~a` is now a macro, so `ExDiceRoller.Sigil.sigil_a/2` can no longer be
     called as a function, and an invalid literal expression or flag fails at
     compile time instead of raising at run time.
+  * Unary minus works on any expression, not only numbers: `-x`, `-(1d4)`
+    and `2*-x` used to be syntax errors. `-1d4` now means `-(1d4)`; before,
+    it rolled -1 dice and failed. Write `(-1)d4` for the old meaning.
   * Filters apply in the order given. Before, they applied in reverse
     order, so `drop_lowest: true, >=: 2` filtered `>= 2` first and then
     dropped the lowest remaining value; now it drops the lowest die first.

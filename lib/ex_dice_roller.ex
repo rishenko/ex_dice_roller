@@ -44,11 +44,17 @@ defmodule ExDiceRoller do
   --------------------- | ------------- | ----------------------------
   `d`                   | left-to-right | `ExDiceRoller.Compilers.Roll`
   modifiers (`kh3`, `!`)| postfix       | `ExDiceRoller.Compilers.Roll`
-  `+`, `-`              | unary         | NA (handled by the parser in `dice_parser.yrl`)
+  `+`, `-`              | unary         | `ExDiceRoller.Compilers.Math` (`-x` is `0 - x`)
   `^`                   | right-to-left | `ExDiceRoller.Compilers.Math`
   `*`, `/`, `%`         | left-to-right | `ExDiceRoller.Compilers.Math`
   `+`, `-`              | left-to-right | `ExDiceRoller.Compilers.Math`
   `,`                   | left-to-right | `ExDiceRoller.Compilers.Separator`
+
+  Unary minus works on any expression: `-x`, `-(1d4)`, `2*-x`. It binds more
+  loosely than rolls and modifiers, so `-1d4` and `-4d6kh3` negate the whole
+  roll, and more tightly than `^`, so `-2^2` is `(-2)^2`, which is 4. A sign
+  on a number is part of the number. A roll's sides can be signed too
+  (`1d-4`), though negative sides are an error when rolled.
 
   ### Effects of Parentheses
 

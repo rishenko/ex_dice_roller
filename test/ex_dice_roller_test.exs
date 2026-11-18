@@ -36,6 +36,45 @@ defmodule ExDiceRollerTest do
       -2 = ExDiceRoller.roll!("-3/2")
     end
 
+    test "unary minus on any expression" do
+      for _ <- 1..50 do
+        assert ExDiceRoller.roll!("-1d4") in -4..-1
+        assert ExDiceRoller.roll!("-(1d4)") in -4..-1
+        assert ExDiceRoller.roll!("-4d6kh3") in -18..-3
+      end
+
+      assert -6 == ExDiceRoller.roll!("2*-x", x: 3)
+      assert -3 == ExDiceRoller.roll!("-x", x: 3)
+      assert [-1, -2, -3] == ExDiceRoller.roll!("-x", x: [1, 2, 3])
+      assert -7 == ExDiceRoller.roll!("-(x+y)", x: 3, y: 4)
+      assert 3 == ExDiceRoller.roll!("--3")
+      assert 3 == ExDiceRoller.roll!("+x", x: 3)
+      # binds below rolls and modifiers but above ^, as for numbers
+      assert 4 == ExDiceRoller.roll!("-2^2")
+      assert 4 == ExDiceRoller.roll!("-x^2", x: 2)
+    end
+
+    test "unary minus parse trees" do
+      parse = fn expr ->
+        {:ok, tokens} = ExDiceRoller.tokenize(expr)
+        {:ok, tree} = ExDiceRoller.parse(tokens)
+        tree
+      end
+
+      # a sign on a number is folded into it
+      assert -3 == parse.("-3")
+      assert -2.5 == parse.("-2.5")
+      assert {:roll, 1, -4} == parse.("1d-4")
+      # anything else is subtracted from 0
+      assert {{:operator, ~c"-"}, 0, {:roll, 1, 4}} == parse.("-1d4")
+      assert {{:operator, ~c"-"}, 0, {:roll, 4, 6, [{:keep, :highest, 3}]}} == parse.("-4d6kh3")
+      # a modifier after signed sides applies to the roll
+      assert {:roll, 1, -4, [{:keep, :highest, 1}]} == parse.("1d-4kh1")
+
+      assert {:roll, 2, {{:operator, ~c"-"}, 0, {:var, ~c"x"}}, [{:keep, :highest, 1}]} ==
+               parse.("2d-xkh1")
+    end
+
     test "variables" do
       4 = ExDiceRoller.roll!("1d8+x", x: 3)
       2 = ExDiceRoller.roll!("1dy", y: 6)
@@ -139,7 +178,8 @@ defmodule ExDiceRollerTest do
     end
 
     test "that error on a negative number of dice" do
-      assert_raise(ExDiceRoller.Error, fn -> ExDiceRoller.roll!("-1d4") end)
+      assert_raise(ExDiceRoller.Error, fn -> ExDiceRoller.roll!("(-1)d4") end)
+      assert_raise(ExDiceRoller.Error, fn -> ExDiceRoller.roll!("1d-4kh1") end)
     end
 
     test "that error on values" do

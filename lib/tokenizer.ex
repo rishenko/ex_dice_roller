@@ -119,9 +119,18 @@ defmodule ExDiceRoller.Tokenizer do
   defp take_sides([{type, _, _} = t | rest]) when type in [:int, :float, :var],
     do: {:ok, [t], rest}
 
-  defp take_sides([{:basic_operator, _, _} = op, {type, _, _} = t | rest])
-       when type in [:int, :float],
-       do: {:ok, [op, t], rest}
+  # A signed side, such as `-4`, `-x`, or `-(1d4)`. It is wrapped in
+  # parentheses, so a modifier after it applies to the roll rather than to the
+  # number being negated: `1d-4kh1` reads as `1d(-4)kh1`.
+  defp take_sides([{:basic_operator, line, _} = op | rest]) do
+    case take_sides(rest) do
+      {:ok, sides, rest} ->
+        {:ok, [{:"(", line, ~c"("}, op | sides] ++ [{:")", line, ~c")"}], rest}
+
+      other ->
+        other
+    end
+  end
 
   defp take_sides([{:"(", _, _} = open | rest]) do
     with {:ok, inner, close, rest} <- split_group(rest, 0, []),

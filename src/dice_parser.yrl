@@ -21,7 +21,7 @@ Rootsymbol expr.
 
 Left  600 roll.
 Left  550 modifier.
-Left  500 unary_operator.
+Unary 500 unary_operator.
 Right 400 exp_operator.
 Left  300 complex_operator.
 Left  200 basic_operator.
@@ -40,8 +40,7 @@ expr -> float                 : to_float('$1').
 expr -> unary_operator        : '$1'.
 expr -> var                   : val('$1').
 
-unary_operator -> basic_operator int : val_to_integer(last('$1') ++ last('$2')).
-unary_operator -> basic_operator float : val_to_float(last('$1') ++ last('$2')).
+unary_operator -> basic_operator expr : unary(last('$1'), '$2').
 
 
 Erlang code.
@@ -56,6 +55,10 @@ op({_, _, V}) ->  {operator, V}.
 last({_, _, V}) -> V.
 
 to_integer({_, _, V}) -> element(1, string:to_integer(V)).
-val_to_integer(V) -> element(1, string:to_integer(V)).
 to_float({_, _, V}) -> element(1, string:to_float(V)).
-val_to_float(V) -> element(1, string:to_float(V)).
+
+% A sign on a number is folded into it; on anything else, `-E` is `0 - E`,
+% which also negates each value of a list.
+unary("+", E) -> E;
+unary("-", N) when is_number(N) -> -N;
+unary("-", E) -> {{operator, "-"}, 0, E}.

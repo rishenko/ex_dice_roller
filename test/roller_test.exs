@@ -40,7 +40,16 @@ defmodule ExDiceRoller.RollerTest do
     "9d6",
     "8d6",
     "1d6+1d6+1d6+1d6",
-    "(1d6)d(1d1000)"
+    "(1d6)d(1d1000)",
+    "-1d4",
+    "-(1d4)",
+    "2*-x",
+    "-x",
+    "-(x,y)",
+    "-4d6kh3",
+    "1d-xkh1",
+    "--x",
+    "-x^2"
   ]
 
   # every single-letter variable except `d`, as in the golden harness

@@ -76,24 +76,24 @@
 12/3	"1D6"	[6]	[6]	:ok
 12/4	"1D6"	2	2	:ok
 12/5	"1D6"	[]	[]	:ok
-13/0	"-1d4"	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	:ok
-13/1	"-1d4"	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	:ok
-13/2	"-1d4"	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	:ok
-13/3	"-1d4"	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	:ok
-13/4	"-1d4"	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	:ok
-13/5	"-1d4"	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	:ok
-14/0	"-(1d4)"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"\"(\""]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"\"(\""]]}}	:error
-14/1	"-(1d4)"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"\"(\""]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"\"(\""]]}}	:error
-14/2	"-(1d4)"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"\"(\""]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"\"(\""]]}}	:error
-14/3	"-(1d4)"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"\"(\""]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"\"(\""]]}}	:error
-14/4	"-(1d4)"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"\"(\""]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"\"(\""]]}}	:error
-14/5	"-(1d4)"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"\"(\""]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"\"(\""]]}}	:error
-15/0	"2*-x"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"x"]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"x"]]}}	:error
-15/1	"2*-x"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"x"]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"x"]]}}	:error
-15/2	"2*-x"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"x"]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"x"]]}}	:error
-15/3	"2*-x"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"x"]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"x"]]}}	:error
-15/4	"2*-x"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"x"]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"x"]]}}	:error
-15/5	"2*-x"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"x"]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"x"]]}}	:error
+13/0	"-1d4"	-4	-4	:ok
+13/1	"-1d4"	-3	-3	:ok
+13/2	"-1d4"	[-3]	[-3]	:ok
+13/3	"-1d4"	[-4]	[-4]	:ok
+13/4	"-1d4"	-3	-3	:ok
+13/5	"-1d4"	[]	[]	:ok
+14/0	"-(1d4)"	-3	-3	:ok
+14/1	"-(1d4)"	-5	-5	:ok
+14/2	"-(1d4)"	[-4]	[-4]	:ok
+14/3	"-(1d4)"	[-3]	[-3]	:ok
+14/4	"-(1d4)"	-1	-1	:ok
+14/5	"-(1d4)"	[]	[]	:ok
+15/0	"2*-x"	-2	-2	:ok
+15/1	"2*-x"	-2	-2	:ok
+15/2	"2*-x"	-2	-2	:ok
+15/3	"2*-x"	-2	-2	:ok
+15/4	"2*-x"	-2	-2	:ok
+15/5	"2*-x"	[]	[]	:ok
 16/0	"1-x"	0	0	:ok
 16/1	"1-x"	0	0	:ok
 16/2	"1-x"	0	0	:ok

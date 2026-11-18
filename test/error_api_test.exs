@@ -11,7 +11,7 @@ defmodule ExDiceRoller.ErrorApiTest do
 
   # expression => expected reason; each fails at roll time, after compiling
   @runtime_errors [
-    {"-1d4", :negative_dice},
+    {"(-1)d4", :negative_dice},
     {"1d(0-4)", :negative_dice},
     {"1/0", :divide_by_zero},
     {"1%0.0", :divide_by_zero},
