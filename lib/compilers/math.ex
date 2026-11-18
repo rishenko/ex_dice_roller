@@ -42,9 +42,9 @@ defmodule ExDiceRoller.Compilers.Math do
   @doc "Function used for modulo calculations. Only accepts integer values."
   @spec modulo(integer, integer) :: integer
 
-  def modulo(_, 0), do: raise(ArgumentError, "the divisor cannot be 0")
-  def modulo(_, +0.0), do: raise(ArgumentError, "the divisor cannot be 0")
-  def modulo(_, -0.0), do: raise(ArgumentError, "the divisor cannot be 0")
+  # `r == 0` matches 0, 0.0 and -0.0 on every OTP release (OTP 27 no longer
+  # matches -0.0 against a 0.0 pattern)
+  def modulo(_, r) when r == 0, do: raise(ArgumentError, "the divisor cannot be 0")
 
   def modulo(l, r) when is_integer(l) and is_integer(r) do
     rem(Compiler.round_val(l), Compiler.round_val(r))
@@ -55,9 +55,9 @@ defmodule ExDiceRoller.Compilers.Math do
   @doc "Function used for division calculations."
   @spec divide(Compiler.calculated_val(), Compiler.calculated_val()) :: float
 
-  def divide(_, 0), do: raise(ArgumentError, "the divisor cannot be 0")
-  def divide(_, +0.0), do: raise(ArgumentError, "the divisor cannot be 0")
-  def divide(_, -0.0), do: raise(ArgumentError, "the divisor cannot be 0")
+  # `r == 0` matches 0, 0.0 and -0.0 on every OTP release (OTP 27 no longer
+  # matches -0.0 against a 0.0 pattern)
+  def divide(_, r) when r == 0, do: raise(ArgumentError, "the divisor cannot be 0")
   def divide(l, r) when is_number(l) and is_number(r), do: l / r
 
   @impl true
