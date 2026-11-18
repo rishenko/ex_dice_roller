@@ -122,6 +122,7 @@ defmodule ExDiceRoller.Compiler do
   """
   @spec delegate(Parser.expression()) :: compiled_val
   def delegate({:roll, _, _} = expr), do: Roll.compile(expr)
+  def delegate({:roll, _, _, _} = expr), do: Roll.compile(expr)
   def delegate({{:operator, _}, _, _} = expr), do: Math.compile(expr)
   def delegate({:sep, _, _} = expr), do: Separator.compile(expr)
   def delegate({:var, _} = var), do: Variable.compile(var)

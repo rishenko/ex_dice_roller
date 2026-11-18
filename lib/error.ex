@@ -32,6 +32,9 @@ defmodule ExDiceRoller.Error do
   `:details` is `{variable, error}`.
   * `:arithmetic_error`: the calculation failed in Erlang, for example a float
   overflow from `^`. `:details` is the original `ArithmeticError`.
+  * `:invalid_modifier`: reroll modifiers that can never stop, such as
+  `1d6r<7`, or that leave only the highest face while exploding.
+  `:details` is the list of reroll conditions.
   * `:invalid_option`: the `~a` sigil was given an unknown flag. `:details` is
   the unrecognized part.
   * `:invalid_roll_key`: `ExDiceRoller.Cache.delete/2` was given a key that is
@@ -56,6 +59,7 @@ defmodule ExDiceRoller.Error do
           | :invalid_variable
           | :arithmetic_error
           | :invalid_option
+          | :invalid_modifier
           | :invalid_roll_key
 
   @type t :: %__MODULE__{reason: reason, details: any, message: String.t()}

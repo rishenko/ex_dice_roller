@@ -70,12 +70,12 @@
 11/3	"0d6"	[]	[]	:ok
 11/4	"0d6"	0	0	:ok
 11/5	"0d6"	[]	[]	:ok
-12/0	"1D6"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"D"]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"D"]]}}	:error
-12/1	"1D6"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"D"]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"D"]]}}	:error
-12/2	"1D6"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"D"]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"D"]]}}	:error
-12/3	"1D6"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"D"]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"D"]]}}	:error
-12/4	"1D6"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"D"]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"D"]]}}	:error
-12/5	"1D6"	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"D"]]}}	{:error, {:token_parsing_failed, [~c"syntax error before: ", [~c"D"]]}}	:error
+12/0	"1D6"	6	6	:ok
+12/1	"1D6"	5	5	:ok
+12/2	"1D6"	[5]	[5]	:ok
+12/3	"1D6"	[6]	[6]	:ok
+12/4	"1D6"	2	2	:ok
+12/5	"1D6"	[]	[]	:ok
 13/0	"-1d4"	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	:ok
 13/1	"-1d4"	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	:ok
 13/2	"-1d4"	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	RAISE ArgumentError neither number of dice nor number of sides can be less than 0	:ok

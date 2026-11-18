@@ -39,6 +39,19 @@
     `{:ok, name}`. Use `{ExDiceRoller.Cache, name: MyCache}` in a supervision
     tree.
   * A cache whose process crashes is restarted empty.
+  * `D` is a roll operator, like `d`, so `D` can no longer be a variable.
+    `1D6` used to be a syntax error.
+  * `NdMdh` and `NdMdl` now mean "drop the highest/lowest die". Before, they
+    rolled a roll of dice with `h` or `l` sides; write `NdMd(h)` for that.
+
+* Enhancements
+  * Dice modifiers in expressions, written right after a roll's sides:
+    `khN`/`kN` and `klN` keep the highest/lowest N dice, `dhN` and `dlN` drop
+    them (N defaults to 1), `rN` rerolls until the die no longer matches,
+    `roN` rerolls once, and `!` explodes. Reroll targets take `=`, `<`, `>`,
+    `<=`, or `>=`. Modifiers are case-insensitive and can be combined
+    (`4d6r1kh3`). Elsewhere, `k`, `r`, `h`, `l` and `o` are still variables.
+    Impossible rerolls (`1d6r<7`) return reason `:invalid_modifier`.
 
 * Bug fixes
   * Dice counts that round to 0 roll no dice. `(1/3)d6` used to roll 2 dice,

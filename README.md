@@ -23,6 +23,9 @@ Main Features:
 
 Other Features:
 
+* Supports dice modifiers in expressions: keep or drop the highest or lowest
+  dice (`4d6kh3`, `2d20kl`, `4d6dl1`), rerolls (`1d20r1`, `1d6ro<3`), and
+  exploding dice (`3d6!`). `D` works as well as `d`.
 * Supports exploding dice.
 * Supports 'keeping' the result of each die roll in an expression. The list
   of values can then be used in a manner similar to list comprehensions in
@@ -137,6 +140,18 @@ iex> ExDiceRoller.roll!("1d6", opts: [:explode])
 # combine various options
 iex> ExDiceRoller.roll!("5d1+5d10", opts: [:keep, :explode])
 #=> [7, 3, 2, 4, 10]
+
+# dice modifiers: keep the highest 3 of 4d6, reroll 1s, explode
+iex> ExDiceRoller.roll!("4d6kh3")
+#=> 14
+iex> ExDiceRoller.roll!("4d6kh3", opts: :keep)
+#=> [6, 5, 3]
+iex> ExDiceRoller.roll!("2D20KL+5")
+#=> 9
+iex> ExDiceRoller.roll!("1d20r1")
+#=> 17
+iex> ExDiceRoller.roll!("5d6!", opts: :keep)
+#=> [2, 9, 4, 1, 6]
 
 # filter final values before returning them
 iex> ExDiceRoller.roll!("8d6", <=: 3, opts: :keep)

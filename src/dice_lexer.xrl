@@ -4,12 +4,14 @@ Number          = [0-9]+
 BasicOperator   = [\+\-]
 ComplexOperator = [\*\/%]
 ExponOperator   = \^
-Roll            = d
+Roll            = [dD]
 Space           = [\s\t\n\r]+
 LeftParen       = \(
 RightParen      = \)
 Variable        = [a-zA-Z]
 Separator       = ,
+Explode         = !
+Comparator      = (<=|>=|<|>|=)
 
 Rules.
 
@@ -24,5 +26,7 @@ Rules.
 {Number}\.{Number}  : {token, {float, TokenLine, TokenChars}}.
 {Variable}          : {token, {var, TokenLine, TokenChars}}.
 {Separator}         : {token, {',', TokenLine, TokenChars}}.
+{Explode}           : {token, {explode, TokenLine, TokenChars}}.
+{Comparator}        : {token, {comparator, TokenLine, TokenChars}}.
 
 Erlang code.

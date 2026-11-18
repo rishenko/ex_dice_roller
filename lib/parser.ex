@@ -48,6 +48,7 @@ defmodule ExDiceRoller.Parser do
           number
           | {{:operator, charlist}, expression, expression}
           | {:roll, expression, expression}
+          | {:roll, expression, expression, [ExDiceRoller.Tokenizer.modifier()]}
           | {:var, charlist}
           | {:sep, expression, expression}
 

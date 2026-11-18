@@ -36,7 +36,7 @@ defmodule ExDiceRoller.CompilerTest do
 
       assert {"-compile_add/2-fun-",
               [
-                {"-compile_roll/2-fun-", [1, 4]},
+                {"-compile_roll/3-fun-", [1, 4, []]},
                 {"-compile_var/1-fun-", [~c"x"]}
               ]} == shape(result)
     end
@@ -50,12 +50,13 @@ defmodule ExDiceRoller.CompilerTest do
 
       assert {"-compile_add/2-fun-",
               [
-                {"-compile_roll/2-fun-", [1, 4]},
-                {"-compile_roll/2-fun-",
+                {"-compile_roll/3-fun-", [1, 4, []]},
+                {"-compile_roll/3-fun-",
                  [
                    {"-compile_add/2-fun-",
                     [2, {"-compile_mul/2-fun-", [5, {"-compile_var/1-fun-", [~c"x"]}]}]},
-                   {"-compile_roll/2-fun-", [1, {"-compile_var/1-fun-", [~c"y"]}]}
+                   {"-compile_roll/3-fun-", [1, {"-compile_var/1-fun-", [~c"y"]}, []]},
+                   []
                  ]}
               ]} == shape(result)
     end

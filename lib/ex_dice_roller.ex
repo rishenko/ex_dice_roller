@@ -36,15 +36,17 @@ defmodule ExDiceRoller do
 
   ## Order of Precedence
 
-  The following table shows order of precendence, from highest to lowest,
+  The following table shows order of precedence, from highest to lowest,
   of the operators available to ExDiceRoller.
 
 
   Operator              | Associativity | Compiler
   --------------------- | ------------- | ----------------------------
   `d`                   | left-to-right | `ExDiceRoller.Compilers.Roll`
+  modifiers (`kh3`, `!`)| postfix       | `ExDiceRoller.Compilers.Roll`
   `+`, `-`              | unary         | NA (handled by the parser in `dice_parser.yrl`)
-  `*`, `/`, `%`, `^`    | left-to-right | `ExDiceRoller.Compilers.Math`
+  `^`                   | right-to-left | `ExDiceRoller.Compilers.Math`
+  `*`, `/`, `%`         | left-to-right | `ExDiceRoller.Compilers.Math`
   `+`, `-`              | left-to-right | `ExDiceRoller.Compilers.Math`
   `,`                   | left-to-right | `ExDiceRoller.Compilers.Separator`
 
