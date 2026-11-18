@@ -54,6 +54,12 @@
     a small key computed at compile time, so a lookup costs the same for any
     expression. `~a/1d20+5/r` went from about 1.15 µs to 0.17 µs per roll.
     Interpolated sigils are still parsed at run time.
+  * New `ExDiceRoller.Roller.defroll/2` defines a named roll function from a
+    literal expression at compile time, generating plain Elixir code instead
+    of closures. It returns the same results as `compile!/1` from the same
+    random seed (tested over the golden corpus). `1d20+5` with no arguments
+    takes ~40 ns (compiled function: ~115 ns); `1d20+x` with `x: 5` takes
+    ~55 ns.
   * New performance guide (`guides/performance.md`) and benchmark script
     (`bench/rolls.exs`).
   * Dice modifiers in expressions, written right after a roll's sides:

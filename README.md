@@ -17,7 +17,8 @@ Main Features:
   can be given values upon invocation. Any letter except `d`/`D` can be a
   variable.
 * Supports parenthetically grouped expressions such as `(1d4)d(3d6)-(1d4+7)`.
-* Supports compiling dice rolls into reusable anonymous functions.
+* Supports compiling dice rolls into reusable anonymous functions, or into
+  named functions at compile time with `defroll`.
 * Introduces a new sigil, `~a`. This can be used as a shorthand for compiling
   and/or rolling dice rolls, such as `~a/1d6+2-(1d4)d6/`.
 
@@ -234,9 +235,11 @@ iex> ~a/5d1+5d10/k
 ## Performance
 
 Compile an expression once and reuse the function: a compiled `1d20+5` rolls
-in about 115 ns, roughly 7 million rolls per second on one core. Literal `~a`
-sigils are parsed when your code compiles, and `cache: true` avoids
-re-parsing strings that arrive at run time. See
+in about 115 ns, roughly 7 million rolls per second on one core. For
+expressions fixed in your code, `ExDiceRoller.Roller.defroll/2` generates a
+named function at compile time that rolls `1d20+5` in about 40 ns, as fast as
+hand-written code. Literal `~a` sigils are parsed when your code compiles,
+and `cache: true` avoids re-parsing strings that arrive at run time. See
 [the performance guide](guides/performance.md) for measurements and advice,
 and run `MIX_ENV=prod mix run bench/rolls.exs` to measure your own hardware.
 

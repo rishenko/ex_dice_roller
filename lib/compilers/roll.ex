@@ -163,11 +163,30 @@ defmodule ExDiceRoller.Compilers.Roll do
   defp roll_prep(num, sides, mods, args) do
     keep? = Args.has_option?(args, :keep)
     explode? = Args.has_option?(args, :explode)
+    __roll__(num, sides, explode?, keep?, mods)
+  end
 
+  @doc false
+  # Rolls with dice counts and sides that may be lists. Used by compiled
+  # closures and by `ExDiceRoller.Roller`.
+  @spec __roll__(
+          Compiler.calculated_val(),
+          Compiler.calculated_val(),
+          boolean,
+          boolean,
+          [Tokenizer.modifier()]
+        ) :: Compiler.calculated_val()
+  def __roll__(num, sides, explode?, keep?, mods) do
     ListComprehension.flattened_apply(num, sides, explode?, fn n, s, e? ->
       roll_dice(n, s, e?, keep?, mods)
     end)
   end
+
+  @doc false
+  # `__roll__/5` for a number of dice and sides that are both numbers.
+  @spec __roll_dice__(number, number, boolean, boolean, [Tokenizer.modifier()]) ::
+          integer | list(integer)
+  def __roll_dice__(n, s, explode?, keep?, mods), do: roll_dice(n, s, explode?, keep?, mods)
 
   # Rolls `n` dice with `s` sides. The checks run on each die group, after
   # list expansion, so they also cover values from variables and kept rolls.

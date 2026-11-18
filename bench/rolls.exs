@@ -7,6 +7,14 @@
 # then roll throughput on one process and on one process per scheduler.
 import ExDiceRoller.Sigil
 
+defmodule ExDiceRoller.Bench.Rolls do
+  import ExDiceRoller.Roller
+  defroll d20, "1d20+5"
+  defroll d20x, "1d20+x"
+  defroll kh3, "4d6kh3"
+  defroll complex, "(1d4)d(6*y)-(2/3+1dx)+4d6kh3"
+end
+
 defmodule ExDiceRoller.Bench do
   def loop(_f, 0), do: :ok
 
@@ -60,6 +68,9 @@ Bench.time("compiled 1d20+5, execute!/2", n, fn ->
   fn -> ExDiceRoller.execute!(f) end
 end)
 
+Bench.time("defroll 1d20+5, d20()", n, fn -> fn -> ExDiceRoller.Bench.Rolls.d20() end end)
+Bench.time("defroll 1d20+x, d20x(x: 5)", n, fn -> fn -> ExDiceRoller.Bench.Rolls.d20x(x: 5) end end)
+
 Bench.time("~a/1d20+5/r", n, fn -> fn -> ~a/1d20+5/r end end)
 
 Bench.time("roll!(\"1d20+5\", cache: true)", n, fn ->
@@ -73,11 +84,17 @@ Bench.time("compiled 4d6kh3", n, fn ->
   fn -> f.([]) end
 end)
 
+Bench.time("defroll 4d6kh3, kh3()", n, fn -> fn -> ExDiceRoller.Bench.Rolls.kh3() end end)
+
 Bench.time("complex: compile/1", 20_000, fn -> fn -> ExDiceRoller.compile(complex) end end)
 
 Bench.time("complex: compiled, fun.(x: 4, y: 3)", 20_000, fn ->
   f = ExDiceRoller.compile!(complex)
   fn -> f.(x: 4, y: 3) end
+end)
+
+Bench.time("complex: defroll, complex(x: 4, y: 3)", 20_000, fn ->
+  fn -> ExDiceRoller.Bench.Rolls.complex(x: 4, y: 3) end
 end)
 
 Bench.time("complex: roll(cache: true)", 20_000, fn ->
@@ -89,4 +106,8 @@ schedulers = System.schedulers_online()
 
 for expr <- ["1d20+5", "4d6kh3"], procs <- Enum.uniq([1, schedulers]) do
   Bench.throughput(expr, ExDiceRoller.compile!(expr), procs)
+end
+
+for procs <- Enum.uniq([1, schedulers]) do
+  Bench.throughput("defroll 1d20+5", fn _ -> ExDiceRoller.Bench.Rolls.d20() end, procs)
 end

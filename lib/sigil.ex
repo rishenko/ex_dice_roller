@@ -72,7 +72,7 @@ defmodule ExDiceRoller.Sigil do
   # first use, builds and stores) the compiled function by its parse tree.
   defp compile_time(roll_string, opts) do
     roll_opts = translate_opts!(opts)
-    tree = parse!(roll_string)
+    tree = __parse__!(roll_string)
 
     fun =
       quote do
@@ -119,7 +119,7 @@ defmodule ExDiceRoller.Sigil do
   @spec __runtime__(String.t(), charlist) :: Compiler.compiled_fun() | Compiler.calculated_val()
   def __runtime__(roll_string, opts) do
     roll_opts = translate_opts!(opts)
-    fun = Compiler.compile(parse!(roll_string))
+    fun = Compiler.compile(__parse__!(roll_string))
 
     case roll_opts do
       nil -> fun
@@ -139,9 +139,11 @@ defmodule ExDiceRoller.Sigil do
     end
   end
 
-  # names the expression in the message, since a sigil has no other context
-  @spec parse!(String.t()) :: Parser.expression()
-  defp parse!(roll_string) do
+  @doc false
+  # Tokenizes and parses, raising `ExDiceRoller.Error`. The message names the
+  # expression, since a sigil or `defroll` has no other context.
+  @spec __parse__!(String.t()) :: Parser.expression()
+  def __parse__!(roll_string) do
     with {:ok, tokens} <- Tokenizer.tokenize(roll_string),
          {:ok, tree} <- Parser.parse(tokens) do
       tree

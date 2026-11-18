@@ -91,13 +91,22 @@ defmodule ExDiceRoller.Compilers.Separator do
           Compiler.calculated_val()
   defp high_low(l, l, _), do: l
 
-  defp high_low(l, r, args) when is_list(args) do
-    case Args.find_first(args, [:highest, :lowest]) do
-      :highest -> ListComprehension.apply(l, r, :highest, "separator", &do_high_low/3)
-      :lowest -> ListComprehension.apply(l, r, :lowest, "separator", &do_high_low/3)
-      _ -> ListComprehension.apply(l, r, :highest, "separator", &do_high_low/3)
-    end
-  end
+  defp high_low(l, r, args) when is_list(args), do: __high_low__(l, r, mode(args))
+
+  @doc false
+  # `:highest` or `:lowest`, from the first of those options given
+  @spec mode(Compiler.args()) :: :highest | :lowest
+  def mode(args), do: Args.find_first(args, [:highest, :lowest]) || :highest
+
+  @doc false
+  # Picks the highest or lowest of two values that may be lists. Used by
+  # compiled closures and by `ExDiceRoller.Roller`.
+  @spec __high_low__(Compiler.calculated_val(), Compiler.calculated_val(), :highest | :lowest) ::
+          Compiler.calculated_val()
+  def __high_low__(l, l, _), do: l
+
+  def __high_low__(l, r, mode),
+    do: ListComprehension.apply(l, r, mode, "separator", &do_high_low/3)
 
   @spec do_high_low(Compiler.calculated_val(), Compiler.calculated_val(), :highest | :lowest) ::
           Compiler.calculated_val()

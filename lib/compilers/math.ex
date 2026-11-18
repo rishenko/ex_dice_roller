@@ -113,6 +113,13 @@ defmodule ExDiceRoller.Compilers.Math do
     end
   end
 
+  @doc false
+  # Applies an operator to values that may be lists, as the compiled
+  # closures do. Used by `ExDiceRoller.Roller`.
+  @spec __apply__(Compiler.calculated_val(), Compiler.calculated_val(), function) ::
+          Compiler.calculated_val()
+  def __apply__(l, r, fun), do: ListComprehension.apply(l, r, fun, @err_name, &op/3)
+
   @spec op(Compiler.calculated_val(), Compiler.calculated_val(), function) ::
           Compiler.calculated_val()
   defp op(l, r, fun) do

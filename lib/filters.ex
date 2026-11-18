@@ -37,6 +37,13 @@ defmodule ExDiceRoller.Filters do
 
   alias ExDiceRoller.Compiler
 
+  @keys [:>=, :!=, :<=, :=, :>, :<, :drop_lowest, :drop_highest, :drop_highest_lowest]
+
+  @doc false
+  # the argument keys that `get_filters/1` removes
+  @spec keys() :: [atom]
+  def keys, do: @keys
+
   @doc """
   Filter the calculated value using the list of provided filters.
 
@@ -64,7 +71,7 @@ defmodule ExDiceRoller.Filters do
 
     {filters,
      Enum.filter(args, fn {k, _} ->
-       k not in [:>=, :!=, :<=, :=, :>, :<, :drop_lowest, :drop_highest, :drop_highest_lowest]
+       k not in @keys
      end)}
   end
 

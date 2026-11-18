@@ -54,7 +54,14 @@ defmodule ExDiceRoller.Compilers.Variable do
   @spec var_final(charlist, Keyword.t()) :: number
   defp var_final(var, args) do
     key = var |> to_string() |> String.to_atom()
+    __value__(var, key, args)
+  end
 
+  @doc false
+  # The value of variable `var` (stored under `key`) in `args`. Used by
+  # compiled closures and by `ExDiceRoller.Roller`.
+  @spec __value__(charlist, atom, Keyword.t()) :: Compiler.calculated_val()
+  def __value__(var, key, args) do
     args
     |> Args.get_var(key)
     |> var_final_arg(var, args)
