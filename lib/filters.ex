@@ -17,6 +17,17 @@ defmodule ExDiceRoller.Filters do
   use the roll modifiers instead (`4d6dl1`, `4d6kh3`; see
   `ExDiceRoller.Compilers.Roll`).
 
+  Filters apply in the order given. Order matters when a `drop_*` filter is
+  combined with another filter: dropping the lowest of `[2, 3, 5]` and then
+  keeping values `>= 3` leaves `[3, 5]`, while the other order leaves `[5]`.
+
+      iex> ExDiceRoller.Filters.get_filters(drop_lowest: true, >=: 3, x: 1)
+      {[drop_lowest: true, >=: 3], [x: 1]}
+      iex> ExDiceRoller.Filters.filter([2, 3, 5], drop_lowest: true, >=: 3)
+      [3, 5]
+      iex> ExDiceRoller.Filters.filter([2, 3, 5], >=: 3, drop_lowest: true)
+      [5]
+
   Examples:
 
       iex> ExDiceRoller.roll!("1d4", >=: 5)
@@ -93,9 +104,9 @@ defmodule ExDiceRoller.Filters do
     val |> Enum.sort() |> Enum.drop(1) |> Enum.drop(-1)
   end
 
-  # Collects filters in reverse order: the last one given is applied first.
+  # Collects filters in the order given, which is the order they apply in.
   @spec do_get_filter(Keyword.t(), list(any)) :: list(any)
-  defp do_get_filter([], acc), do: acc
+  defp do_get_filter([], acc), do: Enum.reverse(acc)
 
   defp do_get_filter([{k, _} = f | rest], acc) when k in @comparators,
     do: do_get_filter(rest, [f | acc])
