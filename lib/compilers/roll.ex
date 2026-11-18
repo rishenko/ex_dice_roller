@@ -198,49 +198,56 @@ defmodule ExDiceRoller.Compilers.Roll do
       message: "neither number of dice nor number of sides can be less than 0"
   end
 
-  defp roll_dice(n, s, e?, keep?, []) do
+  defp roll_dice(n, s, explode?, keep?, mods) do
     n = Compiler.round_val(n)
     s = Compiler.round_val(s)
+    explode? = explode? or :explode in mods
 
     cond do
       # no dice rolled (including counts that round down to 0)
-      n == 0 and keep? -> []
-      n == 0 -> 0
+      n == 0 -> finish([], mods, keep?)
       # zero-sided dice always total 0; with keep, a single 0 stands for them
-      s == 0 and keep? -> [0]
-      s == 0 -> 0
-      keep? -> Enum.map(1..n, fn _ -> roll(s, e?) end)
-      true -> Enum.reduce(1..n, 0, fn _, acc -> acc + roll(s, e?) end)
+      s == 0 -> finish([0], mods, keep?)
+      # the common case: a plain sum, without building a list
+      mods == [] and not keep? -> Enum.reduce(1..n, 0, fn _, acc -> acc + die(s, explode?) end)
+      true -> n |> draw_dice(s, explode?, mods) |> finish(mods, keep?)
     end
   end
 
-  defp roll_dice(n, s, e?, keep?, mods) do
-    n = Compiler.round_val(n)
-    s = Compiler.round_val(s)
-
-    dice =
-      cond do
-        n == 0 -> []
-        s == 0 -> [0]
-        true -> roll_modified(n, s, e? or :explode in mods, mods)
-      end
-
+  # applies keep/drop modifiers, then sums unless the dice are kept
+  defp finish(dice, mods, keep?) do
     dice = Enum.reduce(mods, dice, &select/2)
     if keep?, do: dice, else: Enum.sum(dice)
   end
 
   # rolls `n` dice, applying rerolls to every draw (explosions included)
-  defp roll_modified(n, s, explode?, mods) do
+  defp draw_dice(n, s, explode?, mods) do
     always = for {:reroll, :always, cmp, t} <- mods, do: {cmp, t}
     once = for {:reroll, :once, cmp, t} <- mods, do: {cmp, t}
     check_rerolls!(s, always, explode?)
-    draw = fn -> draw(s, always, once) end
 
-    Enum.map(1..n, fn _ ->
-      first = draw.()
-      if explode?, do: explode_draws(s, first, first, draw), else: first
-    end)
+    if always == [] and once == [] do
+      Enum.map(1..n, fn _ -> die(s, explode?) end)
+    else
+      draw = fn -> draw(s, always, once) end
+      Enum.map(1..n, fn _ -> die(s, explode?, draw) end)
+    end
   end
+
+  # One die, with its explosions added. `draw` is `:plain` for a bare
+  # `:rand.uniform/1` (no closure call), or a function that applies rerolls.
+  defp die(s, false), do: :rand.uniform(s)
+  defp die(s, true), do: die(s, true, :plain)
+
+  defp die(s, false, draw), do: next(draw, s)
+
+  defp die(s, true, draw) do
+    first = next(draw, s)
+    explode_draws(s, first, first, draw)
+  end
+
+  defp next(:plain, s), do: :rand.uniform(s)
+  defp next(draw, _s), do: draw.()
 
   defp draw(s, always, once) do
     value = reroll_always(s, always)
@@ -256,7 +263,7 @@ defmodule ExDiceRoller.Compilers.Roll do
   end
 
   defp explode_draws(s, s, acc, draw) when s > 1 do
-    value = draw.()
+    value = next(draw, s)
     explode_draws(s, value, acc + value, draw)
   end
 
@@ -319,26 +326,4 @@ defmodule ExDiceRoller.Compilers.Roll do
   end
 
   defp select(_, dice), do: dice
-
-  @spec roll(integer, boolean) :: integer
-
-  defp roll(sides, false) do
-    :rand.uniform(sides)
-  end
-
-  defp roll(sides, true) do
-    result = :rand.uniform(sides)
-    explode_roll(sides, result, result)
-  end
-
-  @spec explode_roll(integer, integer, integer) :: integer
-
-  defp explode_roll(_, 1, acc), do: acc
-
-  defp explode_roll(sides, sides, acc) do
-    result = :rand.uniform(sides)
-    explode_roll(sides, result, acc + result)
-  end
-
-  defp explode_roll(_, _, acc), do: acc
 end

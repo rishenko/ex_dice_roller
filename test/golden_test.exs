@@ -24,4 +24,22 @@ defmodule ExDiceRoller.GoldenTest do
               |> Enum.take(10)
               |> Enum.map_join("\n", fn {e, a} -> "  recorded: #{e}\n  now:      #{a}" end))
   end
+
+  test "modifier rolls match the recorded modifier corpus" do
+    expected = Golden.modifiers_recorded()
+    actual = Golden.modifiers_run()
+
+    assert length(actual) == length(expected)
+
+    mismatches =
+      expected
+      |> Enum.zip(actual)
+      |> Enum.reject(fn {e, a} -> e == a end)
+
+    assert mismatches == [],
+           "#{length(mismatches)} of #{length(expected)} cases differ; first ones:\n" <>
+             (mismatches
+              |> Enum.take(10)
+              |> Enum.map_join("\n", fn {e, a} -> "  recorded: #{e}\n  now:      #{a}" end))
+  end
 end

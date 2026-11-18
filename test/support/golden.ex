@@ -47,6 +47,63 @@ defmodule ExDiceRoller.Golden do
 
   def results_path, do: @results_path
 
+  # Dice modifiers postdate the original corpus, so they have their own
+  # recording, made on 2026-11-18 before the plain and modified dice paths in
+  # `ExDiceRoller.Compilers.Roll` were merged. It covers every combination of
+  # these counts, sides, modifiers, options and variable values.
+  @modifiers_path Path.join(@dir, "modifiers.tsv")
+  @counts ["0", "1", "2.4", "4", "10", "x"]
+  @sides ["0", "1", "2", "6", "20", "y"]
+  @modifiers [
+    "",
+    "kh3",
+    "kl",
+    "dh1",
+    "dl2",
+    "r1",
+    "ro<3",
+    "!",
+    "r1!",
+    "kh2dl1",
+    "r>4",
+    "!kh1",
+    "r<6"
+  ]
+  @modifier_opts [[], [opts: :keep], [opts: :explode], [opts: [:keep, :explode]]]
+  @modifier_vars [[x: 3, y: 4], [x: [1, 2], y: [2, 6]], [x: 0.5, y: 1]]
+
+  def modifiers_path, do: @modifiers_path
+
+  @spec modifiers_recorded() :: [String.t()]
+  def modifiers_recorded do
+    @modifiers_path |> File.read!() |> String.split("\n", trim: true)
+  end
+
+  @doc """
+  Runs the modifier corpus and returns one line per case: the case, the
+  result or error, and a hash of the random number state afterwards, which
+  changes if a die is drawn more or fewer times.
+  """
+  @spec modifiers_run() :: [String.t()]
+  def modifiers_run do
+    for c <- @counts,
+        s <- @sides,
+        {m, k} <- Enum.with_index(@modifiers),
+        {o, j} <- Enum.with_index(@modifier_opts),
+        {v, i} <- Enum.with_index(@modifier_vars) do
+      expr = c <> "d" <> s <> m
+      :rand.seed(:exsss, {k, j, i})
+
+      result =
+        case ExDiceRoller.roll(expr, v ++ o) do
+          {:ok, val} -> inspect(val, limit: :infinity)
+          {:error, e} -> "ERROR #{e.reason}: #{e.message}"
+        end
+
+      Enum.join([expr, "#{j}/#{i}", result, :erlang.phash2(:rand.export_seed())], "\t")
+    end
+  end
+
   @spec expressions() :: [String.t()]
   def expressions do
     {exprs, _} = Code.eval_file(@expressions_path)
