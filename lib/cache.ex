@@ -47,11 +47,17 @@ defmodule ExDiceRoller.Cache do
   @spec start_link() :: {:ok, atom}
   def start_link, do: start_link(@cache_table)
 
-  @doc "Starts the caching system, using `name` for the cache table."
+  @doc """
+  Starts the caching system, using `name` for the cache table. Calling it again
+  while the table exists is a no-op.
+  """
   @spec start_link(atom) :: {:ok, atom}
   def start_link(name) do
-    opts = [:public, :set, :named_table, {:read_concurrency, true}]
-    _ = :ets.new(name, opts)
+    if :ets.whereis(name) == :undefined do
+      opts = [:public, :set, :named_table, {:read_concurrency, true}]
+      _ = :ets.new(name, opts)
+    end
+
     {:ok, name}
   end
 
@@ -64,7 +70,7 @@ defmodule ExDiceRoller.Cache do
   the roll is not yet cached, it will be compiled, cached, and the compiled
   function returned.
   """
-  @spec obtain(atom | none, roll_string) :: roll_fun
+  @spec obtain(atom | none, roll_string) :: roll_fun | {:error, any}
   def obtain(cache \\ @cache_table, roll_string) do
     case get(cache, roll_string) do
       {:ok, fun} ->

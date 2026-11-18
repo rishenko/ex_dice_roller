@@ -39,15 +39,18 @@ defmodule ExDiceRoller.Compilers.Math do
     {~c"^", &:math.pow/2, "exp"}
   ]
 
-  @doc "Function used for modulo calculations. Only accepts integer values."
-  @spec modulo(integer, integer) :: integer
+  @doc """
+  Function used for modulo calculations. Accepts integers and floats with a
+  whole-number value, such as the result of `6/2`; other floats raise.
+  """
+  @spec modulo(number, number) :: integer
 
   # `r == 0` matches 0, 0.0 and -0.0 on every OTP release (OTP 27 no longer
   # matches -0.0 against a 0.0 pattern)
   def modulo(_, r) when r == 0, do: raise(ArgumentError, "the divisor cannot be 0")
 
-  def modulo(l, r) when is_integer(l) and is_integer(r) do
-    rem(Compiler.round_val(l), Compiler.round_val(r))
+  def modulo(l, r) when is_number(l) and is_number(r) and l == trunc(l) and r == trunc(r) do
+    rem(trunc(l), trunc(r))
   end
 
   def modulo(_, _), do: raise(ArgumentError, "modulo operator only accepts integer values")

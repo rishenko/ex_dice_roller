@@ -3,12 +3,10 @@ defmodule ExDiceRoller.Args do
 
   alias ExDiceRoller.Filters
 
+  @doc "True when caching is requested as `cache: true` or as `opts: [:cache]`."
   @spec use_cache?(Keyword.t()) :: boolean
   def use_cache?(args) do
-    case Keyword.get(args, :cache, false) do
-      true -> true
-      _ -> false
-    end
+    Keyword.get(args, :cache) == true or :cache in List.wrap(Keyword.get(args, :opts, []))
   end
 
   @doc """

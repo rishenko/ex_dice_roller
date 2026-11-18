@@ -52,13 +52,13 @@ defmodule ExDiceRoller.Tokenizer do
         {:int, 1, ~c"3"}
       ]}
   """
-  @spec tokenize(String.t()) :: {:ok, tokens}
+  @spec tokenize(String.t()) :: {:ok, tokens} | {:error, {:tokenizing_failed, any}}
   def tokenize(roll_string) do
     with charlist <- String.to_charlist(roll_string),
          {:ok, tokens, _} <- :dice_lexer.string(charlist) do
       {:ok, tokens}
     else
-      {:error, {1, :dice_lexer, reason}, 1} ->
+      {:error, {_line, :dice_lexer, reason}, _end_line} ->
         {:error, {:tokenizing_failed, reason}}
     end
   end

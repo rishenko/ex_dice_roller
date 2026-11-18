@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+* Bug fixes
+  * Dice counts that round to 0 roll no dice. `(1/3)d6` used to roll 2 dice,
+    because `1..0` counts down. The same goes for `0.0` and for 0 or negative
+    counts inside variable lists, which are now checked per element.
+  * Side counts that round to 0 give 0 instead of crashing in `:rand`.
+  * With `:keep`, zero dice return `[]`, and N zero-sided dice return N zeros
+    (one entry per die).
+  * Adding or comparing two empty lists returns `[]` instead of raising
+    `ArithmeticError`. List pairing also uses `Enum.zip_with/3` now, so it is
+    no longer O(n²).
+  * Tokenizer errors after the first line of input are returned as
+    `{:error, {:tokenizing_failed, _}}` instead of raising `WithClauseError`.
+  * `roll/2` with `cache: true` returns the parse error for an invalid
+    expression instead of raising `FunctionClauseError`.
+  * `opts: [:cache]`, as shown in the docs, now uses the cache (before, only
+    `cache: true` did).
+  * An invalid expression in a variable value, or in the `~a` sigil, raises an
+    `ArgumentError` that names the expression, instead of a `MatchError`.
+  * `%` accepts floats with whole-number values, such as the result of `6/2`.
+  * Calling `start_cache/1` again while the table exists is a no-op instead of
+    raising.
+
 * Build and tooling
   * Requires Elixir 1.15+ (tested on 1.15 to 1.18, OTP 26 and 27).
   * Updated dev/test dependencies (credo 1.7, ex_doc 0.34, excoveralls 0.18);

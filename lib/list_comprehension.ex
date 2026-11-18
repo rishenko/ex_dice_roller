@@ -87,7 +87,7 @@ defmodule ExDiceRoller.ListComprehension do
   end
 
   def apply(l, r, args, _, fun) when is_list(l) and is_list(r) do
-    Enum.map(0..(length(l) - 1), &fun.(Enum.at(l, &1), Enum.at(r, &1), args))
+    Enum.zip_with(l, r, &fun.(&1, &2, args))
   end
 
   def apply(l, r, args, err_name, fun) when is_list(l) do

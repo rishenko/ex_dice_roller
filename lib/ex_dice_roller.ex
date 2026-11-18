@@ -291,9 +291,10 @@ defmodule ExDiceRoller do
         end
 
       true ->
-        @cache_table
-        |> Cache.obtain(roll_string)
-        |> execute(args)
+        case Cache.obtain(@cache_table, roll_string) do
+          {:error, _} = err -> err
+          fun -> execute(fun, args)
+        end
     end
   end
 

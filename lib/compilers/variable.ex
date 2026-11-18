@@ -65,10 +65,15 @@ defmodule ExDiceRoller.Compilers.Variable do
   defp var_final_arg(val, _, args) when is_function(val), do: val.(args)
 
   defp var_final_arg(val, var, args) when is_bitstring(val) do
-    {:ok, tokens} = Tokenizer.tokenize(val)
-    {:ok, parsed} = Parser.parse(tokens)
-    compiled_arg = Compiler.delegate(parsed)
-    var_final_arg(compiled_arg, var, args)
+    with {:ok, tokens} <- Tokenizer.tokenize(val),
+         {:ok, parsed} <- Parser.parse(tokens) do
+      compiled_arg = Compiler.delegate(parsed)
+      var_final_arg(compiled_arg, var, args)
+    else
+      {:error, reason} ->
+        raise ArgumentError,
+              "invalid expression #{inspect(val)} for variable '#{var}': #{inspect(reason)}"
+    end
   end
 
   defp var_final_arg(val, var, args) when is_list(val) do

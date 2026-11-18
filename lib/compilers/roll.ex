@@ -106,35 +106,37 @@ defmodule ExDiceRoller.Compilers.Roll do
     do: fn args -> roll_prep(num, sides, args) end
 
   @spec roll_prep(Compiler.calculated_val(), Compiler.calculated_val(), list(atom | tuple)) ::
-          integer
+          Compiler.calculated_val()
+  defp roll_prep(num, sides, args) do
+    keep? = Args.has_option?(args, :keep)
+    explode? = Args.has_option?(args, :explode)
 
-  defp roll_prep(0, _, _), do: 0
-  defp roll_prep(_, 0, _), do: 0
+    ListComprehension.flattened_apply(num, sides, explode?, fn n, s, e? ->
+      roll_dice(n, s, e?, keep?)
+    end)
+  end
 
-  defp roll_prep(n, s, _) when n < 0 or s < 0 do
+  # Rolls `n` dice with `s` sides. The checks run on each die group, after
+  # list expansion, so they also cover values from variables and kept rolls.
+  @spec roll_dice(number, number, boolean, boolean) :: integer | list(integer)
+  defp roll_dice(n, s, _, _) when n < 0 or s < 0 do
     raise(ArgumentError, "neither number of dice nor number of sides can be less than 0")
   end
 
-  defp roll_prep(num, sides, args) do
-    num = Compiler.round_val(num)
-    sides = Compiler.round_val(sides)
+  defp roll_dice(n, s, e?, keep?) do
+    n = Compiler.round_val(n)
+    s = Compiler.round_val(s)
 
-    fun =
-      case Args.has_option?(args, :keep) do
-        true -> keep_roll()
-        false -> normal_roll()
-      end
-
-    explode? = Args.has_option?(args, :explode)
-    ListComprehension.flattened_apply(num, sides, explode?, fun)
-  end
-
-  defp keep_roll do
-    fn n, s, e? -> Enum.map(1..n, fn _ -> roll(s, e?) end) end
-  end
-
-  defp normal_roll do
-    fn n, s, e? -> Enum.reduce(1..n, 0, fn _, acc -> acc + roll(s, e?) end) end
+    cond do
+      # no dice rolled (including counts that round down to 0)
+      n == 0 and keep? -> []
+      n == 0 -> 0
+      # zero-sided dice always show 0
+      s == 0 and keep? -> List.duplicate(0, n)
+      s == 0 -> 0
+      keep? -> Enum.map(1..n, fn _ -> roll(s, e?) end)
+      true -> Enum.reduce(1..n, 0, fn _, acc -> acc + roll(s, e?) end)
+    end
   end
 
   @spec roll(integer, boolean) :: integer

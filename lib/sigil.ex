@@ -41,6 +41,8 @@ defmodule ExDiceRoller.Sigil do
 
   """
 
+  alias ExDiceRoller.Compiler
+
   @spec sigil_a(String.t(), charlist) :: Compiler.compiled_val()
 
   def sigil_a(roll_string, opts) do
@@ -48,7 +50,7 @@ defmodule ExDiceRoller.Sigil do
 
     case translate_opts(binary_opts, []) do
       {:ok, translated_opts} ->
-        {:ok, fun} = ExDiceRoller.compile(roll_string)
+        fun = compile!(roll_string)
 
         case translated_opts do
           [] -> fun
@@ -57,6 +59,17 @@ defmodule ExDiceRoller.Sigil do
 
       {:error, reason} ->
         {:error, {:invalid_option, reason}}
+    end
+  end
+
+  @spec compile!(String.t()) :: Compiler.compiled_fun()
+  defp compile!(roll_string) do
+    case ExDiceRoller.compile(roll_string) do
+      {:ok, fun} ->
+        fun
+
+      {:error, reason} ->
+        raise ArgumentError, "invalid dice expression #{inspect(roll_string)}: #{inspect(reason)}"
     end
   end
 
