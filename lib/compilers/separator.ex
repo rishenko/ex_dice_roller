@@ -10,17 +10,17 @@ defmodule ExDiceRoller.Compilers.Separator do
 
   Examples:
 
-      iex> ExDiceRoller.roll("1,2")
+      iex> ExDiceRoller.roll!("1,2")
       2
-      iex> ExDiceRoller.roll("1,1")
+      iex> ExDiceRoller.roll!("1,1")
       1
-      iex> ExDiceRoller.roll("1,2", opts: [:highest])
+      iex> ExDiceRoller.roll!("1,2", opts: [:highest])
       2
-      iex> ExDiceRoller.roll("1,2", opts: [:lowest])
+      iex> ExDiceRoller.roll!("1,2", opts: [:lowest])
       1
-      iex> ExDiceRoller.roll("1d6+2,10d8+3", opts: [:highest])
+      iex> ExDiceRoller.roll!("1d6+2,10d8+3", opts: [:highest])
       49
-      iex> ExDiceRoller.roll("1d6+8,10d8+5", opts: [:lowest])
+      iex> ExDiceRoller.roll!("1d6+8,10d8+5", opts: [:lowest])
       14
 
 
@@ -29,9 +29,9 @@ defmodule ExDiceRoller.Compilers.Separator do
 
   Examples:
 
-      iex> ExDiceRoller.roll("(5d1,2d1)+5", opts: [:highest])
+      iex> ExDiceRoller.roll!("(5d1,2d1)+5", opts: [:highest])
       10
-      iex> ExDiceRoller.roll("(5d1,2d1)+5", opts: [:lowest])
+      iex> ExDiceRoller.roll!("(5d1,2d1)+5", opts: [:lowest])
       7
 
   ## Separator Use And Keeping Dice
@@ -45,26 +45,26 @@ defmodule ExDiceRoller.Compilers.Separator do
   values from both lists by index location.
 
 
-      iex> ExDiceRoller.roll("5d6,5d100", opts: [:keep, :lowest])
+      iex> ExDiceRoller.roll!("5d6,5d100", opts: [:keep, :lowest])
       [2, 2, 6, 4, 5]
-      iex> ExDiceRoller.roll("5d6,5d100", opts: [:keep, :highest])
+      iex> ExDiceRoller.roll!("5d6,5d100", opts: [:keep, :highest])
       [47, 6, 49, 91, 54]
 
-      iex> ExDiceRoller.roll("(5d2,5d6)+5", opts: [:highest, :keep])
+      iex> ExDiceRoller.roll!("(5d2,5d6)+5", opts: [:highest, :keep])
       [7, 9, 9, 11, 6]
-      iex> ExDiceRoller.roll("(5d1,5d100)+5", opts: [:lowest, :keep])
+      iex> ExDiceRoller.roll!("(5d1,5d100)+5", opts: [:lowest, :keep])
       [6, 6, 6, 6, 6]
 
-      iex> ExDiceRoller.roll("5d6, 3", opts: [:keep])
+      iex> ExDiceRoller.roll!("5d6, 3", opts: [:keep])
       [3, 3, 6, 4, 5]
-      iex> ExDiceRoller.roll("3, 5d6", opts: [:keep])
+      iex> ExDiceRoller.roll!("3, 5d6", opts: [:keep])
       [3, 4, 4, 6, 3]
 
-      iex> ExDiceRoller.roll("4, xd5", x: ["1d4", 2.5], opts: [:keep])
+      iex> ExDiceRoller.roll!("4, xd5", x: ["1d4", 2.5], opts: [:keep])
       [5, 4, 4, 4]
 
-      iex> ExDiceRoller.roll("2d4, 1d8", opts: [:keep])
-      ** (ArgumentError) cannot use separator on lists of differing lengths
+      iex> ExDiceRoller.roll!("2d4, 1d8", opts: [:keep])
+      ** (ExDiceRoller.Error) cannot use separator on lists of differing lengths
   """
 
   @behaviour ExDiceRoller.Compiler

@@ -29,20 +29,20 @@ defmodule ExDiceRoller.ListComprehension do
 
   Example with lists of differing lengths:
 
-      iex> ExDiceRoller.roll("5d6+6d6", opts: [:keep])
-      ** (ArgumentError) cannot use math operators on lists of differing lengths
+      iex> ExDiceRoller.roll!("5d6+6d6", opts: [:keep])
+      ** (ExDiceRoller.Error) cannot use math operators on lists of differing lengths
 
   Example of dice rolls of dice rolls:
 
-      iex> ExDiceRoller.roll("1d1d4", opts: [:keep])
+      iex> ExDiceRoller.roll!("1d1d4", opts: [:keep])
       [4]
-      iex> ExDiceRoller.roll("2d1d4", opts: [:keep])
+      iex> ExDiceRoller.roll!("2d1d4", opts: [:keep])
       [3, 2]
-      iex> ExDiceRoller.roll("2d6d4", opts: [:keep])
+      iex> ExDiceRoller.roll!("2d6d4", opts: [:keep])
       [2, 3, 2, 4, 4, 4, 3, 3]
   """
 
-  alias ExDiceRoller.Compiler
+  alias ExDiceRoller.{Compiler, Error}
 
   @type left :: Compiler.compiled_val() | list(Compiler.compiled_val())
   @type right :: Compiler.compiled_val() | list(Compiler.compiled_val())
@@ -83,7 +83,9 @@ defmodule ExDiceRoller.ListComprehension do
   @spec apply(left, right, any, String.t(), function) :: return_val
 
   def apply(l, r, _, err_name, _) when is_list(l) and is_list(r) and length(l) != length(r) do
-    raise ArgumentError, "cannot use #{err_name} on lists of differing lengths"
+    raise Error,
+      reason: :list_length_mismatch,
+      message: "cannot use #{err_name} on lists of differing lengths"
   end
 
   def apply(l, r, args, _, fun) when is_list(l) and is_list(r) do

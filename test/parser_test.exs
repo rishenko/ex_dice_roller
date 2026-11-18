@@ -89,7 +89,7 @@ defmodule ExDiceRoller.ParserTest do
     end
 
     test "parsing error" do
-      assert {:error, {:token_parsing_failed, _}} =
+      assert {:error, %ExDiceRoller.Error{reason: :token_parsing_failed, details: _}} =
                Parser.parse([
                  {{:basic_operator, 1, ~c"%"}, {:int, 1, ~c"1"}, {:int, 1, ~c"3"}}
                ])

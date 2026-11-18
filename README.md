@@ -71,59 +71,75 @@ config :ex_dice_roller,
 
 ## General Usage
 
+`ExDiceRoller.roll/2` returns `{:ok, result}`, or
+`{:error, %ExDiceRoller.Error{}}` when the expression is invalid or the roll
+fails. `ExDiceRoller.roll!/2` returns the bare result and raises
+`ExDiceRoller.Error` instead. The examples below use `roll!/2`.
+
+```elixir
+iex> ExDiceRoller.roll("1+2")
+#=> {:ok, 3}
+
+iex> ExDiceRoller.roll("1/0")
+#=> {:error, %ExDiceRoller.Error{reason: :divide_by_zero, message: "the divisor cannot be 0", ...}}
+
+iex> ExDiceRoller.roll!("1/0")
+#=> ** (ExDiceRoller.Error) the divisor cannot be 0
+```
+
 ExDiceRoller supports a variety of possible dice roll permutations that can be
 used in your application.
 
 ```elixir
-iex> ExDiceRoller.roll("1+2")
+iex> ExDiceRoller.roll!("1+2")
 #=> 3
 
 # roll the dice
-iex> ExDiceRoller.roll("1d6")
+iex> ExDiceRoller.roll!("1d6")
 #=> 1
 
 # rolls of rolls
-iex> ExDiceRoller.roll("1d4d6")    
+iex> ExDiceRoller.roll!("1d4d6")    
 #=> 10
 
 # complex expressions
-iex> ExDiceRoller.roll("(1d4+2)d((5*6)d20-5)") 
+iex> ExDiceRoller.roll!("(1d4+2)d((5*6)d20-5)") 
 #=> 566
 
 # using variables - variable values can be numbers, string dice roll
 # expressions, compiled dice roll functions, or lists of any of those
-iex> ExDiceRoller.roll("1dx+y", [x: 20, y: 13])    
+iex> ExDiceRoller.roll!("1dx+y", [x: 20, y: 13])    
 #=> 16
 
-iex> ExDiceRoller.roll("1dx+y", [x: 20, y: "1d6+8"])    
+iex> ExDiceRoller.roll!("1dx+y", [x: 20, y: "1d6+8"])    
 #=> 15
 
-iex> ExDiceRoller.roll("1dx+y", [x: [4, 6, 8], y: 13])    
+iex> ExDiceRoller.roll!("1dx+y", [x: [4, 6, 8], y: 13])    
 #=> [15, 17, 19]
 
 iex> import ExDiceRoller.Sigil
 #=> ExDiceRoller.Sigil
-iex> ExDiceRoller.roll("1dx+y", [x: ~a/2d10/, y: "1d6+8"])
+iex> ExDiceRoller.roll!("1dx+y", [x: ~a/2d10/, y: "1d6+8"])
 #=> 18
 
 # save each die roll
-iex> ExDiceRoller.roll("3d8", opts: :keep)
+iex> ExDiceRoller.roll!("3d8", opts: :keep)
 #=> [3, 3, 4]
 
 # save each die roll, adding each die's counterpart to the other
-iex> ExDiceRoller.roll("5d1+5d10", opts: :keep)    
+iex> ExDiceRoller.roll!("5d1+5d10", opts: :keep)    
 #=> [3, 5, 7, 7, 2]
 
 # exploding dice
-iex> ExDiceRoller.roll("1d6", opts: [:explode])
+iex> ExDiceRoller.roll!("1d6", opts: [:explode])
 #=> 9
 
 # combine various options
-iex> ExDiceRoller.roll("5d1+5d10", opts: [:keep, :explode])
+iex> ExDiceRoller.roll!("5d1+5d10", opts: [:keep, :explode])
 #=> [7, 3, 2, 4, 10]
 
 # filter final values before returning them
-iex> ExDiceRoller.roll("8d6", <=: 3, opts: :keep)
+iex> ExDiceRoller.roll!("8d6", <=: 3, opts: :keep)
 #=> [2, 3, 2]
 ```
 
@@ -137,7 +153,7 @@ being randomized and calculated for each call.
 iex> {:ok, roll_fun} = ExDiceRoller.compile("1d6 - (3d10)d5 + (1d50)/5")
 #=> {:ok, #Function<1.86580672/2 in ExDiceRoller.Compiler.build_final_function/1>}
 
-iex> ExDiceRoller.execute(roll_fun)
+iex> ExDiceRoller.execute!(roll_fun)
 #=> -16
 
 iex> roll_fun.([])
@@ -146,13 +162,13 @@ iex> roll_fun.([])
 iex> {:ok, roll_fun} = ExDiceRoller.compile("1dx+10")
 #=> {:ok, #Function<8.36233920/1 in ExDiceRoller.Compiler.build_final_function/1>}
 
-iex> ExDiceRoller.execute(roll_fun, [x: 5])
+iex> ExDiceRoller.execute!(roll_fun, [x: 5])
 #=> 12
 
-iex> ExDiceRoller.execute(roll_fun, x: "10d100")
+iex> ExDiceRoller.execute!(roll_fun, x: "10d100")
 #=> 523
 
-iex> ExDiceRoller.execute(roll_fun, x: "10d100", opts: :keep)
+iex> ExDiceRoller.execute!(roll_fun, x: "10d100", opts: :keep)
 #=> [11, 11, 16, 25, 27, 16, 55, 24, 50, 12]
 ```
 
@@ -170,7 +186,7 @@ iex> fun = ~a/1d6+3/
 #=> #Function<1.86580672/2 in ExDiceRoller.Compiler.build_final_function/1>
 
 # the function can then be executed as any other ExDiceRoller.compile/1
-iex> ExDiceRoller.execute(fun)
+iex> ExDiceRoller.execute!(fun)
 #=> 6
 
 # compiles the roll and invokes it
@@ -182,7 +198,7 @@ iex> ~a/1d2+2/re
 #=> 9
 
 # rolling a compiled function
-iex> ExDiceRoller.roll(~a/2d8-2/)
+iex> ExDiceRoller.roll!(~a/2d8-2/)
 #=> 3
 
 # keeping dice rolls and adding 5 to each
@@ -200,19 +216,19 @@ iex> ~a/5d1+5d10/k
 iex> ExDiceRoller.start_cache()
 #=> {:ok, ExDiceRoller.Cache}
 
-iex> ExDiceRoller.roll("xdy-2d4", [x: 10, y: 5, cache: true])
+iex> ExDiceRoller.roll!("xdy-2d4", [x: 10, y: 5, cache: true])
 #=> 34
 
 iex> ExDiceRoller.Cache.all()
 #=> [{"xdy-2d4", #Function<1.86580672/2 in ExDiceRoller.Compiler.build_final_function/1>}]
 
-iex> ExDiceRoller.roll("xdy-2d4", [x: 10, y: "2d6", cache: true])
+iex> ExDiceRoller.roll!("xdy-2d4", [x: 10, y: "2d6", cache: true])
 #=> 29
 
 iex> ExDiceRoller.Cache.all()
 #=> [{"xdy-2d4", #Function<1.86580672/2 in ExDiceRoller.Compiler.build_final_function/1>}]
 
-iex> ExDiceRoller.roll("1d6+3d4", cache: true)
+iex> ExDiceRoller.roll!("1d6+3d4", cache: true)
 #=> 10
 
 iex> ExDiceRoller.Cache.all()

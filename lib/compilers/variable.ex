@@ -22,25 +22,25 @@ defmodule ExDiceRoller.Compilers.Variable do
 
       iex> import ExDiceRoller.Sigil
       ExDiceRoller.Sigil
-      iex> ExDiceRoller.roll(~a/1+x/, [x: 5])
+      iex> ExDiceRoller.roll!(~a/1+x/, [x: 5])
       6
-      iex> ExDiceRoller.roll("xdy+z", x: 5, y: 10, z: 50)
+      iex> ExDiceRoller.roll!("xdy+z", x: 5, y: 10, z: 50)
       82
-      iex> ExDiceRoller.roll("xdy+z", [x: 5, y: 10, z: ~a/15d100/])
+      iex> ExDiceRoller.roll!("xdy+z", [x: 5, y: 10, z: ~a/15d100/])
       739
-      iex> ExDiceRoller.roll("xdy+z", x: [1, 2, 3], y: 1, z: 5, opts: [:keep])
+      iex> ExDiceRoller.roll!("xdy+z", x: [1, 2, 3], y: 1, z: 5, opts: [:keep])
       [6, 6, 6, 6, 6, 6]
-      iex> ExDiceRoller.roll("xdy+z", [x: 1, y: [1, 10, 100], z: -6, opts: [:keep]])
+      iex> ExDiceRoller.roll!("xdy+z", [x: 1, y: [1, 10, 100], z: -6, opts: [:keep]])
       [-5, -4, 66]
-      iex> ExDiceRoller.roll("xdy+z", x: [~a/1d2/, "1d4+1"], y: ["3,4d20/2", ~a/1d6/], z: 2, opts: [:keep])
+      iex> ExDiceRoller.roll!("xdy+z", x: [~a/1d2/, "1d4+1"], y: ["3,4d20/2", ~a/1d6/], z: 2, opts: [:keep])
       [8, 8, 3, 3, 3, 10, 4, 7, 6, 3, 5, 4, 4, 4, 3]
 
-      iex> ExDiceRoller.roll("1+x")
-      ** (ArgumentError) no variable 'x' was found in the arguments
+      iex> ExDiceRoller.roll!("1+x")
+      ** (ExDiceRoller.Error) no variable 'x' was found in the arguments
   """
 
   @behaviour ExDiceRoller.Compiler
-  alias ExDiceRoller.{Args, Compiler, Tokenizer, Parser}
+  alias ExDiceRoller.{Args, Compiler, Error, Parser, Tokenizer}
 
   @impl true
   def compile({:var, _} = var), do: compile_var(var)
@@ -58,8 +58,12 @@ defmodule ExDiceRoller.Compilers.Variable do
   end
 
   @spec var_final_arg(any, charlist, Keyword.t()) :: number
-  defp var_final_arg(nil, var, _),
-    do: raise(ArgumentError, "no variable '#{var}' was found in the arguments")
+  defp var_final_arg(nil, var, _) do
+    raise Error,
+      reason: :missing_variable,
+      details: List.to_atom(var),
+      message: "no variable '#{var}' was found in the arguments"
+  end
 
   defp var_final_arg(val, _, _) when is_number(val), do: val
   defp var_final_arg(val, _, args) when is_function(val), do: val.(args)
@@ -70,9 +74,12 @@ defmodule ExDiceRoller.Compilers.Variable do
       compiled_arg = Compiler.delegate(parsed)
       var_final_arg(compiled_arg, var, args)
     else
-      {:error, reason} ->
-        raise ArgumentError,
-              "invalid expression #{inspect(val)} for variable '#{var}': #{inspect(reason)}"
+      {:error, %Error{} = err} ->
+        raise Error,
+          reason: :invalid_variable,
+          details: {List.to_atom(var), err},
+          message:
+            "invalid expression #{inspect(val)} for variable '#{var}': #{Exception.message(err)}"
     end
   end
 

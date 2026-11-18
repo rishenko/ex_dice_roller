@@ -17,6 +17,14 @@ defmodule ExDiceRoller.Golden do
   from ExDiceRoller itself, so they are kept; other messages come from Elixir
   or OTP internals and vary between versions, so they are dropped.
 
+  The results were recorded from the 1.x API, where `roll/2` returned bare
+  values, returned `{:error, {:tokenizing_failed | :token_parsing_failed, _}}`
+  for bad syntax, and raised `ArgumentError` for failed rolls. Since 2.0,
+  `roll/2` returns `{:ok, _}` or `{:error, %ExDiceRoller.Error{}}`, so
+  `to_1x/1` converts each 2.0 result back into its 1.x form before rendering.
+  That keeps the recording comparable: only the shape of the return value
+  changed, and any difference in values or error messages still shows up.
+
   To re-record after an intentional behavior change, run
   `MIX_ENV=test mix run test/golden/record.exs` and review the diff.
   """
@@ -60,13 +68,25 @@ defmodule ExDiceRoller.Golden do
         {opts, j} <- Enum.with_index(@option_sets) do
       args = @vars ++ opts
       :rand.seed(:exsss, {i, j, 7})
-      direct = render(fn -> ExDiceRoller.roll(expr, args) end)
+      direct = render(fn -> to_1x(ExDiceRoller.roll(expr, args)) end)
       :rand.seed(:exsss, {i, j, 7})
-      cached = render(fn -> ExDiceRoller.roll(expr, args ++ [cache: true]) end)
+      cached = render(fn -> to_1x(ExDiceRoller.roll(expr, args ++ [cache: true])) end)
       compiled = render(fn -> expr |> ExDiceRoller.compile() |> elem(0) end)
       Enum.join(["#{i}/#{j}", inspect(expr), direct, cached, compiled], "\t")
     end
   end
+
+  @parse_reasons [:tokenizing_failed, :token_parsing_failed]
+
+  @spec to_1x({:ok, any} | {:error, ExDiceRoller.Error.t()}) :: any
+  defp to_1x({:ok, value}), do: value
+
+  defp to_1x({:error, %ExDiceRoller.Error{reason: reason, details: details}})
+       when reason in @parse_reasons,
+       do: {:error, {reason, details}}
+
+  defp to_1x({:error, %ExDiceRoller.Error{reason: :arithmetic_error, details: e}}), do: raise(e)
+  defp to_1x({:error, %ExDiceRoller.Error{message: message}}), do: raise(ArgumentError, message)
 
   defp render(fun) do
     inspect(fun.(), limit: :infinity)

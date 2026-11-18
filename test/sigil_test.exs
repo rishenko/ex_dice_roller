@@ -15,13 +15,13 @@ defmodule ExDiceRoller.SigilTest do
     test "basic" do
       fun = ~a/1+1/
       assert is_function(fun)
-      assert 2 == ExDiceRoller.execute(fun)
+      assert 2 == ExDiceRoller.execute!(fun)
     end
 
     test "rolls" do
       fun = ~a/1d20/
       assert is_function(fun)
-      assert 9 == ExDiceRoller.execute(fun)
+      assert 9 == ExDiceRoller.execute!(fun)
     end
 
     test "keep" do
@@ -31,7 +31,7 @@ defmodule ExDiceRoller.SigilTest do
     test "choose highest/lowest" do
       fun = ~a/5d1,6d1/
       assert is_function(fun)
-      assert 6 == ExDiceRoller.execute(fun)
+      assert 6 == ExDiceRoller.execute!(fun)
       assert 6 == ~a/5d1,6d1/rh
       assert 5 == ~a/5d1,6d1/rl
       assert 5 == ~a/5d1,5d1/r
@@ -40,29 +40,29 @@ defmodule ExDiceRoller.SigilTest do
     test "complex" do
       fun = ~a|1d20+(2d4)d(3d10)/5|
       assert is_function(fun)
-      assert 17 == ExDiceRoller.execute(fun)
+      assert 17 == ExDiceRoller.execute!(fun)
     end
 
     test "variables" do
       fun = ~a/3d6+x-y/
       assert is_function(fun)
-      assert 14 == ExDiceRoller.execute(fun, x: 5, y: 2)
+      assert 14 == ExDiceRoller.execute!(fun, x: 5, y: 2)
     end
 
     test "errors when using variables but missing values" do
       fun = ~a/3d6+x-y/
       assert is_function(fun)
 
-      assert_raise(ArgumentError, "no variable 'x' was found in the arguments", fn ->
-        ExDiceRoller.execute(fun)
+      assert_raise(ExDiceRoller.Error, "no variable 'x' was found in the arguments", fn ->
+        ExDiceRoller.execute!(fun)
       end)
 
-      assert_raise(ArgumentError, "no variable 'y' was found in the arguments", fn ->
-        ExDiceRoller.execute(fun, x: 5)
+      assert_raise(ExDiceRoller.Error, "no variable 'y' was found in the arguments", fn ->
+        ExDiceRoller.execute!(fun, x: 5)
       end)
 
-      assert_raise(ArgumentError, "no variable 'x' was found in the arguments", fn ->
-        ExDiceRoller.execute(fun, y: 2)
+      assert_raise(ExDiceRoller.Error, "no variable 'x' was found in the arguments", fn ->
+        ExDiceRoller.execute!(fun, y: 2)
       end)
     end
   end
@@ -87,7 +87,7 @@ defmodule ExDiceRoller.SigilTest do
     end
 
     test "fails when using variables" do
-      assert_raise(ArgumentError, "no variable 'b' was found in the arguments", fn ->
+      assert_raise(ExDiceRoller.Error, "no variable 'b' was found in the arguments", fn ->
         ~a/1d4+b/r
       end)
     end

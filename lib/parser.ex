@@ -76,11 +76,14 @@ defmodule ExDiceRoller.Parser do
         {{:operator, ~c"+"}, 1, 2}}}
 
   """
-  @spec parse(Tokenizer.tokens()) :: {:ok, expression}
+  @spec parse(Tokenizer.tokens()) :: {:ok, expression} | {:error, ExDiceRoller.Error.t()}
   def parse(tokens) do
     case :dice_parser.parse(tokens) do
-      {:ok, _} = resp -> resp
-      {:error, {_, :dice_parser, reason}} -> {:error, {:token_parsing_failed, reason}}
+      {:ok, _} = resp ->
+        resp
+
+      {:error, {_, :dice_parser, reason}} ->
+        {:error, ExDiceRoller.Error.exception(reason: :token_parsing_failed, details: reason)}
     end
   end
 end

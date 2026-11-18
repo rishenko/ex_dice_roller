@@ -15,19 +15,19 @@ defmodule ExDiceRoller.Filters do
 
   Examples:
 
-      iex> ExDiceRoller.roll("1d4", >=: 5)
+      iex> ExDiceRoller.roll!("1d4", >=: 5)
       []
 
-      iex> ExDiceRoller.roll("6d6", <=: 4, opts: :keep)
+      iex> ExDiceRoller.roll!("6d6", <=: 4, opts: :keep)
       [3, 2, 4, 2]
 
-      iex> ExDiceRoller.roll("xd6", x: [1, 2, 3, 2], >=: 4, opts: :keep)
+      iex> ExDiceRoller.roll!("xd6", x: [1, 2, 3, 2], >=: 4, opts: :keep)
       [6, 4, 5, 4, 4]
 
-      iex> ExDiceRoller.roll("4d10", drop_highest: true, opts: :keep)
+      iex> ExDiceRoller.roll!("4d10", drop_highest: true, opts: :keep)
       [9, 6, 4]
 
-      iex> ExDiceRoller.roll("4d10", drop_highest_lowest: true, opts: :keep)
+      iex> ExDiceRoller.roll!("4d10", drop_highest_lowest: true, opts: :keep)
       [6, 9]
   """
 

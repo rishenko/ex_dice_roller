@@ -1,14 +1,37 @@
 # Changelog
 
-## Unreleased
+## Unreleased (2.0.0)
+
+* Breaking changes
+  * `roll/2`, `execute/2` and `calculate/2` return `{:ok, result}` or
+    `{:error, %ExDiceRoller.Error{}}`. Before, they returned the bare result,
+    returned `{:error, tuple}` for bad syntax, and raised `ArgumentError` for
+    failed rolls.
+  * New `roll!/2`, `execute!/2` and `compile!/1` return bare values and raise
+    `ExDiceRoller.Error`. To migrate, replace `roll(` with `roll!(` where you
+    want the old return value.
+  * Every error is an `ExDiceRoller.Error` exception with `:reason`,
+    `:details` and `:message` fields. Syntax errors move from
+    `{:error, {:tokenizing_failed, d}}` to
+    `{:error, %ExDiceRoller.Error{reason: :tokenizing_failed, details: d}}`
+    (likewise `:token_parsing_failed`, `:cannot_compile_roll`, and
+    `:invalid_roll_key` from `Cache.delete/2`). Error messages are unchanged.
+  * Compiled functions called directly (`fun.(args)`) and the `~a` sigil
+    raise `ExDiceRoller.Error` instead of `ArgumentError`.
+  * The `~a` sigil raises for an unknown flag instead of returning
+    `{:error, {:invalid_option, _}}`.
+  * `Cache.obtain/2` returns `{:ok, fun}` instead of the bare function.
+  * An `ArithmeticError` during a roll, such as a float overflow from `^`,
+    becomes `{:error, %ExDiceRoller.Error{reason: :arithmetic_error}}` from
+    `roll/2`.
+  * With `:keep`, N zero-sided dice return `[0]`.
 
 * Bug fixes
   * Dice counts that round to 0 roll no dice. `(1/3)d6` used to roll 2 dice,
     because `1..0` counts down. The same goes for `0.0` and for 0 or negative
     counts inside variable lists, which are now checked per element.
   * Side counts that round to 0 give 0 instead of crashing in `:rand`.
-  * With `:keep`, zero dice return `[]`, and N zero-sided dice return N zeros
-    (one entry per die).
+  * With `:keep`, zero dice return `[]` instead of `0`.
   * Adding or comparing two empty lists returns `[]` instead of raising
     `ArithmeticError`. List pairing also uses `Enum.zip_with/3` now, so it is
     no longer O(n²).
@@ -18,8 +41,8 @@
     expression instead of raising `FunctionClauseError`.
   * `opts: [:cache]`, as shown in the docs, now uses the cache (before, only
     `cache: true` did).
-  * An invalid expression in a variable value, or in the `~a` sigil, raises an
-    `ArgumentError` that names the expression, instead of a `MatchError`.
+  * An invalid expression in a variable value, or in the `~a` sigil, gives an
+    error that names the expression, instead of a `MatchError`.
   * `%` accepts floats with whole-number values, such as the result of `6/2`.
   * Calling `start_cache/1` again while the table exists is a no-op instead of
     raising.

@@ -83,7 +83,7 @@ defmodule ExDiceRoller.Compilers.Roll do
   """
 
   @behaviour ExDiceRoller.Compiler
-  alias ExDiceRoller.{Args, Compiler, ListComprehension}
+  alias ExDiceRoller.{Args, Compiler, Error, ListComprehension}
 
   @impl true
   def compile({:roll, left_expr, right_expr}) do
@@ -120,7 +120,9 @@ defmodule ExDiceRoller.Compilers.Roll do
   # list expansion, so they also cover values from variables and kept rolls.
   @spec roll_dice(number, number, boolean, boolean) :: integer | list(integer)
   defp roll_dice(n, s, _, _) when n < 0 or s < 0 do
-    raise(ArgumentError, "neither number of dice nor number of sides can be less than 0")
+    raise Error,
+      reason: :negative_dice,
+      message: "neither number of dice nor number of sides can be less than 0"
   end
 
   defp roll_dice(n, s, e?, keep?) do
@@ -131,8 +133,8 @@ defmodule ExDiceRoller.Compilers.Roll do
       # no dice rolled (including counts that round down to 0)
       n == 0 and keep? -> []
       n == 0 -> 0
-      # zero-sided dice always show 0
-      s == 0 and keep? -> List.duplicate(0, n)
+      # zero-sided dice always total 0; with keep, a single 0 stands for them
+      s == 0 and keep? -> [0]
       s == 0 -> 0
       keep? -> Enum.map(1..n, fn _ -> roll(s, e?) end)
       true -> Enum.reduce(1..n, 0, fn _, acc -> acc + roll(s, e?) end)

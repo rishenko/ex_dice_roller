@@ -96,6 +96,7 @@ defmodule ExDiceRoller.TokenizerTest do
   end
 
   test "errors" do
-    assert {:error, {:tokenizing_failed, {:illegal, ~c"$"}}} = Tokenizer.tokenize("1-3+$")
+    assert {:error, %ExDiceRoller.Error{reason: :tokenizing_failed, details: {:illegal, ~c"$"}}} =
+             Tokenizer.tokenize("1-3+$")
   end
 end

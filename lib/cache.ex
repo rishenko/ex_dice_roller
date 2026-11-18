@@ -21,16 +21,16 @@ defmodule ExDiceRoller.Cache do
       iex> ExDiceRoller.start_cache()
       iex> ExDiceRoller.Cache.all()
       []
-      iex> ExDiceRoller.roll("2d6+1d5", cache: true)
+      iex> ExDiceRoller.roll!("2d6+1d5", cache: true)
       9
       iex> [{"2d6+1d5", _}] = ExDiceRoller.Cache.all()
-      iex> ExDiceRoller.roll("2d6+1d5", cache: true)
+      iex> ExDiceRoller.roll!("2d6+1d5", cache: true)
       11
       iex> [{"2d6+1d5", _}] = ExDiceRoller.Cache.all()
-      iex> ExDiceRoller.roll("1d4+x", [x: 3, cache: true])
+      iex> ExDiceRoller.roll!("1d4+x", [x: 3, cache: true])
       7
       iex> [{"1d4+x", _}, {"2d6+1d5", _}] = ExDiceRoller.Cache.all()
-      iex> ExDiceRoller.roll("1d4+x", [x: 3, cache: true])
+      iex> ExDiceRoller.roll!("1d4+x", [x: 3, cache: true])
       7
   """
 
@@ -66,24 +66,20 @@ defmodule ExDiceRoller.Cache do
   def all(cache \\ @cache_table), do: :ets.tab2list(cache)
 
   @doc """
-  Looks up the roll in cache and returns its compiled function. Note that if
-  the roll is not yet cached, it will be compiled, cached, and the compiled
-  function returned.
+  Looks up the roll in cache and returns `{:ok, fun}`. If the roll is not yet
+  cached, it is compiled, cached, and returned. An invalid roll returns
+  `{:error, %ExDiceRoller.Error{}}` and is not cached.
   """
-  @spec obtain(atom | none, roll_string) :: roll_fun | {:error, any}
+  @spec obtain(atom | none, roll_string) :: {:ok, roll_fun} | {:error, ExDiceRoller.Error.t()}
   def obtain(cache \\ @cache_table, roll_string) do
     case get(cache, roll_string) do
-      {:ok, fun} ->
-        fun
+      {:ok, _fun} = found ->
+        found
 
-      {:error, :fun_not_found} ->
-        case ExDiceRoller.compile(roll_string) do
-          {:ok, fun} ->
-            :ok = put(cache, roll_string, fun)
-            fun
-
-          {:error, _} = err ->
-            err
+      :not_found ->
+        with {:ok, fun} <- ExDiceRoller.compile(roll_string) do
+          :ok = put(cache, roll_string, fun)
+          {:ok, fun}
         end
     end
   end
@@ -99,11 +95,11 @@ defmodule ExDiceRoller.Cache do
   end
 
   @doc """
-  Deletes the cache entry stored under `roll_string`. Note that if `roll_string`
-  is anything but a string, `{:error, {:invalid_roll_key, roll_string}}`
-  will be returned.
+  Deletes the cache entry stored under `roll_string`. If `roll_string` is
+  anything but a string, returns `{:error, %ExDiceRoller.Error{}}` with reason
+  `:invalid_roll_key`.
   """
-  @spec delete(atom | none, roll_string) :: :ok | {:error, {:invalid_roll_key, any}}
+  @spec delete(atom | none, roll_string) :: :ok | {:error, ExDiceRoller.Error.t()}
 
   def delete(cache \\ @cache_table, roll_string)
 
@@ -112,7 +108,8 @@ defmodule ExDiceRoller.Cache do
     :ok
   end
 
-  def delete(_, roll_string), do: {:error, {:invalid_roll_key, roll_string}}
+  def delete(_, roll_string),
+    do: {:error, ExDiceRoller.Error.exception(reason: :invalid_roll_key, details: roll_string)}
 
   @doc """
   Empties the specified cache.
@@ -123,11 +120,11 @@ defmodule ExDiceRoller.Cache do
     :ok
   end
 
-  @spec get(atom, String.t()) :: {:ok, roll_fun} | {:error, :fun_not_found}
+  @spec get(atom, String.t()) :: {:ok, roll_fun} | :not_found
   defp get(cache, string) do
     case :ets.lookup(cache, string) do
       [{_, fun}] -> {:ok, fun}
-      [] -> {:error, :fun_not_found}
+      [] -> :not_found
     end
   end
 end

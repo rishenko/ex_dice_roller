@@ -20,12 +20,12 @@ defmodule ExDiceRoller.CacheTest do
     roll_1 = "1d6"
     {:ok, fun_1} = ExDiceRoller.compile(roll_1)
     :ok = Cache.put(CacheTest, roll_1, fun_1)
-    ^fun_1 = Cache.obtain(CacheTest, roll_1)
+    {:ok, ^fun_1} = Cache.obtain(CacheTest, roll_1)
   end
 
   test "obtain" do
     {:ok, CacheTest} = Cache.start_link(CacheTest)
-    fun = Cache.obtain(CacheTest, "1d6")
+    {:ok, fun} = Cache.obtain(CacheTest, "1d6")
     assert is_function(fun)
   end
 
@@ -39,9 +39,9 @@ defmodule ExDiceRoller.CacheTest do
     {:ok, CacheTest} = Cache.start_link(CacheTest)
     roll_1 = "1d6"
     roll_2 = "1d8+10-5d8"
-    fun_1 = Cache.obtain(CacheTest, roll_1)
-    fun_2 = Cache.obtain(CacheTest, roll_2)
-    ^fun_1 = Cache.obtain(CacheTest, roll_1)
+    {:ok, fun_1} = Cache.obtain(CacheTest, roll_1)
+    {:ok, fun_2} = Cache.obtain(CacheTest, roll_2)
+    {:ok, ^fun_1} = Cache.obtain(CacheTest, roll_1)
 
     funs = Cache.all(CacheTest)
     assert length(funs) == 2
@@ -51,8 +51,8 @@ defmodule ExDiceRoller.CacheTest do
 
   test "clear" do
     {:ok, CacheTest} = Cache.start_link(CacheTest)
-    _ = Cache.obtain(CacheTest, "1d6")
-    _ = Cache.obtain(CacheTest, "1d8+10-5d8")
+    {:ok, _} = Cache.obtain(CacheTest, "1d6")
+    {:ok, _} = Cache.obtain(CacheTest, "1d8+10-5d8")
 
     assert 2 == CacheTest |> Cache.all() |> length()
     :ok = Cache.clear(CacheTest)
@@ -63,13 +63,13 @@ defmodule ExDiceRoller.CacheTest do
     {:ok, CacheTest} = Cache.start_link(CacheTest)
     roll_1 = "1d6"
     roll_2 = "1d4+110-5d8 + 1d4/5"
-    _ = Cache.obtain(CacheTest, roll_1)
-    _ = Cache.obtain(CacheTest, roll_2)
+    {:ok, _} = Cache.obtain(CacheTest, roll_1)
+    {:ok, _} = Cache.obtain(CacheTest, roll_2)
 
     assert 2 == CacheTest |> Cache.all() |> length()
     :ok = Cache.delete(CacheTest, roll_1)
     assert 1 == CacheTest |> Cache.all() |> length()
-    _ = Cache.obtain(CacheTest, roll_1)
+    {:ok, _} = Cache.obtain(CacheTest, roll_1)
     assert 2 == CacheTest |> Cache.all() |> length()
   end
 
@@ -77,20 +77,20 @@ defmodule ExDiceRoller.CacheTest do
     {:ok, Cache} = Cache.start_link()
     roll_1 = "1d6"
     roll_2 = "1d4+110-5d8 + 1d4/5"
-    _ = Cache.obtain(roll_1)
-    _ = Cache.obtain(roll_2)
+    {:ok, _} = Cache.obtain(roll_1)
+    {:ok, _} = Cache.obtain(roll_2)
 
     assert 2 == Cache.all() |> length()
     :ok = Cache.delete(roll_1)
     assert 1 == Cache.all() |> length()
-    _ = Cache.obtain(roll_1)
+    {:ok, _} = Cache.obtain(roll_1)
     assert 2 == Cache.all() |> length()
   end
 
   test "delete errors with bad rollstring" do
     {:ok, CacheTest} = Cache.start_link(CacheTest)
 
-    {:error, {:invalid_roll_key, :not_a_roll_string}} =
+    {:error, %ExDiceRoller.Error{reason: :invalid_roll_key, details: :not_a_roll_string}} =
       Cache.delete(CacheTest, :not_a_roll_string)
   end
 end

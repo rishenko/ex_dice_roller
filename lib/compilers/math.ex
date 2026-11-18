@@ -26,7 +26,7 @@ defmodule ExDiceRoller.Compilers.Math do
   """
 
   @behaviour ExDiceRoller.Compiler
-  alias ExDiceRoller.{Compiler, ListComprehension}
+  alias ExDiceRoller.{Compiler, Error, ListComprehension}
 
   @err_name "math operators"
 
@@ -41,26 +41,35 @@ defmodule ExDiceRoller.Compilers.Math do
 
   @doc """
   Function used for modulo calculations. Accepts integers and floats with a
-  whole-number value, such as the result of `6/2`; other floats raise.
+  whole-number value, such as the result of `6/2`; other floats raise
+  `ExDiceRoller.Error`.
   """
   @spec modulo(number, number) :: integer
 
   # `r == 0` matches 0, 0.0 and -0.0 on every OTP release (OTP 27 no longer
   # matches -0.0 against a 0.0 pattern)
-  def modulo(_, r) when r == 0, do: raise(ArgumentError, "the divisor cannot be 0")
+  def modulo(_, r) when r == 0,
+    do: raise(Error, reason: :divide_by_zero, message: "the divisor cannot be 0")
 
   def modulo(l, r) when is_number(l) and is_number(r) and l == trunc(l) and r == trunc(r) do
     rem(trunc(l), trunc(r))
   end
 
-  def modulo(_, _), do: raise(ArgumentError, "modulo operator only accepts integer values")
+  def modulo(_, _),
+    do:
+      raise(Error,
+        reason: :non_integer_modulo,
+        message: "modulo operator only accepts integer values"
+      )
 
   @doc "Function used for division calculations."
   @spec divide(Compiler.calculated_val(), Compiler.calculated_val()) :: float
 
   # `r == 0` matches 0, 0.0 and -0.0 on every OTP release (OTP 27 no longer
   # matches -0.0 against a 0.0 pattern)
-  def divide(_, r) when r == 0, do: raise(ArgumentError, "the divisor cannot be 0")
+  def divide(_, r) when r == 0,
+    do: raise(Error, reason: :divide_by_zero, message: "the divisor cannot be 0")
+
   def divide(l, r) when is_number(l) and is_number(r), do: l / r
 
   @impl true
