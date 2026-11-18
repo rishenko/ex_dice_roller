@@ -160,8 +160,8 @@ defmodule ExDiceRoller.Roller do
   defp gen(n, _ctx) when is_number(n), do: n
 
   defp gen({:var, var}, ctx) do
-    key = var |> to_string() |> String.to_atom()
-    quote do: Variable.__value__(unquote(var), unquote(key), unquote(ctx.args))
+    key = List.to_atom(var)
+    quote do: Variable.__value__(unquote(key), unquote(ctx.args))
   end
 
   # The left side is evaluated before the right, the order the compiled

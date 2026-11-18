@@ -64,7 +64,7 @@ compiled `1d20+5`, `execute!/2`             | ~140 ns
 compiled `4d6kh3`                           | ~640 ns
 `defroll` `4d6kh3`                          | ~600 ns
 compile `(1d4)d(6*y)-(2/3+1dx)+4d6kh3`      | ~2.8 µs
-run that expression, compiled               | ~1.5 µs
+run that expression, compiled               | ~1.4 µs
 run that expression, `defroll`              | ~1.0 µs
 run that expression, `roll(cache: true)`    | ~1.9 µs
 

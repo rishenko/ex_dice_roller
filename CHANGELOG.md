@@ -60,6 +60,10 @@
     random seed (tested over the golden corpus). `1d20+5` with no arguments
     takes ~40 ns (compiled function: ~115 ns); `1d20+x` with `x: 5` takes
     ~55 ns.
+  * Variable names are turned into argument keys when an expression
+    compiles, not on every roll: compiled `1d20+x` went from about 280 ns to
+    210 ns. `Compiler.fun_info/1` now shows a variable as an atom (`:x`)
+    instead of a charlist (`~c"x"`).
   * New performance guide (`guides/performance.md`) and benchmark script
     (`bench/rolls.exs`).
   * Dice modifiers in expressions, written right after a roll's sides:

@@ -49,29 +49,27 @@ defmodule ExDiceRoller.Compilers.Variable do
   def compile({:var, _} = var), do: compile_var(var)
 
   @spec compile_var({:var, charlist}) :: Compiler.compiled_fun()
-  defp compile_var({:var, var}), do: fn args -> var_final(var, args) end
-
-  @spec var_final(charlist, Keyword.t()) :: number
-  defp var_final(var, args) do
-    key = var |> to_string() |> String.to_atom()
-    __value__(var, key, args)
+  # the argument key is computed once here, not on every call
+  defp compile_var({:var, var}) do
+    key = List.to_atom(var)
+    fn args -> __value__(key, args) end
   end
 
   @doc false
-  # The value of variable `var` (stored under `key`) in `args`. Used by
-  # compiled closures and by `ExDiceRoller.Roller`.
-  @spec __value__(charlist, atom, Keyword.t()) :: Compiler.calculated_val()
-  def __value__(var, key, args) do
+  # The value of variable `key` in `args`. Used by compiled closures and by
+  # `ExDiceRoller.Roller`.
+  @spec __value__(atom, Keyword.t()) :: Compiler.calculated_val()
+  def __value__(key, args) do
     args
     |> Args.get_var(key)
-    |> var_final_arg(var, args)
+    |> var_final_arg(key, args)
   end
 
-  @spec var_final_arg(any, charlist, Keyword.t()) :: number
+  @spec var_final_arg(any, atom, Keyword.t()) :: number
   defp var_final_arg(nil, var, _) do
     raise Error,
       reason: :missing_variable,
-      details: List.to_atom(var),
+      details: var,
       message: "no variable '#{var}' was found in the arguments"
   end
 
@@ -87,7 +85,7 @@ defmodule ExDiceRoller.Compilers.Variable do
       {:error, %Error{} = err} ->
         raise Error,
           reason: :invalid_variable,
-          details: {List.to_atom(var), err},
+          details: {var, err},
           message:
             "invalid expression #{inspect(val)} for variable '#{var}': #{Exception.message(err)}"
     end

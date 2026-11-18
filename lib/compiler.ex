@@ -157,14 +157,14 @@ defmodule ExDiceRoller.Compiler do
              :"-compile_mul/2-fun-2-",
              [
                {#Function<0.19101679/1 in ExDiceRoller.Compilers.Variable.compile_var/1>,
-                :"-compile_var/1-fun-0-", [~c"y"]},
+                :"-compile_var/1-fun-0-", [:y]},
                2
              ]},
             {#Function<22.46256084/1 in ExDiceRoller.Compilers.Math.compile_sub/2>,
              :"-compile_sub/2-fun-2-",
              [
                {#Function<0.19101679/1 in ExDiceRoller.Compilers.Variable.compile_var/1>,
-                :"-compile_var/1-fun-0-", [~c"x"]},
+                :"-compile_var/1-fun-0-", [:x]},
                1
              ]}
           ]},
@@ -186,7 +186,7 @@ defmodule ExDiceRoller.Compiler do
   def round_val(val) when is_list(val), do: Enum.map(val, &round_val(&1))
   def round_val(val) when is_number(val), do: Kernel.round(val)
 
-  @spec do_fun_info(function | number | charlist) :: function | number | charlist
+  @spec do_fun_info(function | number | atom | list) :: function | number | atom | list
 
   defp do_fun_info(fun) when is_function(fun) do
     info = :erlang.fun_info(fun)
@@ -200,6 +200,7 @@ defmodule ExDiceRoller.Compiler do
   end
 
   defp do_fun_info(num) when is_number(num), do: num
+  defp do_fun_info(atom) when is_atom(atom), do: atom
   defp do_fun_info(str) when is_list(str), do: str
 
   @spec wrap_compiled_expression(compiled_val) :: function
