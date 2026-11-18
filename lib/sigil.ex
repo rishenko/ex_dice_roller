@@ -76,21 +76,33 @@ defmodule ExDiceRoller.Sigil do
 
     fun =
       quote do
-        ExDiceRoller.Sigil.__fetch__(unquote(Macro.escape(tree)))
+        ExDiceRoller.Sigil.__fetch__(unquote(key(tree)), unquote(Macro.escape(tree)))
       end
 
     case roll_opts do
       nil -> fun
+      [] -> quote do: ExDiceRoller.execute!(unquote(fun))
       _ -> quote do: ExDiceRoller.execute!(unquote(fun), opts: unquote(roll_opts))
     end
   end
 
+  # The :persistent_term key for a parse tree, computed at compile time. Keying
+  # on the tree itself would hash and compare the whole tree on every call; a
+  # 59-bit digest stays a small integer, which is cheap to hash. The chance
+  # that two different trees in one program share a key is about n^2 / 2^60
+  # for n distinct sigil expressions.
   @doc false
-  # Returns the compiled function for a parse tree, building it once.
-  @spec __fetch__(Parser.expression()) :: Compiler.compiled_fun()
-  def __fetch__(tree) do
-    key = {__MODULE__, tree}
+  @spec key(Parser.expression()) :: {module, non_neg_integer}
+  def key(tree) do
+    <<digest::59, _::bits>> = :erlang.md5(:erlang.term_to_binary(tree))
+    {__MODULE__, digest}
+  end
 
+  @doc false
+  # Returns the compiled function for a parse tree, building it once and
+  # storing it under `key`.
+  @spec __fetch__({module, non_neg_integer}, Parser.expression()) :: Compiler.compiled_fun()
+  def __fetch__(key, tree) do
     case :persistent_term.get(key, nil) do
       nil ->
         fun = Compiler.compile(tree)
@@ -111,6 +123,7 @@ defmodule ExDiceRoller.Sigil do
 
     case roll_opts do
       nil -> fun
+      [] -> ExDiceRoller.execute!(fun)
       _ -> ExDiceRoller.execute!(fun, opts: roll_opts)
     end
   end

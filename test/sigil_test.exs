@@ -117,12 +117,39 @@ defmodule ExDiceRoller.SigilTest do
     test "the compiled function is built once and stored in :persistent_term" do
       {:ok, tokens} = ExDiceRoller.tokenize("3d7+19")
       {:ok, tree} = ExDiceRoller.parse(tokens)
-      key = {ExDiceRoller.Sigil, tree}
+      key = ExDiceRoller.Sigil.key(tree)
       :persistent_term.erase(key)
 
       fun = ~a/3d7+19/
       assert :persistent_term.get(key) === fun
       assert ~a/3d7+19/ === fun
+    end
+
+    test "the storage key is a small integer derived from the parse tree" do
+      trees =
+        for expr <- ["3d7+19", "1d6", "1D6", "1d6+0", "4d6kh3", "(1d4)d(6*y)-(2/3+1dx)"] do
+          {:ok, tokens} = ExDiceRoller.tokenize(expr)
+          {:ok, tree} = ExDiceRoller.parse(tokens)
+          tree
+        end
+
+      keys = Enum.map(trees, &ExDiceRoller.Sigil.key/1)
+      assert Enum.all?(keys, fn {ExDiceRoller.Sigil, k} -> is_integer(k) and k < 2 ** 59 end)
+      assert length(Enum.uniq(keys)) == length(Enum.uniq(trees))
+      assert Enum.map(trees, &ExDiceRoller.Sigil.key/1) == keys
+    end
+
+    test "r with no other flags rolls the same as execute!/2 with empty opts" do
+      fun = ExDiceRoller.compile!("2d6+1d4")
+
+      for i <- 1..50 do
+        :rand.seed(:exsss, {i, 5, 7})
+        expected = ExDiceRoller.execute!(fun, opts: [])
+        :rand.seed(:exsss, {i, 5, 7})
+        assert ~a/2d6+1d4/r == expected
+        :rand.seed(:exsss, {i, 5, 7})
+        assert ~a/#{"2d6+1d4"}/r == expected
+      end
     end
 
     test "rolls the same as roll!/2 from the same seed" do

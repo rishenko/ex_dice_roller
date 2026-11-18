@@ -19,7 +19,8 @@ From fastest to slowest:
 2. **The `~a` sigil.** For an expression written in your code, `~a/1d20+5/`
    is parsed and checked when your code compiles; a typo is a compile error.
    The roll function is built the first time the sigil runs and kept in
-   `:persistent_term`, so each later use costs one lookup. Interpolated
+   `:persistent_term` under a small key computed at compile time, so each
+   later use costs one quick lookup, however long the expression. Interpolated
    sigils (`~a/#{n}d6/`) are parsed every time they run.
 
 3. **A cached string.** `ExDiceRoller.roll(expr, cache: true)` looks the
@@ -41,7 +42,7 @@ Call                                        | Time per call
 `:rand.uniform(20) + 5` (hand-written floor) | ~35 ns
 compiled `1d20+5`, `fun.([])`               | ~115 ns
 compiled `1d20+5`, `execute!/2`             | ~140 ns
-`~a/1d20+5/r`                               | ~245 ns
+`~a/1d20+5/r`                               | ~170 ns
 `roll!("1d20+5", cache: true)`              | ~285 ns
 `roll!("1d20+5")`, no cache                 | 1.0–1.7 µs
 compiled `4d6kh3`                           | ~850 ns
