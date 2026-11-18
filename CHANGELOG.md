@@ -64,6 +64,10 @@
     compiles, not on every roll: compiled `1d20+x` went from about 280 ns to
     210 ns. `Compiler.fun_info/1` now shows a variable as an atom (`:x`)
     instead of a charlist (`~c"x"`).
+  * With `cache: true` (or `opts: [:cache]`), expressions given as variable
+    values (`x: "1d6"`) are parsed once and cached too, instead of on every
+    roll. `ExDiceRoller.Cache.all/1` still lists only expression entries;
+    `clear/1` removes both.
   * New performance guide (`guides/performance.md`) and benchmark script
     (`bench/rolls.exs`).
   * Dice modifiers in expressions, written right after a roll's sides:

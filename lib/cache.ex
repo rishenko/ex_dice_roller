@@ -7,8 +7,10 @@ defmodule ExDiceRoller.Cache do
   Expressions that arrive as strings at run time, such as from players or a
   database, would otherwise be tokenized, parsed, and compiled on every roll.
   `cache: true` compiles each distinct string once and reuses the function:
-  a cached `1d20+5` takes about 0.3 µs, against 1–1.7 µs uncached. See the
-  performance guide for more measurements.
+  a cached `1d20+5` takes about 0.3 µs, against 1–1.7 µs uncached. Strings
+  given as variable values (`x: "1d6"`) are cached as well, under separate
+  keys that `all/1` doesn't list. See the performance guide for more
+  measurements.
 
   ## Cache ownership
 
@@ -39,6 +41,9 @@ defmodule ExDiceRoller.Cache do
   """
 
   use GenServer
+
+  alias ExDiceRoller.Compiler
+  alias ExDiceRoller.Compilers.Variable
 
   @cache_table Application.compile_env(:ex_dice_roller, :cache_table, ExDiceRoller.Cache)
 
@@ -80,7 +85,11 @@ defmodule ExDiceRoller.Cache do
 
   @doc "Retrieves all cached rolls."
   @spec all(atom | none) :: list(cache_entry)
-  def all(cache \\ @cache_table), do: :ets.tab2list(cache)
+  def all(cache \\ @cache_table) do
+    # expression entries only; variable entries (see `obtain_variable/2`) have
+    # tuple keys
+    :ets.select(cache, [{{:"$1", :_}, [{:is_binary, :"$1"}], [:"$_"]}])
+  end
 
   @doc """
   Looks up the roll in cache and returns `{:ok, fun}`. If the roll is not yet
@@ -97,6 +106,27 @@ defmodule ExDiceRoller.Cache do
         with {:ok, fun} <- ExDiceRoller.compile(roll_string) do
           :ok = put(cache, roll_string, fun)
           {:ok, fun}
+        end
+    end
+  end
+
+  @doc false
+  # The compiled form of an expression given as a variable's value, cached
+  # under `{:variable, string}`. Used with `cache: true`. `all/1` doesn't list
+  # these entries; `clear/1` removes them.
+  @spec obtain_variable(atom, String.t()) ::
+          {:ok, Compiler.compiled_val()} | {:error, ExDiceRoller.Error.t()}
+  def obtain_variable(cache \\ @cache_table, string) do
+    key = {:variable, string}
+
+    case get(cache, key) do
+      {:ok, _compiled} = found ->
+        found
+
+      :not_found ->
+        with {:ok, compiled} <- Variable.compile_value(string) do
+          true = :ets.insert(cache, {key, compiled})
+          {:ok, compiled}
         end
     end
   end
@@ -137,7 +167,7 @@ defmodule ExDiceRoller.Cache do
     :ok
   end
 
-  @spec get(atom, String.t()) :: {:ok, roll_fun} | :not_found
+  @spec get(atom, String.t() | {:variable, String.t()}) :: {:ok, any} | :not_found
   defp get(cache, string) do
     case :ets.lookup(cache, string) do
       [{_, fun}] -> {:ok, fun}

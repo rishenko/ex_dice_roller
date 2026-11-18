@@ -170,4 +170,82 @@ defmodule ExDiceRoller.CacheTest do
         wait_for_restart(name, old_pid, tries - 1)
     end
   end
+
+  describe "string variables with cache: true" do
+    setup do
+      Cache.clear()
+      :ok
+    end
+
+    @exprs ["1d20+x", "xdy", "x,y", "(x+y)d4kh1", "x*y-1"]
+    @arg_sets [
+      [x: "1d6", y: "2d4!"],
+      [x: ["1d4", "3"], y: "1/3"],
+      [x: "2d6kh1", y: ["1d4", "1d2"]],
+      [x: "1d6", y: "1d8", opts: [:keep]],
+      [x: "4d6dl1", y: 3, opts: [:explode, :lowest]]
+    ]
+
+    test "give the same results and draws as without the cache" do
+      for expr <- @exprs, args <- @arg_sets, cache <- [[cache: true], [opts: [:cache]]] do
+        fun = ExDiceRoller.compile!(expr)
+        cached_args = merge_cache(args, cache)
+
+        for seed <- 1..3 do
+          expected = outcome(fn -> fun.(args) end, seed)
+          # twice: the first call fills the cache, the second reads it
+          assert outcome(fn -> fun.(cached_args) end, seed) == expected
+          assert outcome(fn -> fun.(cached_args) end, seed) == expected
+
+          assert outcome(fn -> ExDiceRoller.roll(expr, cached_args) end, seed) ==
+                   outcome(fn -> ExDiceRoller.roll(expr, args) end, seed)
+        end
+      end
+    end
+
+    test "are cached only when asked" do
+      {:ok, _} = ExDiceRoller.roll("1d20+x", x: "1d6")
+      {:ok, _} = ExDiceRoller.compile!("1d20+x") |> ExDiceRoller.execute(x: "1d6")
+      assert [] = :ets.lookup(ExDiceRoller.Cache, {:variable, "1d6"})
+    end
+
+    test "are stored apart from expressions, and cleared with them" do
+      {:ok, _} = ExDiceRoller.roll("1d20+x", x: "1d6", cache: true)
+
+      assert [{"1d20+x", _}] = Cache.all()
+      assert [{_, _}] = :ets.lookup(ExDiceRoller.Cache, {:variable, "1d6"})
+
+      Cache.clear()
+      assert [] = :ets.lookup(ExDiceRoller.Cache, {:variable, "1d6"})
+    end
+
+    test "an invalid string raises the same error and is not cached" do
+      fun = ExDiceRoller.compile!("1+x")
+      plain = assert_raise ExDiceRoller.Error, fn -> fun.(x: "1d") end
+      cached = assert_raise ExDiceRoller.Error, fn -> fun.(x: "1d", cache: true) end
+
+      assert cached == plain
+      assert cached.reason == :invalid_variable
+      assert [] = :ets.lookup(ExDiceRoller.Cache, {:variable, "1d"})
+    end
+
+    defp merge_cache(args, cache: true), do: args ++ [cache: true]
+
+    defp merge_cache(args, opts: [:cache]) do
+      Keyword.update(args, :opts, [:cache], &[:cache | List.wrap(&1)])
+    end
+
+    defp outcome(fun, seed) do
+      :rand.seed(:exsss, {seed, 4, 4})
+
+      result =
+        try do
+          fun.()
+        rescue
+          e -> {:raise, e}
+        end
+
+      {result, :rand.export_seed()}
+    end
+  end
 end

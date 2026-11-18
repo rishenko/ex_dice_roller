@@ -14,7 +14,8 @@ defmodule ExDiceRoller.Compilers.Variable do
   * integers
   * floats
   * compiled functions matching `t:Compiler.compiled_fun/2`
-  * strings that can be parsed by ExDiceRoller
+  * strings that can be parsed by ExDiceRoller (parsed on every roll, or once
+  with `cache: true`)
   * lists composed of any of the above
   * lists of lists
 
@@ -43,7 +44,7 @@ defmodule ExDiceRoller.Compilers.Variable do
   """
 
   @behaviour ExDiceRoller.Compiler
-  alias ExDiceRoller.{Args, Compiler, Error, Parser, Tokenizer}
+  alias ExDiceRoller.{Args, Cache, Compiler, Error, Parser, Tokenizer}
 
   @impl true
   def compile({:var, _} = var), do: compile_var(var)
@@ -77,11 +78,15 @@ defmodule ExDiceRoller.Compilers.Variable do
   defp var_final_arg(val, _, args) when is_function(val), do: val.(args)
 
   defp var_final_arg(val, var, args) when is_binary(val) do
-    with {:ok, tokens} <- Tokenizer.tokenize(val),
-         {:ok, parsed} <- Parser.parse(tokens) do
-      compiled_arg = Compiler.delegate(parsed)
-      var_final_arg(compiled_arg, var, args)
-    else
+    compiled =
+      if Args.use_cache?(args),
+        do: Cache.obtain_variable(val),
+        else: compile_value(val)
+
+    case compiled do
+      {:ok, compiled_arg} ->
+        var_final_arg(compiled_arg, var, args)
+
       {:error, %Error{} = err} ->
         raise Error,
           reason: :invalid_variable,
@@ -93,5 +98,16 @@ defmodule ExDiceRoller.Compilers.Variable do
 
   defp var_final_arg(val, var, args) when is_list(val) do
     Enum.map(val, &var_final_arg(&1, var, args))
+  end
+
+  @doc false
+  # Compiles an expression given as a variable's value. The result is not
+  # rounded or filtered: it is part of the enclosing roll.
+  @spec compile_value(String.t()) :: {:ok, Compiler.compiled_val()} | {:error, Error.t()}
+  def compile_value(string) do
+    with {:ok, tokens} <- Tokenizer.tokenize(string),
+         {:ok, parsed} <- Parser.parse(tokens) do
+      {:ok, Compiler.delegate(parsed)}
+    end
   end
 end

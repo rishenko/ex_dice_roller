@@ -66,7 +66,8 @@ defmodule ExDiceRoller.RollerTest do
     [x: 3, y: 2, z: 1, drop_lowest: false],
     [y: :args, z: 2, >=: 3],
     [y: :args, z: 2, drop_highest: false],
-    [x: 4, y: 3, z: 2, <: 5]
+    [x: 4, y: 3, z: 2, <: 5],
+    [x: "2d6", y: "1/3", z: ["1d4", 2], cache: true]
   ]
 
   # a function variable value, which a module attribute can't hold

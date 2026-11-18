@@ -103,8 +103,10 @@ To measure on your own hardware:
   on plain rolls.
 * **The cache** adds an ETS lookup (about 150 ns) on top of running the
   compiled function. A function you hold yourself skips it.
-* **Variables given as strings** (`x: "1d6"`) are parsed on every call. Pass
-  a compiled function (`x: ExDiceRoller.compile!("1d6")`) instead.
+* **Variables given as strings** (`x: "1d6"`) are parsed on every call
+  (~950 ns for `1d20+x` with `x: "1d6"`). With `cache: true` each string is
+  parsed once and kept in the cache (~440 ns). Passing a compiled function
+  (`x: ExDiceRoller.compile!("1d6")`, ~390 ns) avoids both.
 
 ## Notes
 
