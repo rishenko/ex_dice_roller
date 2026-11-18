@@ -32,6 +32,9 @@ defmodule ExDiceRoller.Roller do
   plain arithmetic and small rolls such as `2d6` become direct calls to
   `:rand.uniform/1`. See the performance guide for measurements.
 
+  To have `mix format` leave `defroll name, "1d6"` without parentheses, add
+  `import_deps: [:ex_dice_roller]` to your `.formatter.exs`.
+
   Use `defroll` for expressions fixed in your code. For expressions that
   arrive as strings at run time, use `ExDiceRoller.compile/1` or the cache.
   """

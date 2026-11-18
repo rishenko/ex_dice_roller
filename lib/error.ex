@@ -30,6 +30,10 @@ defmodule ExDiceRoller.Error do
   variable name as an atom.
   * `:invalid_variable`: a variable's string value is not a valid expression.
   `:details` is `{variable, error}`.
+  * `:recursive_variable`: a variable's value refers back to that variable,
+  directly (`x: "1+x"`) or through others (`x: "y", y: "x"`), so it could
+  never be resolved. `:details` is the chain of variable names, such as
+  `[:x, :y, :x]`.
   * `:arithmetic_error`: the calculation failed in Erlang, for example a float
   overflow from `^`. `:details` is the original `ArithmeticError`.
   * `:invalid_modifier`: reroll modifiers that can never stop, such as
@@ -57,6 +61,7 @@ defmodule ExDiceRoller.Error do
           | :list_length_mismatch
           | :missing_variable
           | :invalid_variable
+          | :recursive_variable
           | :arithmetic_error
           | :invalid_option
           | :invalid_modifier

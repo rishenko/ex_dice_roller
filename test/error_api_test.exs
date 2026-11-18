@@ -8,6 +8,7 @@ defmodule ExDiceRoller.ErrorApiTest do
   import ExDiceRoller.Sigil
 
   alias ExDiceRoller.{Cache, Error}
+  alias ExDiceRoller.RollerTest.Defs
 
   # expression => expected reason; each fails at roll time, after compiling
   @runtime_errors [
@@ -177,5 +178,45 @@ defmodule ExDiceRoller.ErrorApiTest do
   test "parse error messages are readable" do
     {:error, error} = ExDiceRoller.roll("1d6++")
     assert Exception.message(error) =~ "could not parse the expression: syntax error before"
+  end
+
+  describe "variables that refer to themselves" do
+    @cycles [
+      {"x", [x: "x"], [:x, :x]},
+      {"1+x", [x: "1+x"], [:x, :x]},
+      {"x", [x: "y", y: "x"], [:x, :y, :x]},
+      {"x", [x: ["1", "x"]], [:x, :x]},
+      {"xdy", [x: "y", y: "z", z: "y"], [:x, :y, :z, :y]}
+    ]
+
+    test "return :recursive_variable with the chain of names" do
+      for {expr, args, chain} <- @cycles, extra <- [[], [cache: true]] do
+        assert {:error, %Error{reason: :recursive_variable, details: ^chain} = error} =
+                 ExDiceRoller.roll(expr, args ++ extra)
+
+        assert error.message =~ "refers to itself (#{Enum.join(chain, " -> ")})"
+        assert_raise Error, ~r/refers to itself/, fn -> ExDiceRoller.roll!(expr, args) end
+        assert Process.get({ExDiceRoller.Compilers.Variable, :resolving}) == nil
+      end
+    end
+
+    test "are caught through compiled function values and defroll" do
+      x = ExDiceRoller.compile!("1+x")
+
+      assert {:error, %Error{reason: :recursive_variable, details: [:x, :x]}} =
+               ExDiceRoller.roll("x", x: x)
+
+      assert_raise Error, ~r/refers to itself/, fn ->
+        Defs.add_x(x: "x")
+      end
+    end
+
+    test "repeated or nested use, or a new roll with other arguments, is not a cycle" do
+      assert {:ok, _} = ExDiceRoller.roll("x+x", x: "y+y", y: "1d4")
+      assert {:ok, _} = ExDiceRoller.roll("x*y", x: "y", y: "1d4")
+      assert {:ok, n} = ExDiceRoller.roll("x", x: fn _ -> ExDiceRoller.roll!("x", x: "1d4") end)
+      assert n in 1..4
+      assert Process.get({ExDiceRoller.Compilers.Variable, :resolving}) == nil
+    end
   end
 end

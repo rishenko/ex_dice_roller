@@ -69,7 +69,10 @@ Bench.time("compiled 1d20+5, execute!/2", n, fn ->
 end)
 
 Bench.time("defroll 1d20+5, d20()", n, fn -> fn -> ExDiceRoller.Bench.Rolls.d20() end end)
-Bench.time("defroll 1d20+x, d20x(x: 5)", n, fn -> fn -> ExDiceRoller.Bench.Rolls.d20x(x: 5) end end)
+
+Bench.time("defroll 1d20+x, d20x(x: 5)", n, fn ->
+  fn -> ExDiceRoller.Bench.Rolls.d20x(x: 5) end
+end)
 
 Bench.time("~a/1d20+5/r", n, fn -> fn -> ~a/1d20+5/r end end)
 

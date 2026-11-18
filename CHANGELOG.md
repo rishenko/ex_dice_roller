@@ -70,6 +70,13 @@
     compiles, not on every roll: compiled `1d20+x` went from about 280 ns to
     210 ns. `Compiler.fun_info/1` now shows a variable as an atom (`:x`)
     instead of a charlist (`~c"x"`).
+  * A variable whose value refers back to itself (`x: "1+x"`, or
+    `x: "y", y: "x"`) returns an error with reason `:recursive_variable`
+    instead of recursing forever. This adds about 50 ns to each string or
+    function variable value; number values are unaffected.
+  * `.formatter.exs` exports `locals_without_parens` for `defroll`; add
+    `import_deps: [:ex_dice_roller]` to your formatter config to write
+    `defroll name, "1d6"` without parentheses.
   * With `cache: true` (or `opts: [:cache]`), expressions given as variable
     values (`x: "1d6"`) are parsed once and cached too, instead of on every
     roll. `ExDiceRoller.Cache.all/1` still lists only expression entries;

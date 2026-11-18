@@ -75,7 +75,16 @@ defmodule ExDiceRoller.Compilers.Variable do
   end
 
   defp var_final_arg(val, _, _) when is_number(val), do: val
-  defp var_final_arg(val, _, args) when is_function(val), do: val.(args)
+
+  defp var_final_arg(val, var, args) when is_function(val) do
+    chain = enter(var, args)
+
+    try do
+      val.(args)
+    after
+      leave(chain)
+    end
+  end
 
   defp var_final_arg(val, var, args) when is_binary(val) do
     compiled =
@@ -98,6 +107,42 @@ defmodule ExDiceRoller.Compilers.Variable do
 
   defp var_final_arg(val, var, args) when is_list(val) do
     Enum.map(val, &var_final_arg(&1, var, args))
+  end
+
+  # The variables whose values are being evaluated in this process, innermost
+  # first, with the arguments they were looked up in. Only string and
+  # function values can refer to other variables, so only they are tracked;
+  # plain numbers cost nothing. Evaluating a value always evaluates all of it
+  # (there are no conditionals), so meeting the same variable with the same
+  # arguments again means the value can never be resolved. A function value
+  # that starts a new roll with other arguments is not a cycle.
+  @resolving {__MODULE__, :resolving}
+
+  # records `var` as being resolved and returns the previous chain
+  defp enter(var, args) do
+    case Process.get(@resolving) do
+      nil ->
+        Process.put(@resolving, [{var, args}])
+        nil
+
+      chain ->
+        if {var, args} in chain, do: recursive!(var, chain)
+        Process.put(@resolving, [{var, args} | chain])
+        chain
+    end
+  end
+
+  defp leave(nil), do: Process.delete(@resolving)
+  defp leave(chain), do: Process.put(@resolving, chain)
+
+  defp recursive!(var, chain) do
+    names = Enum.reverse([var | Enum.map(chain, &elem(&1, 0))])
+
+    raise Error,
+      reason: :recursive_variable,
+      details: names,
+      message:
+        "variable '#{var}' refers to itself (#{Enum.map_join(names, " -> ", &to_string/1)})"
   end
 
   @doc false

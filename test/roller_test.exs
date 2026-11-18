@@ -1,7 +1,8 @@
 defmodule ExDiceRoller.RollerTest.Defs do
   import ExDiceRoller.Roller
-  defroll(damage, "2d6+3")
-  defroll(roll, "1d6")
+  defroll damage, "2d6+3"
+  defroll roll, "1d6"
+  defroll add_x, "1+x"
 end
 
 defmodule ExDiceRoller.RollerTest do
@@ -156,7 +157,7 @@ defmodule ExDiceRoller.RollerTest do
             quote do
               defmodule ExDiceRoller.RollerTest.Invalid do
                 import ExDiceRoller.Roller
-                defroll(bad, unquote(expr))
+                defroll bad, unquote(expr)
               end
             end
           )
