@@ -9,23 +9,23 @@ defmodule ExDiceRoller.Compiler do
   and recursively navigates the tree
   * each expression is delegated to an appropriate module that implements the
   `compile/1` callback, which then
-    * converts each expression that results in an invariable value into a number
-    * converts each expression containing variability, or randomness, into a
-    compiled anonymous function
+    * leaves number literals as numbers
+    * converts every other expression (math, rolls, variables, separators)
+    into a compiled anonymous function. Constant math such as `1+2` is not
+    folded at compile time; it is calculated when the function runs.
     * sends sub-expressions back to Compiler to be delegated appropriately
   * wraps the nested set of compiled functions with an anonymous function that
   also:
-    * checks for cache usage and acts accordingly
     * applies any `ExDiceRoller.Filters` present in the arguments
     * rounds and returns the final value
 
-  Note that all compiled functions outputted by Compiler accept both arguments
-  and options. Arguments are used exclusively for replacing variables with
-  values. Options affect the behavior of the anonymous functions and include
+  Note that all compiled functions outputted by Compiler accept a single
+  keyword list holding both variable values (such as `x: 3`) and `opts`.
+  Variable values replace variables. Options affect the behavior of the anonymous functions and include
   concepts such as exploding dice, choosing highest or lowest values, and more.
 
   More information about the different types of expression compilers and their
-  function can be found in the individual `ExDiceRoller.Compiler.*` modules.
+  function can be found in the individual `ExDiceRoller.Compilers.*` modules.
 
   ## Example
 
@@ -37,37 +37,41 @@ defmodule ExDiceRoller.Compiler do
           {:roll, 1, 6}}}
 
       > fun = ExDiceRoller.Compiler.compile(parsed)
-      #Function<1.51809653/1 in ExDiceRoller.Compiler.build_final_function/1>
+      #Function<0.39667494/1 in ExDiceRoller.Compiler.build_final_function/1>
 
       > fun.([])
       11
 
       > ExDiceRoller.Compiler.fun_info(fun)
-      {#Function<0.102777967/1 in ExDiceRoller.Compilers.Math.compile_add/2>,
-      :"-compile_add/2-fun-1-",
-      [
-        {#Function<20.102777967/1 in ExDiceRoller.Compilers.Math.compile_sub/2>,
-          :"-compile_sub/2-fun-1-",
+      {#Function<0.46256084/1 in ExDiceRoller.Compilers.Math.compile_add/2>,
+       :"-compile_add/2-fun-0-",
+       [
+         {#Function<4.18758502/1 in ExDiceRoller.Compilers.Roll.compile_roll/3>,
+          :"-compile_roll/3-fun-0-",
           [
-            {#Function<3.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
-            :"-compile_roll/2-fun-3-", [1, 4]},
-            {#Function<5.102777967/1 in ExDiceRoller.Compilers.Math.compile_div/2>,
-            :"-compile_div/2-fun-3-",
-            [
-              {#Function<3.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
-                :"-compile_roll/2-fun-3-", [3, 6]},
-              2
-            ]}
+            [],
+            {#Function<7.18758502/1 in ExDiceRoller.Compilers.Roll.compile_roll/3>,
+             :"-compile_roll/3-fun-3-", [[], 6, 1]},
+            {#Function<7.18758502/1 in ExDiceRoller.Compilers.Roll.compile_roll/3>,
+             :"-compile_roll/3-fun-3-", [[], 4, 1]}
           ]},
-        {#Function<0.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
-          :"-compile_roll/2-fun-0-",
+         {#Function<20.46256084/1 in ExDiceRoller.Compilers.Math.compile_sub/2>,
+          :"-compile_sub/2-fun-0-",
           [
-            {#Function<3.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
-            :"-compile_roll/2-fun-3-", [1, 4]},
-            {#Function<3.31405244/1 in ExDiceRoller.Compilers.Roll.compile_roll/2>,
-            :"-compile_roll/2-fun-3-", [1, 6]}
+            {#Function<5.46256084/1 in ExDiceRoller.Compilers.Math.compile_div/2>,
+             :"-compile_div/2-fun-1-",
+             [
+               2,
+               {#Function<7.18758502/1 in ExDiceRoller.Compilers.Roll.compile_roll/3>,
+                :"-compile_roll/3-fun-3-", [[], 6, 3]}
+             ]},
+            {#Function<7.18758502/1 in ExDiceRoller.Compilers.Roll.compile_roll/3>,
+             :"-compile_roll/3-fun-3-", [[], 4, 1]}
           ]}
-      ]}
+       ]}
+
+  The output above is from Elixir 1.18 / OTP 27; see `fun_info/1` for why it
+  varies.
 
   """
 
@@ -134,37 +138,39 @@ defmodule ExDiceRoller.Compiler do
   ordered function #>, [<recursive info about child functions>]}`.
 
   The function names and the order of child entries come from the BEAM and
-  differ between OTP releases, so treat this output as a debugging aid rather
-  than a stable format.
+  differ between OTP releases (on OTP 27 the children appear in reverse, and
+  each roll lists its modifiers first), so treat this output as a debugging aid
+  rather than a stable format.
 
       > {:ok, fun} = ExDiceRoller.compile("1d8+(1-x)d(2*y)")
-      #=> {:ok, #Function<0.84780260/1 in ExDiceRoller.Compiler.compile_add/4>}
+      {:ok, #Function<0.39667494/1 in ExDiceRoller.Compiler.build_final_function/1>}
 
-      > ExDiceRoller.Compiler.fun_info fun
-      #=> {#Function<0.16543174/1 in ExDiceRoller.Compiler.compile_add/4>,
-      :"-compile_add/4-fun-0-",
-      [
-        {#Function<12.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
-          :"-compile_roll/4-fun-3-", [1, 8]},
-        {#Function<9.16543174/1 in ExDiceRoller.Compiler.compile_roll/4>,
-          :"-compile_roll/4-fun-0-",
+      > ExDiceRoller.Compiler.fun_info(fun)
+      {#Function<0.46256084/1 in ExDiceRoller.Compilers.Math.compile_add/2>,
+       :"-compile_add/2-fun-0-",
+       [
+         {#Function<4.18758502/1 in ExDiceRoller.Compilers.Roll.compile_roll/3>,
+          :"-compile_roll/3-fun-0-",
           [
-            {#Function<15.16543174/1 in ExDiceRoller.Compiler.compile_sub/4>,
-            :"-compile_sub/4-fun-2-",
-            [
-              1,
-              {#Function<16.16543174/1 in ExDiceRoller.Compiler.compile_var/1>,
-                :"-compile_var/1-fun-0-", [~c"x"]}
-            ]},
-            {#Function<8.16543174/1 in ExDiceRoller.Compiler.compile_mul/4>,
-            :"-compile_mul/4-fun-2-",
-            [
-              2,
-              {#Function<16.16543174/1 in ExDiceRoller.Compiler.compile_var/1>,
-                :"-compile_var/1-fun-0-", [~c"y"]}
-            ]}
-          ]}
-      ]}
+            [],
+            {#Function<18.46256084/1 in ExDiceRoller.Compilers.Math.compile_mul/2>,
+             :"-compile_mul/2-fun-2-",
+             [
+               {#Function<0.19101679/1 in ExDiceRoller.Compilers.Variable.compile_var/1>,
+                :"-compile_var/1-fun-0-", [~c"y"]},
+               2
+             ]},
+            {#Function<22.46256084/1 in ExDiceRoller.Compilers.Math.compile_sub/2>,
+             :"-compile_sub/2-fun-2-",
+             [
+               {#Function<0.19101679/1 in ExDiceRoller.Compilers.Variable.compile_var/1>,
+                :"-compile_var/1-fun-0-", [~c"x"]},
+               1
+             ]}
+          ]},
+         {#Function<7.18758502/1 in ExDiceRoller.Compilers.Roll.compile_roll/3>,
+          :"-compile_roll/3-fun-3-", [[], 8, 1]}
+       ]}
 
   """
   @spec fun_info(compiled_fun) :: fun_info_tuple

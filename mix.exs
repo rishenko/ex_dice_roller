@@ -1,7 +1,7 @@
 defmodule ExDiceRoller.MixProject do
   use Mix.Project
 
-  @version "1.0.0-rc.2"
+  @version "2.0.0"
 
   def project do
     [
@@ -16,19 +16,7 @@ defmodule ExDiceRoller.MixProject do
       description: description(),
       name: "ExDiceRoller",
       source_url: "https://github.com/rishenko/ex_dice_roller",
-      test_coverage: [tool: ExCoveralls],
       docs: docs()
-    ]
-  end
-
-  def cli do
-    [
-      preferred_envs: [
-        coveralls: :test,
-        "coveralls.detail": :test,
-        "coveralls.post": :test,
-        "coveralls.html": :test
-      ]
     ]
   end
 
@@ -42,11 +30,11 @@ defmodule ExDiceRoller.MixProject do
   def package do
     [
       maintainers: ["Kevin McAbee"],
-      licenses: ["Apache 2.0"],
+      licenses: ["Apache-2.0"],
       homepage_url: "https://github.com/rishenko/ex_dice_roller",
       source_url: "https://github.com/rishenko/ex_dice_roller",
       links: %{"GitHub" => "https://github.com/rishenko/ex_dice_roller"},
-      files: ~w(lib coveralls.json src/*.xrl src/*.yrl .formatter.exs mix.exs README.md LICENSE)
+      files: ~w(lib src/*.xrl src/*.yrl .formatter.exs mix.exs README.md LICENSE)
     ]
   end
 
@@ -59,7 +47,6 @@ defmodule ExDiceRoller.MixProject do
 
   defp deps do
     [
-      {:excoveralls, "~> 0.18", only: [:test]},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false}
     ]

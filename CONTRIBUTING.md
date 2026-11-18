@@ -17,7 +17,7 @@ High-level steps:
 
 Pull requests lacking the following will not be accepted.:
 
-* new or updated tests providing complete code coverage for all changes
+* new or updated tests covering all changes
 * coded documentation and typespecs
 * new functionality should be documented in the README and/or guides
 

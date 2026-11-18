@@ -10,8 +10,12 @@ defmodule ExDiceRoller.Filters do
   * boolean: `drop_highest`, `drop_lowest`, `drop_highest_lowest` in the format
     `<comparator>: true | false`.
 
-  Note that boolean filters require a list of values, such as adding the
-  separator (`,`) comparator or using the `:keep` option.
+  Filters always return a list: a single (summed) result is treated as a
+  one-element list, so `ExDiceRoller.roll!("8d6", >=: 4)` returns `[total]` or
+  `[]`, and the boolean filters drop that one value. Use them with the `:keep`
+  option to filter individual dice. To drop or keep dice and still get a sum,
+  use the roll modifiers instead (`4d6dl1`, `4d6kh3`; see
+  `ExDiceRoller.Compilers.Roll`).
 
   Examples:
 

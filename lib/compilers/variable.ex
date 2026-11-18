@@ -2,9 +2,12 @@ defmodule ExDiceRoller.Compilers.Variable do
   @moduledoc """
   Handles compiling expressions that use variables.
 
-  Variables can be used to replace single letter characters in an expression
-  with a value, such as a number or an anonymous function that accepts list
-  arguments (`args` and `opts`, respectively).
+  Variables can be used to replace single letters in an expression with a
+  value, such as a number or a compiled roll function. Any letter except `d`
+  and `D` (the roll operator) can be a variable. Letters written directly after
+  a roll's sides are read as dice modifiers instead (see
+  `ExDiceRoller.Compilers.Roll`), so `4d6k` keeps a die, while `4d6+k` adds the
+  variable `k`.
 
   Acceptable variable values include:
 
@@ -15,7 +18,7 @@ defmodule ExDiceRoller.Compilers.Variable do
   * lists composed of any of the above
   * lists of lists
 
-  Note that an error will be raised if values are not supplied for all varaibles
+  Note that an error will be raised if values are not supplied for all variables
   in an expression.
 
   ### Examples

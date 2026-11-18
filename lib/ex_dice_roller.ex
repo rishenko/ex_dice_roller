@@ -106,8 +106,9 @@ defmodule ExDiceRoller do
 
   ## Variables
 
-  Single-letter variables can be used when compiling dice rolls. However, values
-  for those variables must be supplied upon invocation. Values can be any of the
+  Single-letter variables (any letter except `d` and `D`) can be used when
+  compiling dice rolls. However, values for those variables must be supplied
+  upon invocation. Values can be any of the
   following:
 
   * numbers

@@ -24,7 +24,7 @@ defmodule ExDiceRoller.Compilers.Separator do
       14
 
 
-  Seperator expressions can be wrapped in parentheses to be utilized it as a
+  Separator expressions can be wrapped in parentheses to be used as a
   subexpression in a larger expression.
 
   Examples:

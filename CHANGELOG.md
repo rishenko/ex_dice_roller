@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (2.0.0)
+## v2.0.0 (unreleased)
 
 * Breaking changes
   * `roll/2`, `execute/2` and `calculate/2` return `{:ok, result}` or
@@ -62,10 +62,11 @@
   * Adding or comparing two empty lists returns `[]` instead of raising
     `ArithmeticError`. List pairing also uses `Enum.zip_with/3` now, so it is
     no longer O(n²).
-  * Tokenizer errors after the first line of input are returned as
-    `{:error, {:tokenizing_failed, _}}` instead of raising `WithClauseError`.
+  * Tokenizer errors after the first line of input are returned as an error
+    (reason `:tokenizing_failed`) instead of raising `WithClauseError`.
   * `roll/2` with `cache: true` returns the parse error for an invalid
-    expression instead of raising `FunctionClauseError`.
+    expression instead of raising `FunctionClauseError`, and does not cache
+    it.
   * `opts: [:cache]`, as shown in the docs, now uses the cache (before, only
     `cache: true` did).
   * An invalid expression in a variable value, or in the `~a` sigil, gives an
@@ -74,10 +75,20 @@
   * Calling `start_cache/1` again while the table exists is a no-op instead of
     raising.
 
+* Documentation
+  * Corrected the README, guides, and module docs: the `^` precedence row,
+    roll-of-roll semantics (`3d5d6` uses each result as a dice count), the
+    sigil's options, compile-time behavior (constants are not folded), filter
+    results, the `:cache_table` setting (compile time), and several examples
+    with impossible or inconsistent values.
+
 * Build and tooling
   * Requires Elixir 1.15+ (tested on 1.15 to 1.18, OTP 26 and 27).
-  * Updated dev/test dependencies (credo 1.7, ex_doc 0.34, excoveralls 0.18);
-    the old versions no longer compile on current OTP.
+  * Updated dev dependencies (credo 1.7, ex_doc 0.34); the old versions no
+    longer compile on current OTP.
+  * Removed excoveralls and the Coveralls badge; coverage was no longer
+    uploaded anywhere.
+  * The Hex package license is now the SPDX identifier `Apache-2.0`.
   * Replaced Travis CI with GitHub Actions.
   * Replaced `Mix.Config` with `Config`, and declared the leex and yecc
     compilers explicitly.

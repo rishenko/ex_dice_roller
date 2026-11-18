@@ -1,6 +1,6 @@
 defmodule ExDiceRoller.ListComprehension do
   @moduledoc """
-  Contains functionality for list comphrensions in ExDiceRoller.
+  Contains functionality for list comprehensions in ExDiceRoller.
 
   ExDiceRoller also has a certain amount of list comprehension support when
   calculating dice roll equations and 'keeping' rolls. The default behavior when
@@ -11,9 +11,9 @@ defmodule ExDiceRoller.ListComprehension do
   2. If both sides of an expression are lists of equal length, the values of
   each list are applied to their counterpart in the other list. An error is
   raised if the lengths of the two lists are different.
-  3. Combination rolls, such as `3d5d6`, will perform each roll expressions in
-  succession. Kept values from each roll expression is then used as the number
-  of sides in the succeeding expression.
+  3. Combination rolls, such as `3d5d6`, perform each roll expression in
+  succession. Each kept value from one roll is used as the number of dice in
+  the next: `3d5d6` rolls 3d5, then rolls that many d6 for each result.
 
   Example of one side of an expression being a kept list and the other a value:
 

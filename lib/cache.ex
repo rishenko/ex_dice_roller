@@ -8,7 +8,7 @@ defmodule ExDiceRoller.Cache do
   tokenizing, parsing, and compiling of runtime dice rolls can add up. The more
   complex the dice roll, the higher the cost.
 
-  Local testing has revealed that there can be a relatively signifcant
+  Local testing has revealed that there can be a relatively significant
   performance savings by caching compiled dice rolls and reusing the cached
   values instead of repeated interpretation. While these savings are on the
   order of microseconds (not milliseconds), they can add up in applications
