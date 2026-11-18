@@ -3,9 +3,9 @@ defmodule ExDiceRoller.Compilers.Math do
   Handles compiling expressions using common mathematical operators.
 
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize("1+x")
-      {:ok, [{:int, 1, '1'}, {:basic_operator, 1, '+'}, {:var, 1, 'x'}]}
+      {:ok, [{:int, 1, ~c"1"}, {:basic_operator, 1, ~c"+"}, {:var, 1, ~c"x"}]}
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
-      {:ok, {{:operator, '+'}, 1, {:var, 'x'}}}
+      {:ok, {{:operator, ~c"+"}, 1, {:var, ~c"x"}}}
       iex> fun = ExDiceRoller.Compilers.Math.compile(parse_tree)
       iex> fun.([x: 2])
       3
@@ -31,19 +31,20 @@ defmodule ExDiceRoller.Compilers.Math do
   @err_name "math operators"
 
   @operators [
-    {'+', &Kernel.+/2, "add"},
-    {'-', &Kernel.-/2, "sub"},
-    {'*', &Kernel.*/2, "mul"},
-    {'/', &__MODULE__.divide/2, "div"},
-    {'%', &__MODULE__.modulo/2, "mod"},
-    {'^', &:math.pow/2, "exp"}
+    {~c"+", &Kernel.+/2, "add"},
+    {~c"-", &Kernel.-/2, "sub"},
+    {~c"*", &Kernel.*/2, "mul"},
+    {~c"/", &__MODULE__.divide/2, "div"},
+    {~c"%", &__MODULE__.modulo/2, "mod"},
+    {~c"^", &:math.pow/2, "exp"}
   ]
 
   @doc "Function used for modulo calculations. Only accepts integer values."
   @spec modulo(integer, integer) :: integer
 
   def modulo(_, 0), do: raise(ArgumentError, "the divisor cannot be 0")
-  def modulo(_, 0.0), do: raise(ArgumentError, "the divisor cannot be 0")
+  def modulo(_, +0.0), do: raise(ArgumentError, "the divisor cannot be 0")
+  def modulo(_, -0.0), do: raise(ArgumentError, "the divisor cannot be 0")
 
   def modulo(l, r) when is_integer(l) and is_integer(r) do
     rem(Compiler.round_val(l), Compiler.round_val(r))
@@ -55,7 +56,8 @@ defmodule ExDiceRoller.Compilers.Math do
   @spec divide(Compiler.calculated_val(), Compiler.calculated_val()) :: float
 
   def divide(_, 0), do: raise(ArgumentError, "the divisor cannot be 0")
-  def divide(_, 0.0), do: raise(ArgumentError, "the divisor cannot be 0")
+  def divide(_, +0.0), do: raise(ArgumentError, "the divisor cannot be 0")
+  def divide(_, -0.0), do: raise(ArgumentError, "the divisor cannot be 0")
   def divide(l, r) when is_number(l) and is_number(r), do: l / r
 
   @impl true

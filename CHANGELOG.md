@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased
+
+* Build and tooling
+  * Requires Elixir 1.15+ (tested on 1.15 to 1.18, OTP 26 and 27).
+  * Updated dev/test dependencies (credo 1.7, ex_doc 0.34, excoveralls 0.18);
+    the old versions no longer compile on current OTP.
+  * Replaced Travis CI with GitHub Actions.
+  * Replaced `Mix.Config` with `Config`, and declared the leex and yecc
+    compilers explicitly.
+  * The cache table name is read with `Application.compile_env/3` and now
+    defaults to `ExDiceRoller.Cache`, so a project using the library no
+    longer has to set `:cache_table` itself.
+* Compatibility fixes (no change in roll behavior)
+  * Division and modulo by `-0.0` raise "the divisor cannot be 0" again.
+    OTP 27 stopped matching `-0.0` against a `0.0` pattern.
+  * The missing-variable error message is back to `'x'`; newer Elixir
+    versions printed it as `~c"x"`.
+  * Charlists in code and docs use the `~c` sigil.
+  * `Compiler.fun_info/1` docs note that function names and child order
+    depend on the OTP release.
+
+
 ## v1.0.0-rc.2
 
 * Enhancements

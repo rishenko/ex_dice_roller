@@ -5,31 +5,31 @@ defmodule ExDiceRoller.Tokenizer do
       iex> ExDiceRoller.Tokenizer.tokenize("1d4+6-(2dy)d(5*2d7-x)/3d8")
       {:ok,
       [
-        {:int, 1, '1'},
-        {:roll, 1, 'd'},
-        {:int, 1, '4'},
-        {:basic_operator, 1, '+'},
-        {:int, 1, '6'},
-        {:basic_operator, 1, '-'},
-        {:"(", 1, '('},
-        {:int, 1, '2'},
-        {:roll, 1, 'd'},
-        {:var, 1, 'y'},
-        {:")", 1, ')'},
-        {:roll, 1, 'd'},
-        {:"(", 1, '('},
-        {:int, 1, '5'},
-        {:complex_operator, 1, '*'},
-        {:int, 1, '2'},
-        {:roll, 1, 'd'},
-        {:int, 1, '7'},
-        {:basic_operator, 1, '-'},
-        {:var, 1, 'x'},
-        {:")", 1, ')'},
-        {:complex_operator, 1, '/'},
-        {:int, 1, '3'},
-        {:roll, 1, 'd'},
-        {:int, 1, '8'}
+        {:int, 1, ~c"1"},
+        {:roll, 1, ~c"d"},
+        {:int, 1, ~c"4"},
+        {:basic_operator, 1, ~c"+"},
+        {:int, 1, ~c"6"},
+        {:basic_operator, 1, ~c"-"},
+        {:"(", 1, ~c"("},
+        {:int, 1, ~c"2"},
+        {:roll, 1, ~c"d"},
+        {:var, 1, ~c"y"},
+        {:")", 1, ~c")"},
+        {:roll, 1, ~c"d"},
+        {:"(", 1, ~c"("},
+        {:int, 1, ~c"5"},
+        {:complex_operator, 1, ~c"*"},
+        {:int, 1, ~c"2"},
+        {:roll, 1, ~c"d"},
+        {:int, 1, ~c"7"},
+        {:basic_operator, 1, ~c"-"},
+        {:var, 1, ~c"x"},
+        {:")", 1, ~c")"},
+        {:complex_operator, 1, ~c"/"},
+        {:int, 1, ~c"3"},
+        {:roll, 1, ~c"d"},
+        {:int, 1, ~c"8"}
       ]}
   """
 
@@ -45,11 +45,11 @@ defmodule ExDiceRoller.Tokenizer do
       iex> ExDiceRoller.Tokenizer.tokenize("2d8+3")
       {:ok,
       [
-        {:int, 1, '2'},
-        {:roll, 1, 'd'},
-        {:int, 1, '8'},
-        {:basic_operator, 1, '+'},
-        {:int, 1, '3'}
+        {:int, 1, ~c"2"},
+        {:roll, 1, ~c"d"},
+        {:int, 1, ~c"8"},
+        {:basic_operator, 1, ~c"+"},
+        {:int, 1, ~c"3"}
       ]}
   """
   @spec tokenize(String.t()) :: {:ok, tokens}

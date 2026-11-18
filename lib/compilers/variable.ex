@@ -59,7 +59,7 @@ defmodule ExDiceRoller.Compilers.Variable do
 
   @spec var_final_arg(any, charlist, Keyword.t()) :: number
   defp var_final_arg(nil, var, _),
-    do: raise(ArgumentError, "no variable #{inspect(var)} was found in the arguments")
+    do: raise(ArgumentError, "no variable '#{var}' was found in the arguments")
 
   defp var_final_arg(val, _, _) when is_number(val), do: val
   defp var_final_arg(val, _, args) when is_function(val), do: val.(args)

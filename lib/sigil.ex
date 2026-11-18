@@ -46,18 +46,17 @@ defmodule ExDiceRoller.Sigil do
   def sigil_a(roll_string, opts) do
     binary_opts = :binary.list_to_bin(opts)
 
-    with {:ok, translated_opts} <- translate_opts(binary_opts, []),
-         {:ok, fun} = ExDiceRoller.compile(roll_string) do
-      case length(translated_opts) > 0 do
-        false ->
-          {:ok, fun} = ExDiceRoller.compile(roll_string)
-          fun
+    case translate_opts(binary_opts, []) do
+      {:ok, translated_opts} ->
+        {:ok, fun} = ExDiceRoller.compile(roll_string)
 
-        true ->
-          fun.(opts: translated_opts -- [:execute])
-      end
-    else
-      {:error, reason} -> {:error, {:invalid_option, reason}}
+        case translated_opts do
+          [] -> fun
+          _ -> fun.(opts: translated_opts -- [:execute])
+        end
+
+      {:error, reason} ->
+        {:error, {:invalid_option, reason}}
     end
   end
 

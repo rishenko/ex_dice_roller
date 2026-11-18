@@ -34,7 +34,7 @@ defmodule ExDiceRoller.Cache do
       7
   """
 
-  @cache_table Application.fetch_env!(:ex_dice_roller, :cache_table)
+  @cache_table Application.compile_env(:ex_dice_roller, :cache_table, ExDiceRoller.Cache)
 
   @type cache_entry :: {roll_string, roll_fun}
   @type roll_string :: String.t()

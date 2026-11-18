@@ -5,7 +5,7 @@ defmodule ExDiceRoller.Compilers.Roll do
       iex> expr = "1d6"
       "1d6"
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize(expr)
-      {:ok, [{:int, 1, '1'}, {:roll, 1, 'd'}, {:int, 1, '6'}]}
+      {:ok, [{:int, 1, ~c"1"}, {:roll, 1, ~c"d"}, {:int, 1, ~c"6"}]}
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
       {:ok, {:roll, 1, 6}}
       iex> fun = ExDiceRoller.Compilers.Roll.compile(parse_tree)
@@ -38,7 +38,7 @@ defmodule ExDiceRoller.Compilers.Roll do
       iex> expr = "1d6"
       "1d6"
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize(expr)
-      {:ok, [{:int, 1, '1'}, {:roll, 1, 'd'}, {:int, 1, '6'}]}
+      {:ok, [{:int, 1, ~c"1"}, {:roll, 1, ~c"d"}, {:int, 1, ~c"6"}]}
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
       {:ok, {:roll, 1, 6}}
       iex> fun = ExDiceRoller.Compilers.Roll.compile(parse_tree)
@@ -67,7 +67,7 @@ defmodule ExDiceRoller.Compilers.Roll do
       iex> expr = "5d6"
       "5d6"
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize(expr)
-      {:ok, [{:int, 1, '5'}, {:roll, 1, 'd'}, {:int, 1, '6'}]}
+      {:ok, [{:int, 1, ~c"5"}, {:roll, 1, ~c"d"}, {:int, 1, ~c"6"}]}
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
       {:ok, {:roll, 5, 6}}
       iex> fun = ExDiceRoller.Compilers.Roll.compile(parse_tree)

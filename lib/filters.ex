@@ -46,7 +46,7 @@ defmodule ExDiceRoller.Filters do
   def filter(val, []), do: val
   def filter(val, filters) when is_number(val), do: filter([val], filters)
 
-  def filter(val, filters) when length(filters) > 0 do
+  def filter(val, filters) when is_list(filters) and filters != [] do
     Enum.reduce(filters, val, &do_filter(&2, &1))
   end
 

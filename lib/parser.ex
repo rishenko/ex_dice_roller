@@ -5,40 +5,40 @@ defmodule ExDiceRoller.Parser do
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize("2d3+9-(ydz)d(31+x)/(3d8+2)")
       {:ok,
       [
-        {:int, 1, '2'},
-        {:roll, 1, 'd'},
-        {:int, 1, '3'},
-        {:basic_operator, 1, '+'},
-        {:int, 1, '9'},
-        {:basic_operator, 1, '-'},
-        {:"(", 1, '('},
-        {:var, 1, 'y'},
-        {:roll, 1, 'd'},
-        {:var, 1, 'z'},
-        {:")", 1, ')'},
-        {:roll, 1, 'd'},
-        {:"(", 1, '('},
-        {:int, 1, '31'},
-        {:basic_operator, 1, '+'},
-        {:var, 1, 'x'},
-        {:")", 1, ')'},
-        {:complex_operator, 1, '/'},
-        {:"(", 1, '('},
-        {:int, 1, '3'},
-        {:roll, 1, 'd'},
-        {:int, 1, '8'},
-        {:basic_operator, 1, '+'},
-        {:int, 1, '2'},
-        {:")", 1, ')'}
+        {:int, 1, ~c"2"},
+        {:roll, 1, ~c"d"},
+        {:int, 1, ~c"3"},
+        {:basic_operator, 1, ~c"+"},
+        {:int, 1, ~c"9"},
+        {:basic_operator, 1, ~c"-"},
+        {:"(", 1, ~c"("},
+        {:var, 1, ~c"y"},
+        {:roll, 1, ~c"d"},
+        {:var, 1, ~c"z"},
+        {:")", 1, ~c")"},
+        {:roll, 1, ~c"d"},
+        {:"(", 1, ~c"("},
+        {:int, 1, ~c"31"},
+        {:basic_operator, 1, ~c"+"},
+        {:var, 1, ~c"x"},
+        {:")", 1, ~c")"},
+        {:complex_operator, 1, ~c"/"},
+        {:"(", 1, ~c"("},
+        {:int, 1, ~c"3"},
+        {:roll, 1, ~c"d"},
+        {:int, 1, ~c"8"},
+        {:basic_operator, 1, ~c"+"},
+        {:int, 1, ~c"2"},
+        {:")", 1, ~c")"}
       ]}
       iex> ExDiceRoller.Parser.parse(tokens)
       {:ok,
-      {{:operator, '-'},
-        {{:operator, '+'}, {:roll, 2, 3}, 9},
-        {{:operator, '/'},
-        {:roll, {:roll, {:var, 'y'}, {:var, 'z'}},
-          {{:operator, '+'}, 31, {:var, 'x'}}},
-        {{:operator, '+'}, {:roll, 3, 8}, 2}}}}
+      {{:operator, ~c"-"},
+        {{:operator, ~c"+"}, {:roll, 2, 3}, 9},
+        {{:operator, ~c"/"},
+        {:roll, {:roll, {:var, ~c"y"}, {:var, ~c"z"}},
+          {{:operator, ~c"+"}, 31, {:var, ~c"x"}}},
+        {{:operator, ~c"+"}, {:roll, 3, 8}, 2}}}}
 
   """
 
@@ -60,20 +60,20 @@ defmodule ExDiceRoller.Parser do
       iex> {:ok, tokens} = ExDiceRoller.tokenize("2d8 + (1+2)")
       {:ok,
       [
-        {:int, 1, '2'},
-        {:roll, 1, 'd'},
-        {:int, 1, '8'},
-        {:basic_operator, 1, '+'},
-        {:"(", 1, '('},
-        {:int, 1, '1'},
-        {:basic_operator, 1, '+'},
-        {:int, 1, '2'},
-        {:")", 1, ')'}
+        {:int, 1, ~c"2"},
+        {:roll, 1, ~c"d"},
+        {:int, 1, ~c"8"},
+        {:basic_operator, 1, ~c"+"},
+        {:"(", 1, ~c"("},
+        {:int, 1, ~c"1"},
+        {:basic_operator, 1, ~c"+"},
+        {:int, 1, ~c"2"},
+        {:")", 1, ~c")"}
       ]}
       iex> {:ok, _} = ExDiceRoller.parse(tokens)
       {:ok,
-      {{:operator, '+'}, {:roll, 2, 8},
-        {{:operator, '+'}, 1, 2}}}
+      {{:operator, ~c"+"}, {:roll, 2, 8},
+        {{:operator, ~c"+"}, 1, 2}}}
 
   """
   @spec parse(Tokenizer.tokens()) :: {:ok, expression}

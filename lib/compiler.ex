@@ -30,9 +30,9 @@ defmodule ExDiceRoller.Compiler do
   ## Example
 
       > parsed =
-        {{:operator, '+'},
-        {{:operator, '-'}, {:roll, 1, 4},
-          {{:operator, '/'}, {:roll, 3, 6}, 2}},
+        {{:operator, ~c"+"},
+        {{:operator, ~c"-"}, {:roll, 1, 4},
+          {{:operator, ~c"/"}, {:roll, 3, 6}, 2}},
         {:roll, {:roll, 1, 4},
           {:roll, 1, 6}}}
 
@@ -91,14 +91,14 @@ defmodule ExDiceRoller.Compiler do
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize(expr)
       {:ok,
       [
-        {:int, 1, '1'},
-        {:roll, 1, 'd'},
-        {:int, 1, '2'},
-        {:basic_operator, 1, '+'},
-        {:var, 1, 'x'}
+        {:int, 1, ~c"1"},
+        {:roll, 1, ~c"d"},
+        {:int, 1, ~c"2"},
+        {:basic_operator, 1, ~c"+"},
+        {:var, 1, ~c"x"}
       ]}
       iex> {:ok, parsed} = ExDiceRoller.Parser.parse(tokens)
-      {:ok, {{:operator, '+'}, {:roll, 1, 2}, {:var, 'x'}}}
+      {:ok, {{:operator, ~c"+"}, {:roll, 1, 2}, {:var, ~c"x"}}}
       iex> fun = ExDiceRoller.Compiler.compile(parsed)
       iex> fun.([x: 1, opts: [:explode]])
       2
@@ -132,6 +132,10 @@ defmodule ExDiceRoller.Compiler do
   structure of the fun_info result is `{<function>, <atom with name, arity, and
   ordered function #>, [<recursive info about child functions>]}`.
 
+  The function names and the order of child entries come from the BEAM and
+  differ between OTP releases, so treat this output as a debugging aid rather
+  than a stable format.
+
       > {:ok, fun} = ExDiceRoller.compile("1d8+(1-x)d(2*y)")
       #=> {:ok, #Function<0.84780260/1 in ExDiceRoller.Compiler.compile_add/4>}
 
@@ -149,14 +153,14 @@ defmodule ExDiceRoller.Compiler do
             [
               1,
               {#Function<16.16543174/1 in ExDiceRoller.Compiler.compile_var/1>,
-                :"-compile_var/1-fun-0-", ['x']}
+                :"-compile_var/1-fun-0-", [~c"x"]}
             ]},
             {#Function<8.16543174/1 in ExDiceRoller.Compiler.compile_mul/4>,
             :"-compile_mul/4-fun-2-",
             [
               2,
               {#Function<16.16543174/1 in ExDiceRoller.Compiler.compile_var/1>,
-                :"-compile_var/1-fun-0-", ['y']}
+                :"-compile_var/1-fun-0-", [~c"y"]}
             ]}
           ]}
       ]}

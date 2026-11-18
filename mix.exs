@@ -7,7 +7,8 @@ defmodule ExDiceRoller.MixProject do
     [
       app: :ex_dice_roller,
       version: @version,
-      elixir: "~> 1.6",
+      elixir: "~> 1.15",
+      compilers: [:leex, :yecc] ++ Mix.compilers(),
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -16,13 +17,18 @@ defmodule ExDiceRoller.MixProject do
       name: "ExDiceRoller",
       source_url: "https://github.com/rishenko/ex_dice_roller",
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: [
+      docs: docs()
+    ]
+  end
+
+  def cli do
+    [
+      preferred_envs: [
         coveralls: :test,
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test
-      ],
-      docs: docs()
+      ]
     ]
   end
 
@@ -52,9 +58,9 @@ defmodule ExDiceRoller.MixProject do
 
   defp deps do
     [
-      {:excoveralls, "~> 0.10", only: [:test]},
-      {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.18.0", only: :dev, runtime: false}
+      {:excoveralls, "~> 0.18", only: [:test]},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
     ]
   end
 

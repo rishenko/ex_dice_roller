@@ -52,31 +52,31 @@ defmodule ExDiceRoller do
 
       iex> ExDiceRoller.tokenize("1+3d4*1-2/-3") |> elem(1) |> ExDiceRoller.parse()
       {:ok,
-      {{:operator, '-'},
-        {{:operator, '+'}, 1,
-        {{:operator, '*'}, {:roll, 3, 4}, 1}},
-        {{:operator, '/'}, 2, -3}}}
+      {{:operator, ~c"-"},
+        {{:operator, ~c"+"}, 1,
+        {{:operator, ~c"*"}, {:roll, 3, 4}, 1}},
+        {{:operator, ~c"/"}, 2, -3}}}
 
       iex> ExDiceRoller.tokenize("(1+3)d4*1-2/-3") |> elem(1) |> ExDiceRoller.parse()
       {:ok,
-      {{:operator, '-'},
-        {{:operator, '*'},
-        {:roll, {{:operator, '+'}, 1, 3}, 4},
-        1}, {{:operator, '/'}, 2, -3}}}
+      {{:operator, ~c"-"},
+        {{:operator, ~c"*"},
+        {:roll, {{:operator, ~c"+"}, 1, 3}, 4},
+        1}, {{:operator, ~c"/"}, 2, -3}}}
 
       iex> ExDiceRoller.tokenize("1+3d(4*1)-2/-3") |> elem(1) |> ExDiceRoller.parse()
       {:ok,
-      {{:operator, '-'},
-        {{:operator, '+'}, 1,
-        {:roll, 3, {{:operator, '*'}, 4, 1}}},
-        {{:operator, '/'}, 2, -3}}}
+      {{:operator, ~c"-"},
+        {{:operator, ~c"+"}, 1,
+        {:roll, 3, {{:operator, ~c"*"}, 4, 1}}},
+        {{:operator, ~c"/"}, 2, -3}}}
 
       iex> ExDiceRoller.tokenize("1+3d4*(1-2)/-3") |> elem(1) |> ExDiceRoller.parse()
       {:ok,
-      {{:operator, '+'}, 1,
-        {{:operator, '/'},
-        {{:operator, '*'}, {:roll, 3, 4},
-          {{:operator, '-'}, 1, 2}}, -3}}}
+      {{:operator, ~c"+"}, 1,
+        {{:operator, ~c"/"},
+        {{:operator, ~c"*"}, {:roll, 3, 4},
+          {{:operator, ~c"-"}, 1, 2}}, -3}}}
 
 
   ## Compiled Rolls
@@ -212,7 +212,7 @@ defmodule ExDiceRoller do
 
   alias ExDiceRoller.{Args, Cache, Compiler, Parser, Tokenizer}
 
-  @cache_table Application.fetch_env!(:ex_dice_roller, :cache_table)
+  @cache_table Application.compile_env(:ex_dice_roller, :cache_table, ExDiceRoller.Cache)
 
   @doc """
   Processes a given string as a dice roll and returns the final result. The
