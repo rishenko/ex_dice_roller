@@ -78,7 +78,7 @@ defmodule ExDiceRoller.Compilers.Variable do
   defp var_final_arg(val, _, _) when is_number(val), do: val
   defp var_final_arg(val, _, args) when is_function(val), do: val.(args)
 
-  defp var_final_arg(val, var, args) when is_bitstring(val) do
+  defp var_final_arg(val, var, args) when is_binary(val) do
     with {:ok, tokens} <- Tokenizer.tokenize(val),
          {:ok, parsed} <- Parser.parse(tokens) do
       compiled_arg = Compiler.delegate(parsed)

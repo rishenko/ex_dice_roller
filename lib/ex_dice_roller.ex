@@ -279,7 +279,7 @@ defmodule ExDiceRoller do
           {:ok, result} | {:error, Error.t()}
   def roll(roll, args \\ [])
 
-  def roll(roll_string, args) when is_bitstring(roll_string) do
+  def roll(roll_string, args) when is_binary(roll_string) do
     with {:ok, fun} <- obtain(roll_string, args), do: execute(fun, args)
   end
 
@@ -335,7 +335,7 @@ defmodule ExDiceRoller do
           {:ok, Compiler.compiled_fun()} | {:error, Error.t()}
   def compile(roll)
 
-  def compile(roll) when is_bitstring(roll) do
+  def compile(roll) when is_binary(roll) do
     with {:ok, tokens} <- Tokenizer.tokenize(roll),
          {:ok, parsed_tokens} <- Parser.parse(tokens) do
       compile(parsed_tokens)

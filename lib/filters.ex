@@ -37,7 +37,9 @@ defmodule ExDiceRoller.Filters do
 
   alias ExDiceRoller.Compiler
 
-  @keys [:>=, :!=, :<=, :=, :>, :<, :drop_lowest, :drop_highest, :drop_highest_lowest]
+  @comparators [:>=, :!=, :<=, :=, :>, :<]
+  @drops [:drop_lowest, :drop_highest, :drop_highest_lowest]
+  @keys @comparators ++ @drops
 
   @doc false
   # the argument keys that `get_filters/1` removes
@@ -91,19 +93,15 @@ defmodule ExDiceRoller.Filters do
     val |> Enum.sort() |> Enum.drop(1) |> Enum.drop(-1)
   end
 
+  # Collects filters in reverse order: the last one given is applied first.
   @spec do_get_filter(Keyword.t(), list(any)) :: list(any)
   defp do_get_filter([], acc), do: acc
-  defp do_get_filter([{:>=, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:<=, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:=, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:!=, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:>, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:<, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:drop_lowest, true} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:drop_highest, true} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
 
-  defp do_get_filter([{:drop_highest_lowest, true} = f | rest], acc),
-    do: do_get_filter(rest, [f] ++ acc)
+  defp do_get_filter([{k, _} = f | rest], acc) when k in @comparators,
+    do: do_get_filter(rest, [f | acc])
+
+  defp do_get_filter([{k, true} = f | rest], acc) when k in @drops,
+    do: do_get_filter(rest, [f | acc])
 
   defp do_get_filter([_ | rest], acc), do: do_get_filter(rest, acc)
 end

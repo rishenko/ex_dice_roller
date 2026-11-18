@@ -174,7 +174,7 @@ defmodule ExDiceRoller.RandomizedRolls do
   end
 
   defp do_generate_var_value(:expression, max_depth) do
-    ExpressionBuilder.randomize(Enum.random(1..(max_depth - 1)), false)
+    ExpressionBuilder.randomize(Enum.random(1..max(max_depth - 1, 1)), false)
   end
 
   defp do_generate_var_value(:function, max_depth) do

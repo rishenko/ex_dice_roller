@@ -2,21 +2,13 @@ defmodule ExDiceRoller.Cache do
   @moduledoc """
   Functionality for managing caching for compiled roll functions.
 
-  In many cases, ExDiceRoller can be used to compile a dice roll during project
-  compilation, and using it within its local area, or pass it as an argument
-  elsewhere. However, dice rolls can be generated during runtime. Repeated
-  tokenizing, parsing, and compiling of runtime dice rolls can add up. The more
-  complex the dice roll, the higher the cost.
-
-  Local testing has revealed that there can be a relatively significant
-  performance savings by caching compiled dice rolls and reusing the cached
-  values instead of repeated interpretation. While these savings are on the
-  order of microseconds (not milliseconds), they can add up in applications
-  that have complex rules and are regularly generating dice rolls during
-  runtime.
-
-  In an effort to avoid this, ExDiceRoller allows for dice rolls to be cached
-  and reused.
+  Expressions written in your code are best compiled once, with
+  `ExDiceRoller.compile/1`, the `~a` sigil, or `ExDiceRoller.Roller.defroll/2`.
+  Expressions that arrive as strings at run time, such as from players or a
+  database, would otherwise be tokenized, parsed, and compiled on every roll.
+  `cache: true` compiles each distinct string once and reuses the function:
+  a cached `1d20+5` takes about 0.3 µs, against 1–1.7 µs uncached. See the
+  performance guide for more measurements.
 
   ## Cache ownership
 
@@ -128,7 +120,7 @@ defmodule ExDiceRoller.Cache do
 
   def delete(cache \\ @cache_table, roll_string)
 
-  def delete(cache, roll_string) when is_bitstring(roll_string) do
+  def delete(cache, roll_string) when is_binary(roll_string) do
     true = :ets.delete(cache, roll_string)
     :ok
   end
