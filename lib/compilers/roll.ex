@@ -308,22 +308,37 @@ defmodule ExDiceRoller.Compilers.Roll do
     end
   end
 
-  # keep/drop, applied in the order written; kept dice stay in rolled order
+  # Keep/drop, applied in the order written; kept dice stay in rolled order.
+  # Ranks the dice by value, with ties going to the die rolled first, takes
+  # the first `count` positions, then walks the dice once to keep or drop
+  # those positions. Dice are integers, so each die's rank and position are
+  # packed into one integer, `rank * size + position`, which sorts like the
+  # pair (positions are below `size`) and faster than tuples.
   defp select({kind, which, count}, dice) when kind in [:keep, :drop] do
-    ranked =
+    size = length(dice)
+
+    chosen =
       dice
-      |> Enum.with_index()
-      # ties go to the die rolled first
-      |> Enum.sort_by(fn {v, i} -> if which == :highest, do: {-v, i}, else: {v, i} end)
-      |> Enum.map(&elem(&1, 1))
+      |> Enum.with_index(fn v, i -> rank(which, v) * size + i end)
+      |> :lists.sort()
+      |> Enum.take(count)
+      |> Enum.map(&Integer.mod(&1, size))
+      |> :lists.sort()
 
-    chosen = MapSet.new(Enum.take(ranked, count))
-
-    dice
-    |> Enum.with_index()
-    |> Enum.filter(fn {_, i} -> MapSet.member?(chosen, i) == (kind == :keep) end)
-    |> Enum.map(&elem(&1, 0))
+    pick(dice, 0, chosen, kind == :keep, [])
   end
 
   defp select(_, dice), do: dice
+
+  defp rank(:highest, v), do: -v
+  defp rank(:lowest, v), do: v
+
+  # walks the dice; `chosen` holds the chosen positions in ascending order
+  defp pick([], _, _, _, acc), do: Enum.reverse(acc)
+
+  defp pick([die | rest], i, [i | chosen], keep?, acc),
+    do: pick(rest, i + 1, chosen, keep?, if(keep?, do: [die | acc], else: acc))
+
+  defp pick([die | rest], i, chosen, keep?, acc),
+    do: pick(rest, i + 1, chosen, keep?, if(keep?, do: acc, else: [die | acc]))
 end

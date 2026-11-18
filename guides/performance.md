@@ -61,19 +61,19 @@ compiled `1d20+5`, `execute!/2`             | ~140 ns
 `~a/1d20+5/r`                               | ~170 ns
 `roll!("1d20+5", cache: true)`              | ~285 ns
 `roll!("1d20+5")`, no cache                 | 1.0–1.7 µs
-compiled `4d6kh3`                           | ~640 ns
-`defroll` `4d6kh3`                          | ~600 ns
+compiled `4d6kh3`                           | ~430 ns
+`defroll` `4d6kh3`                          | ~395 ns
 compile `(1d4)d(6*y)-(2/3+1dx)+4d6kh3`      | ~2.8 µs
-run that expression, compiled               | ~1.4 µs
-run that expression, `defroll`              | ~1.0 µs
-run that expression, `roll(cache: true)`    | ~1.9 µs
+run that expression, compiled               | ~1.1 µs
+run that expression, `defroll`              | ~0.73 µs
+run that expression, `roll(cache: true)`    | ~1.5 µs
 
 Throughput:
 
 Roll                | 1 process              | 10 processes
 ------------------- | ---------------------- | ------------------------
 compiled `1d20+5`   | ~7–8 million rolls/s   | ~43–50 million rolls/s
-compiled `4d6kh3`   | ~1.5 million rolls/s   | ~9.5–10.5 million rolls/s
+compiled `4d6kh3`   | ~2.2–2.4 million rolls/s | ~14 million rolls/s
 `defroll` `1d20+5`  | ~23–27 million rolls/s | ~120–145 million rolls/s
 
 So a system making thousands of rolls per second spends well under 1% of
