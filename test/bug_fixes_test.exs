@@ -3,7 +3,6 @@ defmodule ExDiceRoller.BugFixesTest do
 
   use ExDiceRoller.Case
 
-  import ExDiceRoller.Sigil
   alias ExDiceRoller.Cache
 
   describe "dice counts and sides that round to 0" do
@@ -78,13 +77,13 @@ defmodule ExDiceRoller.BugFixesTest do
       end
     end
 
-    test "the sigil raises ExDiceRoller.Error for an invalid expression" do
+    test "the sigil reports an invalid expression, naming it" do
       assert_raise ExDiceRoller.Error, ~r/invalid dice expression "1d6\+"/, fn ->
-        sigil_a("1d6+", [])
+        Code.eval_string("import ExDiceRoller.Sigil; ~a/1d6+/")
       end
 
       assert_raise ExDiceRoller.Error, ~r/invalid dice expression/, fn ->
-        sigil_a("1d6+", ~c"r")
+        Code.eval_string("import ExDiceRoller.Sigil; ~a/1d6+/r")
       end
     end
   end

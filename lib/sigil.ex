@@ -42,36 +42,97 @@ defmodule ExDiceRoller.Sigil do
       iex> ~a/1d2/re
       7
 
+  ## Compile-time parsing
+
+  `~a` is a macro. When the expression is a literal (no `\#{}`
+  interpolation), it is tokenized, parsed, and checked when your code
+  compiles, so a malformed expression or an unknown flag is a compile error.
+  The roll function is built the first time the sigil runs and kept in
+  `:persistent_term`, so later calls skip parsing and compiling. An
+  interpolated expression can't be checked early; it is parsed and compiled
+  each time it runs, and errors are raised at run time.
   """
 
-  alias ExDiceRoller.{Compiler, Error}
+  alias ExDiceRoller.{Compiler, Error, Parser, Tokenizer}
 
-  @spec sigil_a(String.t(), charlist) :: Compiler.compiled_fun() | Compiler.calculated_val()
+  @doc false
+  defmacro sigil_a(roll, opts)
 
-  def sigil_a(roll_string, opts) do
-    binary_opts = :binary.list_to_bin(opts)
+  defmacro sigil_a({:<<>>, _meta, [roll_string]}, opts) when is_binary(roll_string),
+    do: compile_time(roll_string, opts)
 
-    case translate_opts(binary_opts, []) do
-      {:ok, translated_opts} ->
-        fun = compile!(roll_string)
+  defmacro sigil_a(roll_string, opts) when is_binary(roll_string),
+    do: compile_time(roll_string, opts)
 
-        case translated_opts do
-          [] -> fun
-          _ -> ExDiceRoller.execute!(fun, opts: translated_opts -- [:execute])
-        end
+  defmacro sigil_a(roll, opts) do
+    quote do: ExDiceRoller.Sigil.__runtime__(unquote(roll), unquote(opts))
+  end
 
-      {:error, rest} ->
-        raise Error, reason: :invalid_option, details: rest
+  # Parses and validates at compile time; the generated code fetches (or, on
+  # first use, builds and stores) the compiled function by its parse tree.
+  defp compile_time(roll_string, opts) do
+    roll_opts = translate_opts!(opts)
+    tree = parse!(roll_string)
+
+    fun =
+      quote do
+        ExDiceRoller.Sigil.__fetch__(unquote(Macro.escape(tree)))
+      end
+
+    case roll_opts do
+      nil -> fun
+      _ -> quote do: ExDiceRoller.execute!(unquote(fun), opts: unquote(roll_opts))
+    end
+  end
+
+  @doc false
+  # Returns the compiled function for a parse tree, building it once.
+  @spec __fetch__(Parser.expression()) :: Compiler.compiled_fun()
+  def __fetch__(tree) do
+    key = {__MODULE__, tree}
+
+    case :persistent_term.get(key, nil) do
+      nil ->
+        fun = Compiler.compile(tree)
+        :persistent_term.put(key, fun)
+        fun
+
+      fun ->
+        fun
+    end
+  end
+
+  @doc false
+  # The sigil with an interpolated expression: everything happens at run time.
+  @spec __runtime__(String.t(), charlist) :: Compiler.compiled_fun() | Compiler.calculated_val()
+  def __runtime__(roll_string, opts) do
+    roll_opts = translate_opts!(opts)
+    fun = Compiler.compile(parse!(roll_string))
+
+    case roll_opts do
+      nil -> fun
+      _ -> ExDiceRoller.execute!(fun, opts: roll_opts)
+    end
+  end
+
+  # `nil` when there are no flags (return the function); otherwise the roll
+  # options, which may be empty (`r` alone)
+  defp translate_opts!([]), do: nil
+
+  defp translate_opts!(opts) do
+    case translate_opts(:binary.list_to_bin(opts), []) do
+      {:ok, translated} -> translated -- [:execute]
+      {:error, rest} -> raise Error, reason: :invalid_option, details: rest
     end
   end
 
   # names the expression in the message, since a sigil has no other context
-  @spec compile!(String.t()) :: Compiler.compiled_fun()
-  defp compile!(roll_string) do
-    case ExDiceRoller.compile(roll_string) do
-      {:ok, fun} ->
-        fun
-
+  @spec parse!(String.t()) :: Parser.expression()
+  defp parse!(roll_string) do
+    with {:ok, tokens} <- Tokenizer.tokenize(roll_string),
+         {:ok, tree} <- Parser.parse(tokens) do
+      tree
+    else
       {:error, %Error{} = err} ->
         raise %{
           err

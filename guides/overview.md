@@ -111,7 +111,7 @@ While repeatedly calling `ExDiceRoller.roll!/2` is very fast, it's better to tok
     iex> ExDiceRoller.execute!(fun)
     8
 
-The `~a` sigil can also generate compiled functions, including those with variables.
+The `~a` sigil can also generate compiled functions, including those with variables. The sigil parses its expression when your code compiles and builds the function once, so it is as cheap to reuse as a function from `compile/1`.
 
     iex> import ExDiceRoller.Sigil
     iex> fun = ~a/2d6+2/

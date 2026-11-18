@@ -41,10 +41,20 @@
   * A cache whose process crashes is restarted empty.
   * `D` is a roll operator, like `d`, so `D` can no longer be a variable.
     `1D6` used to be a syntax error.
+  * `~a` is now a macro, so `ExDiceRoller.Sigil.sigil_a/2` can no longer be
+    called as a function, and an invalid literal expression or flag fails at
+    compile time instead of raising at run time.
   * `NdMdh` and `NdMdl` now mean "drop the highest/lowest die". Before, they
     rolled a roll of dice with `h` or `l` sides; write `NdMd(h)` for that.
 
 * Enhancements
+  * The `~a` sigil is a macro: a literal expression is parsed and its flags
+    checked at compile time (a malformed expression is a compile error), and
+    the compiled function is built once and kept in `:persistent_term`.
+    `~a/1d20+5/r` went from about 1.15 µs to 0.25 µs per roll. Interpolated
+    sigils are still parsed at run time.
+  * New performance guide (`guides/performance.md`) and benchmark script
+    (`bench/rolls.exs`).
   * Dice modifiers in expressions, written right after a roll's sides:
     `khN`/`kN` and `klN` keep the highest/lowest N dice, `dhN` and `dlN` drop
     them (N defaults to 1), `rN` rerolls until the die no longer matches,
@@ -108,6 +118,13 @@
 ## v1.0.0-rc.2
 
 * Enhancements
+  * The `~a` sigil is a macro: a literal expression is parsed and its flags
+    checked at compile time (a malformed expression is a compile error), and
+    the compiled function is built once and kept in `:persistent_term`.
+    `~a/1d20+5/r` went from about 1.15 µs to 0.25 µs per roll. Interpolated
+    sigils are still parsed at run time.
+  * New performance guide (`guides/performance.md`) and benchmark script
+    (`bench/rolls.exs`).
   * Replaced Enum.random/1 calls with erlang's rand:uniform/1, greatly
     increasing speed for equations with dice rolls.
   * Fixed an issue with exponent operator precedence.
@@ -132,6 +149,13 @@
     * return strings as strings and not charlists
 
 * Enhancements
+  * The `~a` sigil is a macro: a literal expression is parsed and its flags
+    checked at compile time (a malformed expression is a compile error), and
+    the compiled function is built once and kept in `:persistent_term`.
+    `~a/1d20+5/r` went from about 1.15 µs to 0.25 µs per roll. Interpolated
+    sigils are still parsed at run time.
+  * New performance guide (`guides/performance.md`) and benchmark script
+    (`bench/rolls.exs`).
   * added float as possible value in expressions and variable values
   * consolidated improved list comprehension code to
     `ExDiceRoller.ListComprehension`
@@ -153,6 +177,13 @@
 ## v0.5.0-alpha
 
 * Enhancements
+  * The `~a` sigil is a macro: a literal expression is parsed and its flags
+    checked at compile time (a malformed expression is a compile error), and
+    the compiled function is built once and kept in `:persistent_term`.
+    `~a/1d20+5/r` went from about 1.15 µs to 0.25 µs per roll. Interpolated
+    sigils are still parsed at run time.
+  * New performance guide (`guides/performance.md`) and benchmark script
+    (`bench/rolls.exs`).
   * adds modulo `%` and exponent `^` support
   * adds `,` to dice rolls, allowing for choosing highest/lowest of the values
     on either side
@@ -167,6 +198,13 @@
 ## v0.4.0-alpha
 
 * Enhancements
+  * The `~a` sigil is a macro: a literal expression is parsed and its flags
+    checked at compile time (a malformed expression is a compile error), and
+    the compiled function is built once and kept in `:persistent_term`.
+    `~a/1d20+5/r` went from about 1.15 µs to 0.25 µs per roll. Interpolated
+    sigils are still parsed at run time.
+  * New performance guide (`guides/performance.md`) and benchmark script
+    (`bench/rolls.exs`).
   * added a new sigil `~a` in `ExDiceRoller.Sigil` for compiling functions
     and/or performing rolls
   * added exploding dice logic to the dice roller and sigil
@@ -185,6 +223,13 @@
 ## v0.3.0-alpha
 
 * Enhancements
+  * The `~a` sigil is a macro: a literal expression is parsed and its flags
+    checked at compile time (a malformed expression is a compile error), and
+    the compiled function is built once and kept in `:persistent_term`.
+    `~a/1d20+5/r` went from about 1.15 µs to 0.25 µs per roll. Interpolated
+    sigils are still parsed at run time.
+  * New performance guide (`guides/performance.md`) and benchmark script
+    (`bench/rolls.exs`).
   * adds variables to dice roll expressions
   * includes refactoring of tokenizing and parsing code to their own modules
   * adds `ExDiceRoller.Compiler.fun_info/1` which details the tree of functions

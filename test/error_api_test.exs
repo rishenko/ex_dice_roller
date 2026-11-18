@@ -138,19 +138,23 @@ defmodule ExDiceRoller.ErrorApiTest do
   end
 
   describe "sigil" do
-    test "raises for an invalid option instead of returning a tuple" do
-      error = assert_raise Error, fn -> sigil_a("1d6", ~c"rz") end
+    test "an unknown flag is a compile error" do
+      error =
+        assert_raise Error, fn -> Code.eval_string("import ExDiceRoller.Sigil; ~a/1d6/rz") end
+
       assert error.reason == :invalid_option
       assert error.details == "z"
     end
 
     test "raises for a failed roll" do
-      assert_raise Error, "the divisor cannot be 0", fn -> sigil_a("1/0", ~c"r") end
+      assert_raise Error, "the divisor cannot be 0", fn -> ~a|1/0|r end
     end
 
-    test "names the expression when it does not parse" do
+    test "an invalid expression is a compile error that names the expression" do
       error =
-        assert_raise Error, ~r/invalid dice expression "1d6\+"/, fn -> sigil_a("1d6+", []) end
+        assert_raise Error, ~r/invalid dice expression "1d6\+"/, fn ->
+          Code.eval_string("import ExDiceRoller.Sigil; ~a/1d6+/")
+        end
 
       assert error.reason == :token_parsing_failed
     end

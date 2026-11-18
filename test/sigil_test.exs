@@ -91,4 +91,59 @@ defmodule ExDiceRoller.SigilTest do
       end)
     end
   end
+
+  describe "compile-time sigil" do
+    test "a malformed expression or flag fails when the code compiles, not when it runs" do
+      code = fn body ->
+        """
+        defmodule ExDiceRoller.SigilTest.Never do
+          import ExDiceRoller.Sigil
+          def never, do: #{body}
+        end
+        """
+      end
+
+      assert_raise ExDiceRoller.Error, ~r/invalid dice expression/, fn ->
+        Code.compile_string(code.("~a/1d6+/"))
+      end
+
+      assert_raise ExDiceRoller.Error, ~r/invalid sigil option/, fn ->
+        Code.compile_string(code.("~a/1d6/z"))
+      end
+
+      refute Code.ensure_loaded?(ExDiceRoller.SigilTest.Never)
+    end
+
+    test "the compiled function is built once and stored in :persistent_term" do
+      {:ok, tokens} = ExDiceRoller.tokenize("3d7+19")
+      {:ok, tree} = ExDiceRoller.parse(tokens)
+      key = {ExDiceRoller.Sigil, tree}
+      :persistent_term.erase(key)
+
+      fun = ~a/3d7+19/
+      assert :persistent_term.get(key) === fun
+      assert ~a/3d7+19/ === fun
+    end
+
+    test "rolls the same as roll!/2 from the same seed" do
+      for i <- 1..50 do
+        :rand.seed(:exsss, {i, 2, 3})
+        expected = ExDiceRoller.roll!("4d6kh3+1d8", opts: [:explode])
+        :rand.seed(:exsss, {i, 2, 3})
+        assert ~a/4d6kh3+1d8/re == expected
+      end
+    end
+
+    test "an interpolated expression is parsed at run time" do
+      n = 3
+      assert [1, 1, 1] == ~a/#{n}d1/k
+      assert 3 == ExDiceRoller.execute!(~a/#{n}d1/)
+
+      bad = "+"
+
+      assert_raise ExDiceRoller.Error, ~r/invalid dice expression "1d6\+"/, fn ->
+        ~a/1d6#{bad}/r
+      end
+    end
+  end
 end

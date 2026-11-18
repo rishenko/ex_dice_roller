@@ -65,7 +65,8 @@ defmodule ExDiceRoller.MixProject do
   defp doc_extras do
     [
       "guides/overview.md",
-      "guides/dice_mechanics.md"
+      "guides/dice_mechanics.md",
+      "guides/performance.md"
     ]
   end
 end

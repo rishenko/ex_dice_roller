@@ -191,7 +191,8 @@ iex> ExDiceRoller.execute!(roll_fun, x: "10d100", opts: :keep)
 ## Sigil Usage
 
 ExDiceRoller introduces a new sigil, `~a`. Without flags it returns a compiled
-function. Its flags are `r` (roll now), `e` (explode), `k` (keep), `h`
+function. A literal expression is parsed and checked when your code compiles,
+so a typo is a compile error, and the compiled function is built only once. Its flags are `r` (roll now), `e` (explode), `k` (keep), `h`
 (highest), and `l` (lowest); any flag rolls the expression immediately.
 Variables, filters, and caching are not available when the sigil rolls, and
 results are bare values (errors raise `ExDiceRoller.Error`).
@@ -229,6 +230,15 @@ iex> ~a/5d1+5/k
 iex> ~a/5d1+5d10/k
 #=> [8, 7, 5, 2, 11]
 ```
+
+## Performance
+
+Compile an expression once and reuse the function: a compiled `1d20+5` rolls
+in about 115 ns, roughly 7 million rolls per second on one core. Literal `~a`
+sigils are parsed when your code compiles, and `cache: true` avoids
+re-parsing strings that arrive at run time. See
+[the performance guide](guides/performance.md) for measurements and advice,
+and run `MIX_ENV=prod mix run bench/rolls.exs` to measure your own hardware.
 
 ## Caching Support
 
