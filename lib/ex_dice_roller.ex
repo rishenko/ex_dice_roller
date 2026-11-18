@@ -379,12 +379,19 @@ defmodule ExDiceRoller do
   def execute!(compiled, args \\ []), do: unwrap!(execute(compiled, args))
 
   @doc """
-  Starts the underlying roll function cache. See `ExDiceRoller.Cache` for more
-  details.
+  Starts a roll function cache named `cache`, supervised by ExDiceRoller, and
+  returns `{:ok, cache}`. If the cache is already running, it is left as is.
+
+  The default cache starts with the application, so calling this is only
+  needed for additional caches. See `ExDiceRoller.Cache` for more details.
   """
-  @spec start_cache(atom | none) :: {:ok, any}
+  @spec start_cache(atom) :: {:ok, atom} | {:error, any}
   def start_cache(cache \\ @cache_table) do
-    {:ok, _} = Cache.start_link(cache)
+    case DynamicSupervisor.start_child(ExDiceRoller.CacheSupervisor, {Cache, name: cache}) do
+      {:ok, _pid} -> {:ok, cache}
+      {:error, {:already_started, _pid}} -> {:ok, cache}
+      {:error, _} = err -> err
+    end
   end
 
   @spec obtain(String.t(), Keyword.t()) :: {:ok, Compiler.compiled_fun()} | {:error, Error.t()}

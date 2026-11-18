@@ -18,7 +18,19 @@ defmodule ExDiceRoller.Cache do
   In an effort to avoid this, ExDiceRoller allows for dice rolls to be cached
   and reused.
 
-      iex> ExDiceRoller.start_cache()
+  ## Cache ownership
+
+  Each cache is an ETS table owned by an `ExDiceRoller.Cache` process. The
+  default cache (the `:cache_table` config, `ExDiceRoller.Cache` by default)
+  starts with the `:ex_dice_roller` application, so `cache: true` works with
+  no setup. Start more caches with `ExDiceRoller.start_cache/1`, which runs
+  them under ExDiceRoller's own supervisor, or add `{ExDiceRoller.Cache,
+  name: MyCache}` to your own supervision tree.
+
+  If a cache process crashes, its supervisor restarts it with an empty table;
+  rolls are compiled again on their next use.
+
+      iex> ExDiceRoller.Cache.clear()
       iex> ExDiceRoller.Cache.all()
       []
       iex> ExDiceRoller.roll!("2d6+1d5", cache: true)
@@ -34,6 +46,8 @@ defmodule ExDiceRoller.Cache do
       7
   """
 
+  use GenServer
+
   @cache_table Application.compile_env(:ex_dice_roller, :cache_table, ExDiceRoller.Cache)
 
   @type cache_entry :: {roll_string, roll_fun}
@@ -41,23 +55,34 @@ defmodule ExDiceRoller.Cache do
   @type roll_fun :: function
 
   @doc """
-  Start the caching system, using the `:ex_dice_roller` config's `:cache_table`
-  value.
-  """
-  @spec start_link() :: {:ok, atom}
-  def start_link, do: start_link(@cache_table)
+  Starts a process that creates and owns the cache table `name`, and links it
+  to the caller. `opts` is a cache name, or a keyword list with `:name`; the
+  default is the `:cache_table` config. The process is registered under the
+  same name as the table.
 
-  @doc """
-  Starts the caching system, using `name` for the cache table. Calling it again
-  while the table exists is a no-op.
+  Use this from a supervisor (`{ExDiceRoller.Cache, name: MyCache}`). To
+  start a cache from anywhere else, use `ExDiceRoller.start_cache/1`.
   """
-  @spec start_link(atom) :: {:ok, atom}
-  def start_link(name) do
-    if :ets.whereis(name) == :undefined do
-      opts = [:public, :set, :named_table, {:read_concurrency, true}]
-      _ = :ets.new(name, opts)
-    end
+  @spec start_link(atom | Keyword.t()) :: GenServer.on_start()
+  def start_link(opts \\ [])
 
+  def start_link(name) when is_atom(name), do: start_link(name: name)
+
+  def start_link(opts) when is_list(opts) do
+    name = Keyword.get(opts, :name, @cache_table)
+    GenServer.start_link(__MODULE__, name, name: name)
+  end
+
+  @doc false
+  def child_spec(opts) do
+    name = if is_atom(opts), do: opts, else: Keyword.get(opts, :name, @cache_table)
+    %{id: {__MODULE__, name}, start: {__MODULE__, :start_link, [opts]}}
+  end
+
+  @impl GenServer
+  def init(name) do
+    opts = [:public, :set, :named_table, {:read_concurrency, true}]
+    ^name = :ets.new(name, opts)
     {:ok, name}
   end
 

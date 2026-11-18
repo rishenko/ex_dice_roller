@@ -25,6 +25,20 @@
     becomes `{:error, %ExDiceRoller.Error{reason: :arithmetic_error}}` from
     `roll/2`.
   * With `:keep`, N zero-sided dice return `[0]`.
+  * Caches are owned by supervised processes. ExDiceRoller is now an OTP
+    application (`ExDiceRoller.Application`) that starts the default cache, so
+    `cache: true` works without calling `start_cache/1`. Before, the ETS table
+    belonged to whichever process called `start_cache/1` and was deleted when
+    that process exited.
+  * `ExDiceRoller.start_cache/1` starts the cache under
+    `ExDiceRoller.CacheSupervisor`; it still returns `{:ok, name}` and is still
+    a no-op if the cache is running.
+  * `ExDiceRoller.Cache` is a GenServer. `Cache.start_link/1` takes a name or
+    `name:` option, links the owner process to the caller, and returns
+    `{:ok, pid}` (or `{:error, {:already_started, pid}}`) instead of
+    `{:ok, name}`. Use `{ExDiceRoller.Cache, name: MyCache}` in a supervision
+    tree.
+  * A cache whose process crashes is restarted empty.
 
 * Bug fixes
   * Dice counts that round to 0 roll no dice. `(1/3)d6` used to roll 2 dice,

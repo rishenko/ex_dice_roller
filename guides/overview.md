@@ -109,10 +109,8 @@ More detailed information about compiling dice roll expressions can be found in 
 ## Caching Compiled Dice Rolls
 
 While creating dice roll functions during compile-time and reusing them is great, there are situations when dice rolls need to be built and generated at runtime. Again, ExDiceRoller can do this very quickly, with even complex expressions taking only a tenth of a millisecond. But if every microsecond counts,
-ExDiceRoller provides caching.
-
-    iex> ExDiceRoller.start_cache()
-    {:ok, ExDiceRoller.Cache}
+ExDiceRoller provides caching. The default cache starts with the application,
+so no setup is needed.
     iex> ExDiceRoller.roll!("1d6+3", cache: true)
     4
     iex> ExDiceRoller.Cache.all()

@@ -4,10 +4,9 @@ defmodule ExDiceRoller.SigilTest do
   use ExDiceRoller.Case
   doctest ExDiceRoller.Sigil
   import ExDiceRoller.Sigil
-  alias ExDiceRoller.Cache
 
   setup do
-    {:ok, _} = Cache.start_link()
+    {:ok, _} = ExDiceRoller.start_cache()
     :ok
   end
 

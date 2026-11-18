@@ -171,6 +171,7 @@ defmodule ExDiceRollerTest do
   describe "caching" do
     test "rolls" do
       {:ok, _} = ExDiceRoller.start_cache()
+      :ok = Cache.clear()
       roll = "1d20"
 
       assert [] == Cache.all()
@@ -181,6 +182,7 @@ defmodule ExDiceRollerTest do
 
     test "variables" do
       {:ok, _} = ExDiceRoller.start_cache()
+      :ok = Cache.clear()
       roll = "1d6+x-y"
 
       assert [] == Cache.all()

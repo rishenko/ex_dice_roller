@@ -212,9 +212,12 @@ iex> ~a/5d1+5d10/k
 
 ## Caching Support
 
+The default cache starts with the `:ex_dice_roller` application, so
+`cache: true` needs no setup. `ExDiceRoller.start_cache/1` starts more caches
+under ExDiceRoller's supervisor; you can also add
+`{ExDiceRoller.Cache, name: MyCache}` to your own supervision tree.
+
 ```elixir
-iex> ExDiceRoller.start_cache()
-#=> {:ok, ExDiceRoller.Cache}
 
 iex> ExDiceRoller.roll!("xdy-2d4", [x: 10, y: 5, cache: true])
 #=> 34

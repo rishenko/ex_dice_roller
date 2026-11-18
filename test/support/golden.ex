@@ -61,7 +61,7 @@ defmodule ExDiceRoller.Golden do
   @doc "Runs the whole corpus and returns one line per case."
   @spec run() :: [String.t()]
   def run do
-    _ = ExDiceRoller.Cache.start_link()
+    {:ok, _} = ExDiceRoller.start_cache()
     :ok = ExDiceRoller.Cache.clear()
 
     for {expr, i} <- Enum.with_index(expressions()),

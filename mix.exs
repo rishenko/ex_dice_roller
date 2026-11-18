@@ -52,6 +52,7 @@ defmodule ExDiceRoller.MixProject do
 
   def application do
     [
+      mod: {ExDiceRoller.Application, []},
       extra_applications: [:logger]
     ]
   end
