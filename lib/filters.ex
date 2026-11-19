@@ -10,28 +10,52 @@ defmodule ExDiceRoller.Filters do
   * boolean: `drop_highest`, `drop_lowest`, `drop_highest_lowest` in the format
     `<comparator>: true | false`.
 
-  Note that boolean filters require a list of values, such as adding the
-  separator (`,`) comparator or using the `:keep` option.
+  Filters always return a list: a single (summed) result is treated as a
+  one-element list, so `ExDiceRoller.roll!("8d6", >=: 4)` returns `[total]` or
+  `[]`, and the boolean filters drop that one value. Use them with the `:keep`
+  option to filter individual dice. To drop or keep dice and still get a sum,
+  use the roll modifiers instead (`4d6dl1`, `4d6kh3`; see
+  `ExDiceRoller.Compilers.Roll`).
+
+  Filters apply in the order given. Order matters when a `drop_*` filter is
+  combined with another filter: dropping the lowest of `[2, 3, 5]` and then
+  keeping values `>= 3` leaves `[3, 5]`, while the other order leaves `[5]`.
+
+      iex> ExDiceRoller.Filters.get_filters(drop_lowest: true, >=: 3, x: 1)
+      {[drop_lowest: true, >=: 3], [x: 1]}
+      iex> ExDiceRoller.Filters.filter([2, 3, 5], drop_lowest: true, >=: 3)
+      [3, 5]
+      iex> ExDiceRoller.Filters.filter([2, 3, 5], >=: 3, drop_lowest: true)
+      [5]
 
   Examples:
 
-      iex> ExDiceRoller.roll("1d4", >=: 5)
+      iex> ExDiceRoller.roll!("1d4", >=: 5)
       []
 
-      iex> ExDiceRoller.roll("6d6", <=: 4, opts: :keep)
+      iex> ExDiceRoller.roll!("6d6", <=: 4, opts: :keep)
       [3, 2, 4, 2]
 
-      iex> ExDiceRoller.roll("xd6", x: [1, 2, 3, 2], >=: 4, opts: :keep)
+      iex> ExDiceRoller.roll!("xd6", x: [1, 2, 3, 2], >=: 4, opts: :keep)
       [6, 4, 5, 4, 4]
 
-      iex> ExDiceRoller.roll("4d10", drop_highest: true, opts: :keep)
+      iex> ExDiceRoller.roll!("4d10", drop_highest: true, opts: :keep)
       [9, 6, 4]
 
-      iex> ExDiceRoller.roll("4d10", drop_highest_lowest: true, opts: :keep)
+      iex> ExDiceRoller.roll!("4d10", drop_highest_lowest: true, opts: :keep)
       [6, 9]
   """
 
   alias ExDiceRoller.Compiler
+
+  @comparators [:>=, :!=, :<=, :=, :>, :<]
+  @drops [:drop_lowest, :drop_highest, :drop_highest_lowest]
+  @keys @comparators ++ @drops
+
+  @doc false
+  # the argument keys that `get_filters/1` removes
+  @spec keys() :: [atom]
+  def keys, do: @keys
 
   @doc """
   Filter the calculated value using the list of provided filters.
@@ -46,7 +70,7 @@ defmodule ExDiceRoller.Filters do
   def filter(val, []), do: val
   def filter(val, filters) when is_number(val), do: filter([val], filters)
 
-  def filter(val, filters) when length(filters) > 0 do
+  def filter(val, filters) when is_list(filters) and filters != [] do
     Enum.reduce(filters, val, &do_filter(&2, &1))
   end
 
@@ -60,7 +84,7 @@ defmodule ExDiceRoller.Filters do
 
     {filters,
      Enum.filter(args, fn {k, _} ->
-       k not in [:>=, :!=, :<=, :=, :>, :<, :drop_lowest, :drop_highest, :drop_highest_lowest]
+       k not in @keys
      end)}
   end
 
@@ -80,19 +104,15 @@ defmodule ExDiceRoller.Filters do
     val |> Enum.sort() |> Enum.drop(1) |> Enum.drop(-1)
   end
 
+  # Collects filters in the order given, which is the order they apply in.
   @spec do_get_filter(Keyword.t(), list(any)) :: list(any)
-  defp do_get_filter([], acc), do: acc
-  defp do_get_filter([{:>=, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:<=, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:=, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:!=, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:>, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:<, _} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:drop_lowest, true} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
-  defp do_get_filter([{:drop_highest, true} = f | rest], acc), do: do_get_filter(rest, [f] ++ acc)
+  defp do_get_filter([], acc), do: Enum.reverse(acc)
 
-  defp do_get_filter([{:drop_highest_lowest, true} = f | rest], acc),
-    do: do_get_filter(rest, [f] ++ acc)
+  defp do_get_filter([{k, _} = f | rest], acc) when k in @comparators,
+    do: do_get_filter(rest, [f | acc])
+
+  defp do_get_filter([{k, true} = f | rest], acc) when k in @drops,
+    do: do_get_filter(rest, [f | acc])
 
   defp do_get_filter([_ | rest], acc), do: do_get_filter(rest, acc)
 end

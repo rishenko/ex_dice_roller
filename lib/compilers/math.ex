@@ -3,9 +3,9 @@ defmodule ExDiceRoller.Compilers.Math do
   Handles compiling expressions using common mathematical operators.
 
       iex> {:ok, tokens} = ExDiceRoller.Tokenizer.tokenize("1+x")
-      {:ok, [{:int, 1, '1'}, {:basic_operator, 1, '+'}, {:var, 1, 'x'}]}
+      {:ok, [{:int, 1, ~c"1"}, {:basic_operator, 1, ~c"+"}, {:var, 1, ~c"x"}]}
       iex> {:ok, parse_tree} = ExDiceRoller.Parser.parse(tokens)
-      {:ok, {{:operator, '+'}, 1, {:var, 'x'}}}
+      {:ok, {{:operator, ~c"+"}, 1, {:var, ~c"x"}}}
       iex> fun = ExDiceRoller.Compilers.Math.compile(parse_tree)
       iex> fun.([x: 2])
       3
@@ -26,36 +26,50 @@ defmodule ExDiceRoller.Compilers.Math do
   """
 
   @behaviour ExDiceRoller.Compiler
-  alias ExDiceRoller.{Compiler, ListComprehension}
+  alias ExDiceRoller.{Compiler, Error, ListComprehension}
 
   @err_name "math operators"
 
   @operators [
-    {'+', &Kernel.+/2, "add"},
-    {'-', &Kernel.-/2, "sub"},
-    {'*', &Kernel.*/2, "mul"},
-    {'/', &__MODULE__.divide/2, "div"},
-    {'%', &__MODULE__.modulo/2, "mod"},
-    {'^', &:math.pow/2, "exp"}
+    {~c"+", &Kernel.+/2, "add"},
+    {~c"-", &Kernel.-/2, "sub"},
+    {~c"*", &Kernel.*/2, "mul"},
+    {~c"/", &__MODULE__.divide/2, "div"},
+    {~c"%", &__MODULE__.modulo/2, "mod"},
+    {~c"^", &:math.pow/2, "exp"}
   ]
 
-  @doc "Function used for modulo calculations. Only accepts integer values."
-  @spec modulo(integer, integer) :: integer
+  @doc """
+  Function used for modulo calculations. Accepts integers and floats with a
+  whole-number value, such as the result of `6/2`; other floats raise
+  `ExDiceRoller.Error`.
+  """
+  @spec modulo(number, number) :: integer
 
-  def modulo(_, 0), do: raise(ArgumentError, "the divisor cannot be 0")
-  def modulo(_, 0.0), do: raise(ArgumentError, "the divisor cannot be 0")
+  # `r == 0` matches 0, 0.0 and -0.0 on every OTP release (OTP 27 no longer
+  # matches -0.0 against a 0.0 pattern)
+  def modulo(_, r) when r == 0,
+    do: raise(Error, reason: :divide_by_zero, message: "the divisor cannot be 0")
 
-  def modulo(l, r) when is_integer(l) and is_integer(r) do
-    rem(Compiler.round_val(l), Compiler.round_val(r))
+  def modulo(l, r) when is_number(l) and is_number(r) and l == trunc(l) and r == trunc(r) do
+    rem(trunc(l), trunc(r))
   end
 
-  def modulo(_, _), do: raise(ArgumentError, "modulo operator only accepts integer values")
+  def modulo(_, _),
+    do:
+      raise(Error,
+        reason: :non_integer_modulo,
+        message: "modulo operator only accepts integer values"
+      )
 
   @doc "Function used for division calculations."
   @spec divide(Compiler.calculated_val(), Compiler.calculated_val()) :: float
 
-  def divide(_, 0), do: raise(ArgumentError, "the divisor cannot be 0")
-  def divide(_, 0.0), do: raise(ArgumentError, "the divisor cannot be 0")
+  # `r == 0` matches 0, 0.0 and -0.0 on every OTP release (OTP 27 no longer
+  # matches -0.0 against a 0.0 pattern)
+  def divide(_, r) when r == 0,
+    do: raise(Error, reason: :divide_by_zero, message: "the divisor cannot be 0")
+
   def divide(l, r) when is_number(l) and is_number(r), do: l / r
 
   @impl true
@@ -98,6 +112,13 @@ defmodule ExDiceRoller.Compilers.Math do
       end
     end
   end
+
+  @doc false
+  # Applies an operator to values that may be lists, as the compiled
+  # closures do. Used by `ExDiceRoller.Roller`.
+  @spec __apply__(Compiler.calculated_val(), Compiler.calculated_val(), function) ::
+          Compiler.calculated_val()
+  def __apply__(l, r, fun), do: ListComprehension.apply(l, r, fun, @err_name, &op/3)
 
   @spec op(Compiler.calculated_val(), Compiler.calculated_val(), function) ::
           Compiler.calculated_val()

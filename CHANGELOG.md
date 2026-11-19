@@ -1,5 +1,148 @@
 # Changelog
 
+## v2.0.0 (unreleased)
+
+* Breaking changes
+  * `roll/2`, `execute/2` and `calculate/2` return `{:ok, result}` or
+    `{:error, %ExDiceRoller.Error{}}`. Before, they returned the bare result,
+    returned `{:error, tuple}` for bad syntax, and raised `ArgumentError` for
+    failed rolls.
+  * New `roll!/2`, `execute!/2` and `compile!/1` return bare values and raise
+    `ExDiceRoller.Error`. To migrate, replace `roll(` with `roll!(` where you
+    want the old return value.
+  * Every error is an `ExDiceRoller.Error` exception with `:reason`,
+    `:details` and `:message` fields. Syntax errors move from
+    `{:error, {:tokenizing_failed, d}}` to
+    `{:error, %ExDiceRoller.Error{reason: :tokenizing_failed, details: d}}`
+    (likewise `:token_parsing_failed`, `:cannot_compile_roll`, and
+    `:invalid_roll_key` from `Cache.delete/2`). Error messages are unchanged.
+  * Compiled functions called directly (`fun.(args)`) and the `~a` sigil
+    raise `ExDiceRoller.Error` instead of `ArgumentError`.
+  * The `~a` sigil raises for an unknown flag instead of returning
+    `{:error, {:invalid_option, _}}`.
+  * `Cache.obtain/2` returns `{:ok, fun}` instead of the bare function.
+  * An `ArithmeticError` during a roll, such as a float overflow from `^`,
+    becomes `{:error, %ExDiceRoller.Error{reason: :arithmetic_error}}` from
+    `roll/2`.
+  * With `:keep`, N zero-sided dice return `[0]`.
+  * Caches are owned by supervised processes. ExDiceRoller is now an OTP
+    application (`ExDiceRoller.Application`) that starts the default cache, so
+    `cache: true` works without calling `start_cache/1`. Before, the ETS table
+    belonged to whichever process called `start_cache/1` and was deleted when
+    that process exited.
+  * `ExDiceRoller.start_cache/1` starts the cache under
+    `ExDiceRoller.CacheSupervisor`; it still returns `{:ok, name}` and is still
+    a no-op if the cache is running.
+  * `ExDiceRoller.Cache` is a GenServer. `Cache.start_link/1` takes a name or
+    `name:` option, links the owner process to the caller, and returns
+    `{:ok, pid}` (or `{:error, {:already_started, pid}}`) instead of
+    `{:ok, name}`. Use `{ExDiceRoller.Cache, name: MyCache}` in a supervision
+    tree.
+  * A cache whose process crashes is restarted empty.
+  * `D` is a roll operator, like `d`, so `D` can no longer be a variable.
+    `1D6` used to be a syntax error.
+  * `~a` is now a macro, so `ExDiceRoller.Sigil.sigil_a/2` can no longer be
+    called as a function, and an invalid literal expression or flag fails at
+    compile time instead of raising at run time.
+  * Unary minus works on any expression, not only numbers: `-x`, `-(1d4)`
+    and `2*-x` used to be syntax errors. `-1d4` now means `-(1d4)`; before,
+    it rolled -1 dice and failed. Write `(-1)d4` for the old meaning.
+  * Filters apply in the order given. Before, they applied in reverse
+    order, so `drop_lowest: true, >=: 2` filtered `>= 2` first and then
+    dropped the lowest remaining value; now it drops the lowest die first.
+  * `NdMdh` and `NdMdl` now mean "drop the highest/lowest die". Before, they
+    rolled a roll of dice with `h` or `l` sides; write `NdMd(h)` for that.
+
+* Enhancements
+  * The `~a` sigil is a macro: a literal expression is parsed and its flags
+    checked at compile time (a malformed expression is a compile error), and
+    the compiled function is built once and kept in `:persistent_term` under
+    a small key computed at compile time, so a lookup costs the same for any
+    expression. `~a/1d20+5/r` went from about 1.15 µs to 0.17 µs per roll.
+    Interpolated sigils are still parsed at run time.
+  * New `ExDiceRoller.Roller.defroll/2` defines a named roll function from a
+    literal expression at compile time, generating plain Elixir code instead
+    of closures. It returns the same results as `compile!/1` from the same
+    random seed (tested over the golden corpus). `1d20+5` with no arguments
+    takes ~40 ns (compiled function: ~115 ns); `1d20+x` with `x: 5` takes
+    ~55 ns.
+  * Variable names are turned into argument keys when an expression
+    compiles, not on every roll: compiled `1d20+x` went from about 280 ns to
+    210 ns. `Compiler.fun_info/1` now shows a variable as an atom (`:x`)
+    instead of a charlist (`~c"x"`).
+  * A variable whose value refers back to itself (`x: "1+x"`, or
+    `x: "y", y: "x"`) returns an error with reason `:recursive_variable`
+    instead of recursing forever. This adds about 50 ns to each string or
+    function variable value; number values are unaffected.
+  * `.formatter.exs` exports `locals_without_parens` for `defroll`; add
+    `import_deps: [:ex_dice_roller]` to your formatter config to write
+    `defroll name, "1d6"` without parentheses.
+  * With `cache: true` (or `opts: [:cache]`), expressions given as variable
+    values (`x: "1d6"`) are parsed once and cached too, instead of on every
+    roll. `ExDiceRoller.Cache.all/1` still lists only expression entries;
+    `clear/1` removes both.
+  * New performance guide (`guides/performance.md`) and benchmark script
+    (`bench/rolls.exs`).
+  * Dice modifiers in expressions, written right after a roll's sides:
+    `khN`/`kN` and `klN` keep the highest/lowest N dice, `dhN` and `dlN` drop
+    them (N defaults to 1), `rN` rerolls until the die no longer matches,
+    `roN` rerolls once, and `!` explodes. Reroll targets take `=`, `<`, `>`,
+    `<=`, or `>=`. Modifiers are case-insensitive and can be combined
+    (`4d6r1kh3`). Elsewhere, `k`, `r`, `h`, `l` and `o` are still variables.
+    Impossible rerolls (`1d6r<7`) return reason `:invalid_modifier`.
+
+* Bug fixes
+  * Dice counts that round to 0 roll no dice. `(1/3)d6` used to roll 2 dice,
+    because `1..0` counts down. The same goes for `0.0` and for 0 or negative
+    counts inside variable lists, which are now checked per element.
+  * Side counts that round to 0 give 0 instead of crashing in `:rand`.
+  * With `:keep`, zero dice return `[]` instead of `0`.
+  * Adding or comparing two empty lists returns `[]` instead of raising
+    `ArithmeticError`. List pairing also uses `Enum.zip_with/3` now, so it is
+    no longer O(n²).
+  * Tokenizer errors after the first line of input are returned as an error
+    (reason `:tokenizing_failed`) instead of raising `WithClauseError`.
+  * `roll/2` with `cache: true` returns the parse error for an invalid
+    expression instead of raising `FunctionClauseError`, and does not cache
+    it.
+  * `opts: [:cache]`, as shown in the docs, now uses the cache (before, only
+    `cache: true` did).
+  * An invalid expression in a variable value, or in the `~a` sigil, gives an
+    error that names the expression, instead of a `MatchError`.
+  * `%` accepts floats with whole-number values, such as the result of `6/2`.
+  * Calling `start_cache/1` again while the table exists is a no-op instead of
+    raising.
+
+* Documentation
+  * Corrected the README, guides, and module docs: the `^` precedence row,
+    roll-of-roll semantics (`3d5d6` uses each result as a dice count), the
+    sigil's options, compile-time behavior (constants are not folded), filter
+    results, the `:cache_table` setting (compile time), and several examples
+    with impossible or inconsistent values.
+
+* Build and tooling
+  * Requires Elixir 1.15+ (tested on 1.15 to 1.18, OTP 26 and 27).
+  * Updated dev dependencies (credo 1.7, ex_doc 0.34); the old versions no
+    longer compile on current OTP.
+  * Removed excoveralls and the Coveralls badge; coverage was no longer
+    uploaded anywhere.
+  * The Hex package license is now the SPDX identifier `Apache-2.0`.
+  * Replaced Travis CI with GitHub Actions.
+  * Replaced `Mix.Config` with `Config`, and declared the leex and yecc
+    compilers explicitly.
+  * The cache table name is read with `Application.compile_env/3` and now
+    defaults to `ExDiceRoller.Cache`, so a project using the library no
+    longer has to set `:cache_table` itself.
+* Compatibility fixes (no change in roll behavior)
+  * Division and modulo by `-0.0` raise "the divisor cannot be 0" again.
+    OTP 27 stopped matching `-0.0` against a `0.0` pattern.
+  * The missing-variable error message is back to `'x'`; newer Elixir
+    versions printed it as `~c"x"`.
+  * Charlists in code and docs use the `~c` sigil.
+  * `Compiler.fun_info/1` docs note that function names and child order
+    depend on the OTP release.
+
+
 ## v1.0.0-rc.2
 
 * Enhancements

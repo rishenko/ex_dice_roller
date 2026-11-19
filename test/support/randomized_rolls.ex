@@ -125,7 +125,12 @@ defmodule ExDiceRoller.RandomizedRolls do
 
   @spec create_error_list(any, String.t(), Keyword.t()) :: Keyword.t()
   defp create_error_list(err, expr, args) do
-    [err: err, expr: expr, args: args, stacktrace: System.stacktrace()]
+    [
+      err: err,
+      expr: expr,
+      args: args,
+      stacktrace: Process.info(self(), :current_stacktrace) |> elem(1)
+    ]
   end
 
   @spec build_variable_values(String.t(), integer) :: Keyword.t()
@@ -169,7 +174,7 @@ defmodule ExDiceRoller.RandomizedRolls do
   end
 
   defp do_generate_var_value(:expression, max_depth) do
-    ExpressionBuilder.randomize(Enum.random(1..(max_depth - 1)), false)
+    ExpressionBuilder.randomize(Enum.random(1..max(max_depth - 1, 1)), false)
   end
 
   defp do_generate_var_value(:function, max_depth) do

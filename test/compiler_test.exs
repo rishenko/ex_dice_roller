@@ -8,7 +8,7 @@ defmodule ExDiceRoller.CompilerTest do
 
   test "basic expression" do
     {:ok, compiled} = ExDiceRoller.compile("1d4+1")
-    2 = ExDiceRoller.execute(compiled)
+    2 = ExDiceRoller.execute!(compiled)
   end
 
   test "error" do
@@ -16,6 +16,17 @@ defmodule ExDiceRoller.CompilerTest do
   end
 
   describe "function info/relationships" do
+    # fun_info/1 reports names and captured values straight from the BEAM. The
+    # numeric suffix in names ("-fun-1-") and the order of captured values both
+    # vary between OTP releases, so compare a normalized shape: numbers stripped
+    # from names and children sorted.
+    defp shape({_fun, name, children}) do
+      name = String.replace(Atom.to_string(name), ~r/-fun-\d+-$/, "-fun-")
+      {name, children |> Enum.map(&shape/1) |> Enum.sort()}
+    end
+
+    defp shape(other), do: other
+
     test "simple" do
       result =
         "1d4+x"
@@ -23,11 +34,11 @@ defmodule ExDiceRoller.CompilerTest do
         |> elem(1)
         |> Compiler.fun_info()
 
-      assert {_, :"-compile_add/2-fun-1-",
+      assert {"-compile_add/2-fun-",
               [
-                {_, :"-compile_roll/2-fun-3-", [1, 4]},
-                {_, :"-compile_var/1-fun-0-", ['x']}
-              ]} = result
+                {"-compile_roll/3-fun-", [1, 4, []]},
+                {"-compile_var/1-fun-", [:x]}
+              ]} == shape(result)
     end
 
     test "complex" do
@@ -37,24 +48,25 @@ defmodule ExDiceRoller.CompilerTest do
         |> elem(1)
         |> Compiler.fun_info()
 
-      assert {_, :"-compile_add/2-fun-1-",
+      assert {"-compile_add/2-fun-",
               [
-                {_, :"-compile_roll/2-fun-3-", [1, 4]},
-                {_, :"-compile_roll/2-fun-0-",
+                {"-compile_roll/3-fun-", [1, 4, []]},
+                {"-compile_roll/3-fun-",
                  [
-                   {_, :"-compile_roll/2-fun-2-", [1, {_, :"-compile_var/1-fun-0-", ['y']}]},
-                   {_, :"-compile_add/2-fun-3-",
-                    [{_, :"-compile_mul/2-fun-5-", [5, {_, :"-compile_var/1-fun-0-", ['x']}]}, 2]}
+                   {"-compile_add/2-fun-",
+                    [2, {"-compile_mul/2-fun-", [5, {"-compile_var/1-fun-", [:x]}]}]},
+                   {"-compile_roll/3-fun-", [1, {"-compile_var/1-fun-", [:y]}, []]},
+                   []
                  ]}
-              ]} = result
+              ]} == shape(result)
     end
 
     test "filters" do
-      assert [4] == ExDiceRoller.roll("6d6", =: 4, opts: :keep)
-      assert [4, 4, 2] == ExDiceRoller.roll("3d8", <: 5, opts: :keep)
-      assert [6, 8, 8] == ExDiceRoller.roll("5d8", >: 4, opts: :keep)
-      assert [7, 5] == ExDiceRoller.roll("5d8", >=: 4, opts: :keep)
-      assert [4, 4, 1] == ExDiceRoller.roll("5d8", <=: 4, opts: :keep)
+      assert [4] == ExDiceRoller.roll!("6d6", =: 4, opts: :keep)
+      assert [4, 4, 2] == ExDiceRoller.roll!("3d8", <: 5, opts: :keep)
+      assert [6, 8, 8] == ExDiceRoller.roll!("5d8", >: 4, opts: :keep)
+      assert [7, 5] == ExDiceRoller.roll!("5d8", >=: 4, opts: :keep)
+      assert [4, 4, 1] == ExDiceRoller.roll!("5d8", <=: 4, opts: :keep)
     end
   end
 end

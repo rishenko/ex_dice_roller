@@ -3,12 +3,10 @@ defmodule ExDiceRoller.Args do
 
   alias ExDiceRoller.Filters
 
+  @doc "True when caching is requested as `cache: true` or as `opts: [:cache]`."
   @spec use_cache?(Keyword.t()) :: boolean
   def use_cache?(args) do
-    case Keyword.get(args, :cache, false) do
-      true -> true
-      _ -> false
-    end
+    Keyword.get(args, :cache) == true or :cache in List.wrap(Keyword.get(args, :opts, []))
   end
 
   @doc """
@@ -52,6 +50,18 @@ defmodule ExDiceRoller.Args do
     |> get_options()
     |> Enum.find(&(&1 in keys))
   end
+
+  @reserved [:opts | Filters.keys()]
+
+  @doc """
+  True when `args` is a keyword list without options or filters, such as
+  `[x: 5]`. For those, `sanitize/1` and `get_filters/1` only add `opts: []`.
+  """
+  @spec plain?(list) :: boolean
+  def plain?([]), do: true
+  def plain?([{key, _} | _]) when key in @reserved, do: false
+  def plain?([{key, _} | rest]) when is_atom(key), do: plain?(rest)
+  def plain?(_), do: false
 
   @spec get_var(Keyword.t(), atom) :: any
   def get_var(args, var_name) do
